@@ -1,11 +1,50 @@
 const ROWS = 9;
 const COLS = 6;
-const SYMBOL_VERSION = "symbol-rules-32";
+const SYMBOL_VERSION = "symbol-rules-33";
 const PERF_ENABLED = new URLSearchParams(window.location.search).has("perf");
 const SPECIAL_METER_TARGET = 20;
 const BET_STEPS = [20, 50, 100, 200, 500];
 const CANDIES = ["red", "blue", "green", "orange", "purple"];
 const MULTIPLIER_VALUES = [5, 10, 20, 30, 50, 100];
+const COLLECTION_SLOT_ITEM_WEIGHTS = [
+  { kind: "chocolate", weight: 38 },
+  { kind: "multiplier", value: 5, weight: 18 },
+  { kind: "multiplier", value: 10, weight: 14 },
+  { kind: "multiplier", value: 20, weight: 11 },
+  { kind: "multiplier", value: 30, weight: 6 },
+  { kind: "multiplier", value: 50, weight: 3 },
+  { kind: "multiplier", value: 100, weight: 1 },
+  { kind: "sniper", weight: 20 },
+];
+const MULTIPLIER_VALUE_WEIGHTS = {
+  normal: [
+    { value: 5, weight: 28 },
+    { value: 10, weight: 24 },
+    { value: 20, weight: 22 },
+    { value: 30, weight: 14 },
+    { value: 50, weight: 8 },
+    { value: 100, weight: 4 },
+  ],
+  high: [
+    { value: 5, weight: 12 },
+    { value: 10, weight: 18 },
+    { value: 20, weight: 26 },
+    { value: 30, weight: 22 },
+    { value: 50, weight: 14 },
+    { value: 100, weight: 8 },
+  ],
+};
+const MULTIPLIER_ROW_WEIGHTS = [
+  { row: 0, weight: 6 },
+  { row: 1, weight: 8 },
+  { row: 2, weight: 10 },
+  { row: 3, weight: 12 },
+  { row: 4, weight: 14 },
+  { row: 5, weight: 16 },
+  { row: 6, weight: 16 },
+  { row: 7, weight: 12 },
+  { row: 8, weight: 6 },
+];
 const WIN_TIERS = [
   { ratio: 100, label: "LEGENDARY WIN", art: "legendary", sound: "jackpot", className: "tier-legendary", duration: 2500, quick: 2500, particles: 86, countVolume: 0.055 },
   { ratio: 50, label: "EPIC WIN", art: "epic", sound: "jackpot", className: "tier-epic", duration: 2500, quick: 2500, particles: 72, countVolume: 0.05 },
@@ -212,17 +251,24 @@ function randomItem(items) {
   return items[Math.floor(Math.random() * items.length)];
 }
 
+function weightedPick(items) {
+  const total = items.reduce((sum, item) => sum + item.weight, 0);
+  let roll = Math.random() * total;
+  for (const item of items) {
+    roll -= item.weight;
+    if (roll <= 0) return item;
+  }
+  return items[items.length - 1];
+}
+
 function randomCandy(exclude = [], options = {}) {
   const pool = CANDIES.filter((type) => !exclude.includes(type));
   return { kind: "candy", type: randomItem(pool.length ? pool : CANDIES) };
 }
 
 function weightedMultiplier() {
-  const pool =
-    state.mode === "high"
-      ? [5, 10, 20, 20, 30, 30, 50, 100]
-      : [5, 5, 10, 10, 20, 20, 30, 50, 100];
-  return { kind: "multiplier", value: randomItem(pool) };
+  const table = state.mode === "high" ? MULTIPLIER_VALUE_WEIGHTS.high : MULTIPLIER_VALUE_WEIGHTS.normal;
+  return { kind: "multiplier", value: weightedPick(table).value };
 }
 
 function multiplierTierClass(value) {
@@ -310,10 +356,10 @@ function sniperIconAsset() {
 }
 
 function randomBoardEvent() {
-  const kind = randomItem(["chocolate", "multiplier", "sniper"]);
-  if (kind === "chocolate") return { kind, type: randomItem(CANDIES) };
-  if (kind === "multiplier") return { kind, value: weightedMultiplier().value };
-  return { kind };
+  const item = weightedPick(COLLECTION_SLOT_ITEM_WEIGHTS);
+  if (item.kind === "chocolate") return { kind: item.kind, type: randomItem(CANDIES) };
+  if (item.kind === "multiplier") return { kind: item.kind, value: item.value };
+  return { kind: item.kind };
 }
 
 function eventPreviewAsset(event) {
@@ -369,13 +415,29 @@ function addMultipliers(board) {
   const placed = new Set();
 
   while (placed.size < count) {
-    const row = Math.floor(Math.random() * (ROWS - 2));
-    const col = Math.floor(Math.random() * COLS);
+    const point = pickMultiplierSpawnCell(board, (cell) => !placed.has(`${cell.row},${cell.col}`));
+    if (!point) break;
+    const { row, col } = point;
     const key = `${row},${col}`;
-    if (placed.has(key)) continue;
     placed.add(key);
     board[row][col] = weightedMultiplier();
   }
+}
+
+function pickMultiplierSpawnCell(board, predicate = () => true) {
+  const rowOrder = [...MULTIPLIER_ROW_WEIGHTS];
+  while (rowOrder.length) {
+    const picked = weightedPick(rowOrder);
+    const row = picked.row;
+    const cells = [];
+    for (let col = 0; col < COLS; col += 1) {
+      const cell = { row, col };
+      if (predicate(cell, board[row][col])) cells.push(cell);
+    }
+    if (cells.length) return randomItem(cells);
+    rowOrder.splice(rowOrder.indexOf(picked), 1);
+  }
+  return null;
 }
 
 function buildBoard() {
@@ -1967,7 +2029,11 @@ function renderHud() {
   soundMenuButton.textContent = state.sound ? "音效開啟" : "音效關閉";
 }
 
-function findBoardEventCell({ allowMultiplierTarget = false } = {}) {
+function findBoardEventCell({ allowMultiplierTarget = false, useMultiplierRows = false } = {}) {
+  if (useMultiplierRows) {
+    return pickMultiplierSpawnCell(state.board, (cell, tile) => isOrdinaryCandy(tile));
+  }
+
   const cells = [];
   for (let row = 0; row < ROWS; row += 1) {
     for (let col = 0; col < COLS; col += 1) {
@@ -2091,7 +2157,7 @@ async function processSpecialAwards() {
       setStatus("狙擊槍");
       await playSniperEvent();
     } else {
-      const target = findBoardEventCell();
+      const target = findBoardEventCell({ useMultiplierRows: event.kind === "multiplier" });
       if (target) {
         if (event.kind === "multiplier") {
           state.board[target.row][target.col] = { kind: "multiplier", value: event.value, _reward: true };
