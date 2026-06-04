@@ -1413,6 +1413,7 @@ async function resolveMove(initialMatches, preferredSpawn = null) {
       }
     }
     clearEnd();
+    state.lastClearedCells = new Set(expandedCells);
     addSpecialMeter(clearedCandyCount);
     if (createdSpecial) {
       setPerfPhase("special-spawn");
@@ -1435,6 +1436,7 @@ async function resolveMove(initialMatches, preferredSpawn = null) {
     const collectEnd = startPerfSpan("move.collect.mult");
     setPerfPhase("collect");
     const collected = collectMultipliers();
+    state.lastClearedCells = null;
     collectEnd();
     if (collected.length > 0) {
       state.slotFlash = Array(SLOT_COUNT).fill(null);
@@ -2308,7 +2310,14 @@ function collectMultipliers() {
 function canMultiplierDrop(multiplier) {
   if (multiplier.row >= ROWS - MULTIPLIER_SIZE) return false;
   const belowRow = multiplier.row + MULTIPLIER_SIZE;
-  return !state.board[belowRow][multiplier.col] && !state.board[belowRow][multiplier.col + 1];
+  const leftKey = `${belowRow},${multiplier.col}`;
+  const rightKey = `${belowRow},${multiplier.col + 1}`;
+  return (
+    state.lastClearedCells?.has(leftKey) &&
+    state.lastClearedCells?.has(rightKey) &&
+    !state.board[belowRow][multiplier.col] &&
+    !state.board[belowRow][multiplier.col + 1]
+  );
 }
 
 function mergeAdjacentMultipliers() {
