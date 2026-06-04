@@ -3,7 +3,7 @@ const COLS = 6;
 const SLOT_COUNT = 3;
 const MULTIPLIER_SIZE = 2;
 const MULTIPLIER_COLS = [0, 2, 4];
-const SYMBOL_VERSION = "symbol-rules-38";
+const SYMBOL_VERSION = "symbol-rules-39";
 const PERF_ENABLED = new URLSearchParams(window.location.search).has("perf");
 const SPECIAL_METER_TARGET = 20;
 const BET_STEPS = [20, 50, 100, 200, 500];
@@ -1190,26 +1190,52 @@ function mergeAdjacentMultipliers() {
 }
 
 function collapseColumns() {
-  for (let col = 0; col < COLS; col += 1) {
-    let write = ROWS - 1;
-    for (let row = ROWS - 1; row >= 0; row -= 1) {
-      const tile = state.board[row][col];
-      if (!tile) continue;
-      if (write !== row) tile._fall = write - row;
-      state.board[write][col] = tile;
-      if (write !== row) state.board[row][col] = null;
-      write -= 1;
-    }
+  clearMultiplierFootprints();
 
-    for (let row = write; row >= 0; row -= 1) {
-      state.board[row][col] = null;
+  for (let col = 0; col < COLS; col += 1) {
+    let row = ROWS - 1;
+
+    while (row >= 0) {
+      if (multiplierAt(row, col)) {
+        state.board[row][col] = null;
+        row -= 1;
+        continue;
+      }
+
+      const segmentEnd = row;
+      while (row >= 0 && !multiplierAt(row, col)) {
+        row -= 1;
+      }
+      const segmentStart = row + 1;
+      let write = segmentEnd;
+
+      for (let scan = segmentEnd; scan >= segmentStart; scan -= 1) {
+        const tile = state.board[scan][col];
+        if (!tile) continue;
+        if (write !== scan) tile._fall = write - scan;
+        state.board[write][col] = tile;
+        if (write !== scan) state.board[scan][col] = null;
+        write -= 1;
+      }
+
+      for (let scan = write; scan >= segmentStart; scan -= 1) {
+        state.board[scan][col] = null;
+      }
     }
   }
+
+  clearMultiplierFootprints();
 }
 
 function fillEmptyCells() {
+  clearMultiplierFootprints();
+
   for (let col = 0; col < COLS; col += 1) {
     for (let row = 0; row < ROWS; row += 1) {
+      if (multiplierAt(row, col)) {
+        state.board[row][col] = null;
+        continue;
+      }
       if (!state.board[row][col]) {
         const tile = randomCandy([], { allowFish: true });
         tile._fall = row + 1;
@@ -1217,6 +1243,8 @@ function fillEmptyCells() {
       }
     }
   }
+
+  clearMultiplierFootprints();
 }
 
 function clearFallMarks() {
@@ -2309,6 +2337,8 @@ function collectMultipliers() {
   let changed = true;
   let guard = 0;
 
+  clearMultiplierFootprints();
+
   while (changed && guard < ROWS) {
     changed = false;
     guard += 1;
@@ -2331,28 +2361,30 @@ function collectMultipliers() {
       }
       const collectedIds = new Set(collectedNow.map((multiplier) => multiplier.id));
       state.multipliers = state.multipliers.filter((multiplier) => !collectedIds.has(multiplier.id));
+      clearMultiplierFootprints();
       changed = true;
     }
   }
 
+  clearMultiplierFootprints();
   return collected;
 }
 
 function multiplierDropDistance(multiplier) {
   if (multiplier.row >= ROWS - MULTIPLIER_SIZE) return 0;
-  return Math.min(
-    multiplierColumnDropDistance(multiplier, multiplier.col),
-    multiplierColumnDropDistance(multiplier, multiplier.col + 1)
-  );
-}
-
-function multiplierColumnDropDistance(multiplier, col) {
   let distance = 0;
   for (let row = multiplier.row + MULTIPLIER_SIZE; row < ROWS; row += 1) {
-    if (multiplierAtExcept(row, col, multiplier)) break;
-    if (!state.board[row][col]) distance += 1;
+    if (!canMultiplierOccupyDropRow(multiplier, row)) break;
+    distance += 1;
   }
   return distance;
+}
+
+function canMultiplierOccupyDropRow(multiplier, row) {
+  for (let col = multiplier.col; col < multiplier.col + MULTIPLIER_SIZE; col += 1) {
+    if (state.board[row][col] || multiplierAtExcept(row, col, multiplier)) return false;
+  }
+  return true;
 }
 
 function multiplierAtExcept(row, col, ignoredMultiplier) {
@@ -2365,6 +2397,14 @@ function multiplierAtExcept(row, col, ignoredMultiplier) {
       col < multiplier.col + MULTIPLIER_SIZE
     );
   });
+}
+
+function clearMultiplierFootprints() {
+  for (const multiplier of state.multipliers) {
+    for (const cell of multiplierCells(multiplier)) {
+      state.board[cell.row][cell.col] = null;
+    }
+  }
 }
 
 function mergeAdjacentMultipliers() {
