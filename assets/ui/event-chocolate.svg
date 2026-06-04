@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="frame" x1="13" y1="12" x2="112" y2="118" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff5b0"/>
+      <stop offset=".22" stop-color="#ffb733"/>
+      <stop offset=".54" stop-color="#862c12"/>
+      <stop offset=".78" stop-color="#ffe268"/>
+      <stop offset="1" stop-color="#5b1a08"/>
+    </linearGradient>
+    <radialGradient id="shine" cx="48%" cy="34%" r="65%">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset=".16" stop-color="#fff075"/>
+      <stop offset=".45" stop-color="#ff4bd6"/>
+      <stop offset=".78" stop-color="#3cd9ff"/>
+      <stop offset="1" stop-color="#200838"/>
+    </radialGradient>
+    <filter id="glow" x="-35%" y="-35%" width="170%" height="170%">
+      <feDropShadow dx="0" dy="0" stdDeviation="7" flood-color="#ffd95f" flood-opacity=".8"/>
+      <feDropShadow dx="0" dy="7" stdDeviation="5" flood-color="#13031e" flood-opacity=".75"/>
+    </filter>
+  </defs>
+  <g filter="url(#glow)">
+    <path d="M64 8c24 0 45 15 53 37 8 24-2 52-24 66-20 13-48 11-66-6C9 88 4 61 15 38 24 20 42 8 64 8Z" fill="url(#frame)"/>
+    <path d="M64 18c20 0 37 12 44 30 7 20-2 42-19 54-17 11-40 9-55-5C20 83 16 60 25 42c8-15 23-24 39-24Z" fill="url(#shine)"/>
+    <circle cx="64" cy="64" r="35" fill="none" stroke="#fff6a2" stroke-width="3" opacity=".65"/>
+    <path d="M30 56c18-16 43-21 68-3-19-8-41-5-68 3Z" fill="#fff" opacity=".28"/>
+  </g>
+</svg>

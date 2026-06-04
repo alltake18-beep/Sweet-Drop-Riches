@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <radialGradient id="aura" cx="50%" cy="47%" r="58%">
+      <stop offset="0" stop-color="#fff4aa" stop-opacity=".95"/>
+      <stop offset=".34" stop-color="#ff5bd7" stop-opacity=".72"/>
+      <stop offset=".72" stop-color="#45d7ff" stop-opacity=".34"/>
+      <stop offset="1" stop-color="#23104a" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="rim" x1="18" y1="14" x2="112" y2="118" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff7a6"/>
+      <stop offset=".2" stop-color="#ffb536"/>
+      <stop offset=".48" stop-color="#9b3f13"/>
+      <stop offset=".7" stop-color="#ffd66a"/>
+      <stop offset="1" stop-color="#5e210d"/>
+    </linearGradient>
+    <radialGradient id="choc" cx="37%" cy="24%" r="80%">
+      <stop offset="0" stop-color="#ffe0a4"/>
+      <stop offset=".17" stop-color="#b96a2d"/>
+      <stop offset=".48" stop-color="#6b2714"/>
+      <stop offset=".8" stop-color="#2b0b13"/>
+      <stop offset="1" stop-color="#150318"/>
+    </radialGradient>
+    <radialGradient id="gemRed" cx="35%" cy="25%" r="70%">
+      <stop offset="0" stop-color="#fff8d8"/>
+      <stop offset=".25" stop-color="#ff6b55"/>
+      <stop offset="1" stop-color="#9b1429"/>
+    </radialGradient>
+    <radialGradient id="gemBlue" cx="35%" cy="25%" r="70%">
+      <stop offset="0" stop-color="#e8ffff"/>
+      <stop offset=".28" stop-color="#54d8ff"/>
+      <stop offset="1" stop-color="#1466cc"/>
+    </radialGradient>
+    <radialGradient id="gemGold" cx="35%" cy="25%" r="70%">
+      <stop offset="0" stop-color="#fffde1"/>
+      <stop offset=".3" stop-color="#ffe45c"/>
+      <stop offset="1" stop-color="#d06b12"/>
+    </radialGradient>
+    <filter id="shadow" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="7" stdDeviation="6" flood-color="#190622" flood-opacity=".65"/>
+      <feDropShadow dx="0" dy="0" stdDeviation="5" flood-color="#ffd967" flood-opacity=".8"/>
+    </filter>
+  </defs>
+  <circle cx="64" cy="64" r="62" fill="url(#aura)"/>
+  <g filter="url(#shadow)">
+    <circle cx="64" cy="64" r="47" fill="url(#rim)"/>
+    <circle cx="64" cy="64" r="39" fill="#2c0a19"/>
+    <circle cx="64" cy="64" r="35" fill="url(#choc)"/>
+    <path d="M31 63c12-18 24-26 39-25 13 1 23 7 33 23-8-8-19-12-33-12-17 0-31 5-39 14Z" fill="#fff1c1" opacity=".22"/>
+    <path d="M30 73c17 11 42 16 68 1-7 20-24 31-43 27-13-3-23-11-25-28Z" fill="#210411" opacity=".45"/>
+    <g stroke="#2b0910" stroke-width="3">
+      <circle cx="45" cy="45" r="10" fill="url(#gemRed)"/>
+      <circle cx="67" cy="39" r="9" fill="url(#gemBlue)"/>
+      <circle cx="89" cy="50" r="10" fill="url(#gemGold)"/>
+      <circle cx="40" cy="70" r="9" fill="url(#gemBlue)"/>
+      <circle cx="63" cy="64" r="11" fill="url(#gemGold)"/>
+      <circle cx="87" cy="74" r="10" fill="url(#gemRed)"/>
+      <circle cx="57" cy="91" r="10" fill="url(#gemRed)"/>
+      <circle cx="76" cy="91" r="9" fill="url(#gemBlue)"/>
+    </g>
+    <g fill="#fff" opacity=".58">
+      <ellipse cx="42" cy="39" rx="5" ry="3" transform="rotate(-28 42 39)"/>
+      <ellipse cx="64" cy="34" rx="4" ry="2.4" transform="rotate(-24 64 34)"/>
+      <ellipse cx="86" cy="45" rx="5" ry="2.8" transform="rotate(-23 86 45)"/>
+      <ellipse cx="57" cy="59" rx="5" ry="2.7" transform="rotate(-25 57 59)"/>
+    </g>
+  </g>
+</svg>

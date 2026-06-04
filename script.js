@@ -1,6 +1,6 @@
 const ROWS = 9;
 const COLS = 5;
-const SYMBOL_VERSION = "symbol-rules-30";
+const SYMBOL_VERSION = "symbol-rules-31";
 const PERF_ENABLED = new URLSearchParams(window.location.search).has("perf");
 const SPECIAL_METER_TARGET = 20;
 const BET_STEPS = [20, 50, 100, 200, 500];
@@ -84,6 +84,7 @@ const state = {
   miniSlotPreview: { kind: "chocolate", type: "purple" },
   miniSlotRolling: false,
   miniSlotWin: false,
+  eventPulse: false,
   sniperTarget: null,
 };
 
@@ -127,6 +128,11 @@ function setPerfPhase(phase) {
 
 function setBoardBusy(isBusy) {
   document.querySelector(".phone")?.classList.toggle("board-busy", isBusy);
+}
+
+function setEventPulse(active) {
+  state.eventPulse = active;
+  document.querySelector(".phone")?.classList.toggle("event-pulse", active);
 }
 
 function updatePerfPanel(force = false) {
@@ -257,7 +263,7 @@ function isOrdinaryCandy(tile) {
 
 function specialAsset(special, type) {
   if (special === "chocolate") {
-    return `assets/symbols/special-colorbomb.png?v=${SYMBOL_VERSION}`;
+    return `assets/symbols/special-chocolate.svg?v=${SYMBOL_VERSION}`;
   }
   if (special === "horizontal" || special === "vertical" || special === "bomb") {
     return `assets/symbols/special-${special}-${type}.png?v=${SYMBOL_VERSION}`;
@@ -276,6 +282,8 @@ function allSymbolAssets() {
     "assets/symbols/multiplier-x200.svg?v=" + SYMBOL_VERSION,
     ...WIN_TIERS.map((tier) => winArtAsset(tier.art)),
     specialAsset("chocolate"),
+    `assets/ui/event-sniper.svg?v=${SYMBOL_VERSION}`,
+    `assets/ui/event-chocolate.svg?v=${SYMBOL_VERSION}`,
   ];
   return Array.from(new Set(assets));
 }
@@ -298,21 +306,7 @@ function preloadSymbolAssets() {
 }
 
 function sniperIconAsset() {
-  return `data:image/svg+xml,${encodeURIComponent(`
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96">
-      <defs>
-        <radialGradient id="g" cx="50%" cy="50%" r="56%">
-          <stop offset="0" stop-color="#fff7aa"/>
-          <stop offset=".42" stop-color="#ff46d8"/>
-          <stop offset="1" stop-color="#31d7ff"/>
-        </radialGradient>
-      </defs>
-      <circle cx="48" cy="48" r="33" fill="none" stroke="url(#g)" stroke-width="8"/>
-      <circle cx="48" cy="48" r="12" fill="none" stroke="#fff" stroke-width="5"/>
-      <path d="M48 4v23M48 69v23M4 48h23M69 48h23" stroke="#ffe56b" stroke-width="8" stroke-linecap="round"/>
-      <circle cx="48" cy="48" r="4" fill="#fff"/>
-    </svg>
-  `)}`;
+  return `assets/ui/event-sniper.svg?v=${SYMBOL_VERSION}`;
 }
 
 function randomBoardEvent() {
@@ -325,7 +319,7 @@ function randomBoardEvent() {
 function eventPreviewAsset(event) {
   if (event.kind === "multiplier") return multiplierAsset(event.value || 10);
   if (event.kind === "sniper") return sniperIconAsset();
-  return specialAsset("chocolate");
+  return `assets/ui/event-chocolate.svg?v=${SYMBOL_VERSION}`;
 }
 
 function eventName(event) {
@@ -510,6 +504,9 @@ function renderBoard() {
       }
       if (tile?._reward) {
         classes.push("reward-drop");
+      }
+      if (tile?._eventTransform) {
+        classes.push("event-transform");
       }
       if (tile?._spawn) {
         classes.push("special-spawn");
@@ -2032,9 +2029,10 @@ async function playSniperEvent() {
   const targetTile = state.board[finalTarget.row][finalTarget.col];
   const resultTile = cloneSniperResultTile(targetTile);
   for (const point of surroundingPoints(finalTarget.row, finalTarget.col)) {
-    state.board[point.row][point.col] = { ...resultTile, _reward: true };
+    state.board[point.row][point.col] = { ...resultTile, _eventTransform: true };
   }
   setStatus("狙擊槍鎖定");
+  setEventPulse(true);
   render();
   markSniperTarget(finalTarget);
   spawnParticles(24);
@@ -2047,8 +2045,10 @@ async function playSniperEvent() {
   for (const row of state.board) {
     for (const tile of row) {
       if (tile?._reward) delete tile._reward;
+      if (tile?._eventTransform) delete tile._eventTransform;
     }
   }
+  setEventPulse(false);
   return true;
 }
 
@@ -2069,6 +2069,7 @@ async function processSpecialAwards() {
     state.miniSlotRolling = false;
     state.miniSlotWin = true;
     state.miniSlotPreview = event;
+    setEventPulse(true);
     render();
     playSound("specialReady");
     await wait(resolveDelay(460, 180));
@@ -2096,6 +2097,7 @@ async function processSpecialAwards() {
     }
 
     state.miniSlotWin = false;
+    setEventPulse(false);
     render();
   }
 }
