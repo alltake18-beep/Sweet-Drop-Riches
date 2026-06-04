@@ -1,6 +1,9 @@
 const ROWS = 9;
 const COLS = 6;
-const SYMBOL_VERSION = "symbol-rules-33";
+const SLOT_COUNT = 3;
+const MULTIPLIER_SIZE = 2;
+const MULTIPLIER_COLS = [0, 2, 4];
+const SYMBOL_VERSION = "symbol-rules-34";
 const PERF_ENABLED = new URLSearchParams(window.location.search).has("perf");
 const SPECIAL_METER_TARGET = 20;
 const BET_STEPS = [20, 50, 100, 200, 500];
@@ -80,8 +83,9 @@ const state = {
   selected: null,
   clearing: new Set(),
   invalid: null,
-  slotFlash: Array(COLS).fill(null),
+  slotFlash: Array(SLOT_COUNT).fill(null),
   filledSlots: new Set(),
+  multipliers: [],
   balance: 2732,
   betIndex: 2,
   currentWin: 0,
@@ -391,6 +395,65 @@ function cloneBoard(board) {
   return board.map((row) => row.map(cloneTile));
 }
 
+function cloneMultiplier(multiplier) {
+  return { ...multiplier };
+}
+
+function multiplierCells(multiplier) {
+  const cells = [];
+  for (let row = multiplier.row; row < multiplier.row + MULTIPLIER_SIZE; row += 1) {
+    for (let col = multiplier.col; col < multiplier.col + MULTIPLIER_SIZE; col += 1) {
+      if (row >= 0 && row < ROWS && col >= 0 && col < COLS) cells.push({ row, col });
+    }
+  }
+  return cells;
+}
+
+function multiplierCellKeys(multiplier) {
+  return multiplierCells(multiplier).map((cell) => `${cell.row},${cell.col}`);
+}
+
+function multiplierAt(row, col, multipliers = state.multipliers) {
+  return multipliers.find((multiplier) =>
+    row >= multiplier.row &&
+    row < multiplier.row + MULTIPLIER_SIZE &&
+    col >= multiplier.col &&
+    col < multiplier.col + MULTIPLIER_SIZE
+  ) || null;
+}
+
+function isMultiplierAnchor(row, col, multiplier) {
+  return Boolean(multiplier && multiplier.row === row && multiplier.col === col);
+}
+
+function slotIndexFromMultiplier(multiplier) {
+  return Math.max(0, Math.min(SLOT_COUNT - 1, Math.floor(multiplier.col / MULTIPLIER_SIZE)));
+}
+
+function canPlaceMultiplierAt(row, col, multipliers = state.multipliers, ignore = null) {
+  if (row < 0 || row > ROWS - MULTIPLIER_SIZE || !MULTIPLIER_COLS.includes(col)) return false;
+  return !multipliers.some((multiplier) => {
+    if (ignore && multiplier.id === ignore.id) return false;
+    return !(
+      col + MULTIPLIER_SIZE - 1 < multiplier.col ||
+      multiplier.col + MULTIPLIER_SIZE - 1 < col ||
+      row + MULTIPLIER_SIZE - 1 < multiplier.row ||
+      multiplier.row + MULTIPLIER_SIZE - 1 < row
+    );
+  });
+}
+
+function createMultiplier(value, row, col, flags = {}) {
+  return {
+    id: `m-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
+    kind: "multiplier",
+    value,
+    row,
+    col,
+    ...flags,
+  };
+}
+
 function makeCandyBoard() {
   const board = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
 
@@ -411,26 +474,27 @@ function makeCandyBoard() {
 }
 
 function addMultipliers(board) {
-  const count = state.mode === "high" ? 7 : 6;
-  const placed = new Set();
+  const count = Math.random() < 0.5 ? 1 : 2;
+  const multipliers = [];
 
-  while (placed.size < count) {
-    const point = pickMultiplierSpawnCell(board, (cell) => !placed.has(`${cell.row},${cell.col}`));
+  while (multipliers.length < count) {
+    const point = pickMultiplierSpawnCell(board, (cell) => canPlaceMultiplierAt(cell.row, cell.col, multipliers));
     if (!point) break;
-    const { row, col } = point;
-    const key = `${row},${col}`;
-    placed.add(key);
-    board[row][col] = weightedMultiplier();
+    multipliers.push(createMultiplier(weightedMultiplier().value, point.row, point.col));
   }
+
+  return multipliers;
 }
 
 function pickMultiplierSpawnCell(board, predicate = () => true) {
-  const rowOrder = [...MULTIPLIER_ROW_WEIGHTS];
+  const rowOrder = MULTIPLIER_ROW_WEIGHTS
+    .filter((item) => item.row <= ROWS - MULTIPLIER_SIZE)
+    .map((item) => ({ ...item }));
   while (rowOrder.length) {
     const picked = weightedPick(rowOrder);
     const row = picked.row;
     const cells = [];
-    for (let col = 0; col < COLS; col += 1) {
+    for (const col of MULTIPLIER_COLS) {
       const cell = { row, col };
       if (predicate(cell, board[row][col])) cells.push(cell);
     }
@@ -442,19 +506,20 @@ function pickMultiplierSpawnCell(board, predicate = () => true) {
 
 function buildBoard() {
   let board;
+  let multipliers = [];
   let attempts = 0;
 
   do {
     board = makeCandyBoard();
-    addMultipliers(board);
+    multipliers = addMultipliers(board);
     attempts += 1;
-  } while ((!hasLegalMove(board) || findMatches(board).cells.size > 0) && attempts < 120);
+  } while ((!hasLegalMove(board, multipliers) || findMatches(board, multipliers).cells.size > 0) && attempts < 120);
 
-  if (!hasLegalMove(board) || findMatches(board).cells.size > 0) {
+  if (!hasLegalMove(board, multipliers) || findMatches(board, multipliers).cells.size > 0) {
     forcePlayablePattern(board);
   }
 
-  return board;
+  return { board, multipliers };
 }
 
 function forcePlayablePattern(board) {
@@ -472,11 +537,13 @@ function forcePlayablePattern(board) {
 }
 
 function startNewBoard(keepScore = false) {
-  state.board = buildBoard();
+  const next = buildBoard();
+  state.board = next.board;
+  state.multipliers = next.multipliers;
   state.selected = null;
   state.clearing = new Set();
   state.invalid = null;
-  state.slotFlash = Array(COLS).fill(null);
+  state.slotFlash = Array(SLOT_COUNT).fill(null);
   state.filledSlots = new Set();
   state.specialMeter = 0;
   state.pendingSpecialAwards = 0;
@@ -542,10 +609,16 @@ function renderBoard() {
 
   for (let row = 0; row < ROWS; row += 1) {
     for (let col = 0; col < COLS; col += 1) {
-      const tile = state.board[row][col];
+      const coveredMultiplier = multiplierAt(row, col);
+      const anchorMultiplier = isMultiplierAnchor(row, col, coveredMultiplier) ? coveredMultiplier : null;
+      const tile = anchorMultiplier || state.board[row][col];
       const button = boardEl.children[row * COLS + col];
       const key = `${row},${col}`;
       const classes = ["tile"];
+
+      button.style.setProperty("grid-column", `${col + 1}`);
+      button.style.setProperty("grid-row", `${row + 1}`);
+      button.style.removeProperty("z-index");
 
       if (state.selected?.row === row && state.selected?.col === col) {
         classes.push("selected");
@@ -577,21 +650,26 @@ function renderBoard() {
         classes.push("invalid");
       }
 
-      if (tile?.kind === "candy") {
+      if (coveredMultiplier && !anchorMultiplier) {
+        classes.push("multiplier-covered");
+      } else if (tile?.kind === "candy") {
         classes.push("candy", `candy-${tile.type}`);
         if (tile.special) classes.push("special-candy", `special-${tile.special}`);
       } else if (tile?.kind === "multiplier") {
-        classes.push("multiplier", `value-${tile.value}`, multiplierTierClass(tile.value));
+        classes.push("multiplier", "multiplier-anchor", `value-${tile.value}`, multiplierTierClass(tile.value));
+        button.style.setProperty("grid-column", `${tile.col + 1} / span ${MULTIPLIER_SIZE}`);
+        button.style.setProperty("grid-row", `${tile.row + 1} / span ${MULTIPLIER_SIZE}`);
+        button.style.setProperty("z-index", tile._reward || tile._eventTransform ? "24" : "8");
       }
 
-      const signature = tileSignature(tile);
+      const signature = coveredMultiplier && !anchorMultiplier ? `covered:${coveredMultiplier.id}` : tileSignature(tile);
       if (button.dataset.signature !== signature) {
-        button.innerHTML = tileMarkup(tile);
+        button.innerHTML = coveredMultiplier && !anchorMultiplier ? "" : tileMarkup(tile);
         button.dataset.signature = signature;
       }
       button.className = classes.join(" ");
-      button.disabled = state.resolving;
-      button.setAttribute("aria-label", tileLabel(tile));
+      button.disabled = state.resolving || Boolean(coveredMultiplier);
+      button.setAttribute("aria-label", tileLabel(coveredMultiplier || tile));
     }
   }
 }
@@ -599,7 +677,7 @@ function renderBoard() {
 function renderSlots() {
   slotsEl.innerHTML = "";
 
-  for (let col = 0; col < COLS; col += 1) {
+  for (let col = 0; col < SLOT_COUNT; col += 1) {
     const slot = document.createElement("div");
     const value = state.slotFlash[col];
     slot.className = "slot";
@@ -688,10 +766,8 @@ function syncBoardSize() {
 
 function highestMultiplier() {
   let high = 0;
-  for (const row of state.board) {
-    for (const tile of row) {
-      if (tile?.kind === "multiplier") high = Math.max(high, tile.value);
-    }
+  for (const tile of state.multipliers) {
+    high = Math.max(high, tile.value);
   }
   return high;
 }
@@ -710,7 +786,7 @@ function swap(board, a, b) {
   board[b.row][b.col] = next;
 }
 
-function findMatches(board) {
+function findMatches(board, multipliers = board === state.board ? state.multipliers : []) {
   const cells = new Set();
   const runs = [];
 
@@ -718,13 +794,18 @@ function findMatches(board) {
     let col = 0;
     while (col < COLS) {
       const tile = board[row][col];
-      if (!isMatchableCandy(tile)) {
+      if (multiplierAt(row, col, multipliers) || !isMatchableCandy(tile)) {
         col += 1;
         continue;
       }
 
       let end = col + 1;
-      while (end < COLS && isMatchableCandy(board[row][end]) && board[row][end].type === tile.type) {
+      while (
+        end < COLS &&
+        !multiplierAt(row, end, multipliers) &&
+        isMatchableCandy(board[row][end]) &&
+        board[row][end].type === tile.type
+      ) {
         end += 1;
       }
 
@@ -746,13 +827,18 @@ function findMatches(board) {
     let row = 0;
     while (row < ROWS) {
       const tile = board[row][col];
-      if (!isMatchableCandy(tile)) {
+      if (multiplierAt(row, col, multipliers) || !isMatchableCandy(tile)) {
         row += 1;
         continue;
       }
 
       let end = row + 1;
-      while (end < ROWS && isMatchableCandy(board[end][col]) && board[end][col].type === tile.type) {
+      while (
+        end < ROWS &&
+        !multiplierAt(end, col, multipliers) &&
+        isMatchableCandy(board[end][col]) &&
+        board[end][col].type === tile.type
+      ) {
         end += 1;
       }
 
@@ -920,9 +1006,10 @@ function findFishTarget() {
   return candies.length ? randomItem(candies) : null;
 }
 
-function hasLegalMove(board) {
+function hasLegalMove(board, multipliers = board === state.board ? state.multipliers : []) {
   for (let row = 0; row < ROWS; row += 1) {
     for (let col = 0; col < COLS; col += 1) {
+      if (multiplierAt(row, col, multipliers)) continue;
       const here = { row, col };
       const checks = [
         { row, col: col + 1 },
@@ -931,10 +1018,11 @@ function hasLegalMove(board) {
 
       for (const there of checks) {
         if (there.row >= ROWS || there.col >= COLS) continue;
+        if (multiplierAt(there.row, there.col, multipliers)) continue;
         if (canTriggerGenericSpecial(board[here.row][here.col], board[there.row][there.col])) return true;
         const test = cloneBoard(board);
         swap(test, here, there);
-        if (findMatches(test).cells.size > 0) return true;
+        if (findMatches(test, multipliers).cells.size > 0) return true;
       }
     }
   }
@@ -1115,6 +1203,12 @@ function clearFallMarks() {
       if (tile?._merged) delete tile._merged;
     }
   }
+  for (const multiplier of state.multipliers) {
+    if (multiplier._fall) delete multiplier._fall;
+    if (multiplier._merged) delete multiplier._merged;
+    if (multiplier._reward) delete multiplier._reward;
+    if (multiplier._eventTransform) delete multiplier._eventTransform;
+  }
 }
 
 function addWin(amount) {
@@ -1199,6 +1293,7 @@ async function attemptSwap(from, to) {
   }
 
   if (!isAdjacent(from, to)) return;
+  if (multiplierAt(from.row, from.col) || multiplierAt(to.row, to.col)) return;
 
   state.selected = null;
   swap(state.board, from, to);
@@ -1223,7 +1318,7 @@ async function attemptSwap(from, to) {
 
   state.balance -= currentBet();
   state.currentWin = 0;
-  state.slotFlash = Array(COLS).fill(null);
+  state.slotFlash = Array(SLOT_COUNT).fill(null);
   playSound("move");
   await resolveMove(matches, specialPoint || to);
 }
@@ -1256,6 +1351,7 @@ async function handleTileClick(row, col) {
   }
 
   const point = { row, col };
+  if (multiplierAt(row, col)) return;
   if (!state.selected) {
     state.selected = point;
     render();
@@ -1341,7 +1437,7 @@ async function resolveMove(initialMatches, preferredSpawn = null) {
     const collected = collectMultipliers();
     collectEnd();
     if (collected.length > 0) {
-      state.slotFlash = Array(COLS).fill(null);
+      state.slotFlash = Array(SLOT_COUNT).fill(null);
       for (const item of collected) {
         state.slotFlash[item.col] = item.value;
         state.filledSlots.add(item.col);
@@ -1383,7 +1479,7 @@ async function resolveMove(initialMatches, preferredSpawn = null) {
   state.lastWin = state.currentWin;
   await maybeFullDropBonus();
   const showedWinCard = await maybeShowWinCard();
-  state.slotFlash = Array(COLS).fill(null);
+  state.slotFlash = Array(SLOT_COUNT).fill(null);
   state.resolving = false;
   setBoardBusy(false);
   setPerfPhase("idle");
@@ -1467,7 +1563,7 @@ function playWinCountLoop(duration, volume = 0.04) {
 }
 
 async function maybeFullDropBonus() {
-  if (state.filledSlots.size < COLS) return;
+  if (state.filledSlots.size < SLOT_COUNT) return;
 
   const bonus = currentBet() * 10;
   addWin(bonus);
@@ -1477,7 +1573,9 @@ async function maybeFullDropBonus() {
   playSound("win");
   triggerScreenFx("fx-jackpot", 900);
   await wait(resolveDelay(800, 480));
-  state.board = buildBoard();
+  const next = buildBoard();
+  state.board = next.board;
+  state.multipliers = next.multipliers;
   state.filledSlots = new Set();
 }
 
@@ -2179,6 +2277,256 @@ async function processSpecialAwards() {
     setEventPulse(false);
     render();
   }
+}
+
+function collectMultipliers() {
+  const collected = [];
+
+  for (const multiplier of state.multipliers) {
+    if (multiplier.row < ROWS - MULTIPLIER_SIZE) {
+      multiplier.row += 1;
+      multiplier._fall = Math.max(multiplier._fall || 0, 1);
+    }
+
+    if (multiplier.row >= ROWS - MULTIPLIER_SIZE) {
+      collected.push({ col: slotIndexFromMultiplier(multiplier), value: multiplier.value });
+    }
+  }
+
+  if (collected.length) {
+    const collectedIds = new Set(
+      state.multipliers
+        .filter((multiplier) => multiplier.row >= ROWS - MULTIPLIER_SIZE)
+        .map((multiplier) => multiplier.id)
+    );
+    state.multipliers = state.multipliers.filter((multiplier) => !collectedIds.has(multiplier.id));
+  }
+
+  return collected;
+}
+
+function mergeAdjacentMultipliers() {
+  return false;
+}
+
+function multiplierSpawnPoint(value = 10, flags = {}) {
+  const point = pickMultiplierSpawnCell(state.board, (cell) => canPlaceMultiplierAt(cell.row, cell.col, state.multipliers));
+  return point ? createMultiplier(value, point.row, point.col, flags) : null;
+}
+
+function findBoardEventCell({ allowMultiplierTarget = false, useMultiplierRows = false } = {}) {
+  if (useMultiplierRows) {
+    const multiplier = multiplierSpawnPoint(10);
+    return multiplier ? { row: multiplier.row, col: multiplier.col } : null;
+  }
+
+  const cells = [];
+  for (let row = 0; row < ROWS; row += 1) {
+    for (let col = 0; col < COLS; col += 1) {
+      const tile = state.board[row][col];
+      const multiplier = multiplierAt(row, col);
+      if (isOrdinaryCandy(tile) && !multiplier) cells.push({ row, col });
+      if (allowMultiplierTarget && multiplier) cells.push({ row, col });
+    }
+  }
+  return cells.length ? randomItem(cells) : null;
+}
+
+function sniperLockPoint(point) {
+  const multiplier = multiplierAt(point.row, point.col);
+  return multiplier ? { row: multiplier.row, col: multiplier.col, multiplier } : { ...point, multiplier: null };
+}
+
+function markSniperTarget(point) {
+  boardEl.querySelectorAll(".sniper-target").forEach((tile) => tile.classList.remove("sniper-target"));
+  if (!point) return;
+  const lock = sniperLockPoint(point);
+  boardEl.querySelector(tileSelector(lock))?.classList.add("sniper-target");
+}
+
+function transformSniperCandyLine(target, sourceTile) {
+  const horizontal = Math.random() < 0.5;
+  const points = [];
+  const touchedMultipliers = new Map();
+  for (let i = 0; i < (horizontal ? COLS : ROWS); i += 1) {
+    const row = horizontal ? target.row : i;
+    const col = horizontal ? i : target.col;
+    const multiplier = multiplierAt(row, col);
+    if (multiplier) {
+      touchedMultipliers.set(multiplier.id, multiplier);
+      continue;
+    }
+    if (isOrdinaryCandy(state.board[row][col])) points.push({ row, col });
+  }
+
+  let shattered = 0;
+  for (const multiplier of touchedMultipliers.values()) {
+    const chance = multiplier.value >= 100 ? 0.15 : multiplier.value >= 50 ? 0.25 : multiplier.value >= 20 ? 0.35 : 0.45;
+    if (Math.random() >= chance) {
+      multiplier._eventTransform = true;
+      continue;
+    }
+    shattered += 1;
+    for (const cell of multiplierCells(multiplier)) {
+      points.push(cell);
+    }
+    state.multipliers = state.multipliers.filter((item) => item.id !== multiplier.id);
+  }
+
+  for (const point of points) {
+    state.board[point.row][point.col] = { kind: "candy", type: sourceTile.type, _eventTransform: true };
+  }
+  return points.length + shattered;
+}
+
+function transformSniperMultiplierCross(multiplier) {
+  const candidates = [];
+  for (const col of MULTIPLIER_COLS) candidates.push({ row: multiplier.row, col });
+  for (let row = multiplier.row % MULTIPLIER_SIZE; row <= ROWS - MULTIPLIER_SIZE; row += MULTIPLIER_SIZE) {
+    candidates.push({ row, col: multiplier.col });
+  }
+
+  let count = 0;
+  const seen = new Set();
+  for (const point of candidates) {
+    const key = `${point.row},${point.col}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    if (point.row === multiplier.row && point.col === multiplier.col) continue;
+    if (!canPlaceMultiplierAt(point.row, point.col, state.multipliers)) continue;
+    state.multipliers.push(createMultiplier(multiplier.value, point.row, point.col, { _eventTransform: true, _reward: true }));
+    count += 1;
+  }
+  return count;
+}
+
+async function playSniperEvent() {
+  const targets = [];
+  for (let row = 0; row < ROWS; row += 1) {
+    for (let col = 0; col < COLS; col += 1) {
+      const multiplier = multiplierAt(row, col);
+      if (multiplier || isOrdinaryCandy(state.board[row][col])) targets.push({ row, col });
+    }
+  }
+  if (!targets.length) return false;
+
+  const finalTarget = randomItem(targets);
+  const finalLock = sniperLockPoint(finalTarget);
+  const steps = state.fast ? 8 : 15;
+  const stepDelays = sniperStepDelays(steps);
+  playSound("specialReady");
+  for (let i = 0; i < steps; i += 1) {
+    const point = i === steps - 1 ? finalTarget : randomItem(targets);
+    state.sniperTarget = sniperLockPoint(point);
+    render();
+    markSniperTarget(point);
+    await wait(stepDelays[i]);
+  }
+
+  const targetMultiplier = finalLock.multiplier;
+  const targetTile = targetMultiplier || state.board[finalTarget.row][finalTarget.col];
+  const changed = targetMultiplier
+    ? transformSniperMultiplierCross(targetMultiplier)
+    : transformSniperCandyLine(finalTarget, targetTile);
+
+  setStatus(targetMultiplier ? "SNIPER CROSS" : "SNIPER LINE");
+  setEventPulse(true);
+  render();
+  markSniperTarget(finalTarget);
+  spawnParticles(targetMultiplier ? 44 : 24);
+  triggerScreenFx(targetMultiplier ? "fx-blast" : "fx-bump", targetMultiplier ? 560 : 420);
+  playSound(targetMultiplier ? "multiplierHigh" : "specialBlast");
+  await wait(resolveDelay(changed ? 620 : 420, 220));
+
+  state.sniperTarget = null;
+  markSniperTarget(null);
+  clearFallMarks();
+  for (const row of state.board) {
+    for (const tile of row) {
+      if (tile?._reward) delete tile._reward;
+      if (tile?._eventTransform) delete tile._eventTransform;
+    }
+  }
+  setEventPulse(false);
+  return true;
+}
+
+async function processSpecialAwards() {
+  while (state.pendingSpecialAwards > 0) {
+    state.pendingSpecialAwards -= 1;
+    const event = randomBoardEvent();
+    state.miniSlotRolling = true;
+    specialMiniSlotEl.classList.remove("win");
+
+    const steps = state.fast ? 5 : 9;
+    for (let i = 0; i < steps; i += 1) {
+      state.miniSlotPreview = randomBoardEvent();
+      render();
+      await wait(resolveDelay(120, 55));
+    }
+
+    state.miniSlotRolling = false;
+    state.miniSlotWin = true;
+    state.miniSlotPreview = event;
+    setEventPulse(true);
+    render();
+    playSound("specialReady");
+    await wait(resolveDelay(460, 180));
+
+    if (event.kind === "sniper") {
+      setStatus("??瑽?");
+      await playSniperEvent();
+    } else if (event.kind === "multiplier") {
+      const multiplier = multiplierSpawnPoint(event.value, { _reward: true });
+      if (multiplier) {
+        state.multipliers.push(multiplier);
+        setStatus(`?賭葉${eventName(event)}`);
+        render();
+        spawnParticles(event.value >= 50 ? 28 : 18);
+        triggerScreenFx(event.value >= 50 ? "fx-bump" : "fx-pop", 360);
+        playSound("multiplierHigh");
+        await wait(resolveDelay(520, 200));
+        delete multiplier._reward;
+      }
+    } else {
+      const target = findBoardEventCell();
+      if (target) {
+        state.board[target.row][target.col] = chocolateTile(event.type, true);
+        setStatus(`?賭葉${eventName(event)}`);
+        render();
+        spawnParticles(18);
+        triggerScreenFx("fx-pop", 360);
+        playSound("specialSpawn");
+        await wait(resolveDelay(520, 200));
+        const tile = state.board[target.row][target.col];
+        if (tile) delete tile._reward;
+      }
+    }
+
+    state.miniSlotWin = false;
+    setEventPulse(false);
+    render();
+  }
+}
+
+function reshuffleBoard() {
+  const values = state.multipliers.map((multiplier) => multiplier.value);
+  let attempts = 0;
+  do {
+    state.board = makeCandyBoard();
+    state.multipliers = [];
+    for (const value of values) {
+      const multiplier = multiplierSpawnPoint(value);
+      if (multiplier) state.multipliers.push(multiplier);
+    }
+    attempts += 1;
+  } while ((!hasLegalMove(state.board) || findMatches(state.board).cells.size > 0) && attempts < 80);
+
+  if (!hasLegalMove(state.board) || findMatches(state.board).cells.size > 0) {
+    forcePlayablePattern(state.board);
+  }
+
+  setStatus("?日撌脫???");
 }
 
 window.addEventListener("resize", () => scheduleBoardSizeSync(true));

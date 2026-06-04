@@ -728,6 +728,11 @@ button {
   filter: drop-shadow(0 0 8px rgba(255, 232, 82, 0.88));
 }
 
+.tile.multiplier-covered {
+  visibility: hidden;
+  pointer-events: none;
+}
+
 .tile.clearing,
 .tile.falling,
 .tile.reward-drop,
@@ -1254,7 +1259,7 @@ button {
 .drop-arrows,
 .slots {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 2px;
   width: var(--board-width, 100%);
 }
