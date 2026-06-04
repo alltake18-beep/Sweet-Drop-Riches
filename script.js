@@ -3,7 +3,7 @@ const COLS = 6;
 const SLOT_COUNT = 3;
 const MULTIPLIER_SIZE = 2;
 const MULTIPLIER_COLS = [0, 2, 4];
-const SYMBOL_VERSION = "symbol-rules-37";
+const SYMBOL_VERSION = "symbol-rules-38";
 const PERF_ENABLED = new URLSearchParams(window.location.search).has("perf");
 const SPECIAL_METER_TARGET = 20;
 const BET_STEPS = [20, 50, 100, 200, 500];
@@ -2349,8 +2349,8 @@ function multiplierDropDistance(multiplier) {
 function multiplierColumnDropDistance(multiplier, col) {
   let distance = 0;
   for (let row = multiplier.row + MULTIPLIER_SIZE; row < ROWS; row += 1) {
-    if (state.board[row][col] || multiplierAtExcept(row, col, multiplier)) break;
-    distance += 1;
+    if (multiplierAtExcept(row, col, multiplier)) break;
+    if (!state.board[row][col]) distance += 1;
   }
   return distance;
 }
