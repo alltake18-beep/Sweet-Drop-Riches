@@ -1,6 +1,6 @@
 const ROWS = 9;
 const COLS = 5;
-const SYMBOL_VERSION = "symbol-rules-22";
+const SYMBOL_VERSION = "symbol-rules-23";
 const SPECIAL_METER_TARGET = 20;
 const BET_STEPS = [20, 50, 100, 200, 500];
 const CANDIES = ["red", "blue", "green", "orange", "yellow", "purple"];
@@ -15,6 +15,7 @@ const WIN_TIERS = [
 
 const boardEl = document.getElementById("board");
 const slotsEl = document.getElementById("slots");
+const fxCanvas = document.getElementById("fxCanvas");
 const specialMeterTextEl = document.getElementById("specialMeterText");
 const specialMeterFillEl = document.getElementById("specialMeterFill");
 const specialMiniSlotEl = document.getElementById("specialMiniSlot");
@@ -53,6 +54,12 @@ const state = {
   musicStep: 0,
   activeTones: 0,
   lastSoundAt: {},
+  fx: {
+    context: null,
+    dpr: 1,
+    items: [],
+    frame: null,
+  },
   pointer: null,
   ignoreClick: false,
   specialMeter: 0,
@@ -394,6 +401,7 @@ function syncBoardSize() {
 
   phone.style.setProperty("--board-width", `${width}px`);
   boardEl.style.height = `${Math.round((width * ROWS) / COLS)}px`;
+  resizeFxCanvas();
 }
 
 function highestMultiplier() {
@@ -1159,20 +1167,27 @@ function spawnParticles(count) {
   const host = document.querySelector(".play-area");
   if (!host || document.hidden) return;
 
-  const limit = window.innerWidth <= 520 ? 12 : 20;
+  const hostRect = host.getBoundingClientRect();
+  const limit = window.innerWidth <= 520 ? 20 : 34;
   const actualCount = Math.min(count, limit);
-  for (let i = 0; i < actualCount; i += 1) {
-    const particle = document.createElement("span");
-    particle.className = "particle";
-    particle.style.setProperty("--x", `${35 + Math.random() * 30}%`);
-    particle.style.setProperty("--y", `${44 + Math.random() * 26}%`);
-    particle.style.setProperty("--dx", `${Math.random() * 220 - 110}px`);
-    particle.style.setProperty("--dy", `${Math.random() * -190 - 40}px`);
-    particle.style.setProperty("--r", `${Math.random() * 180}deg`);
-    particle.style.setProperty("--color", randomItem(colors));
-    host.appendChild(particle);
-    window.setTimeout(() => particle.remove(), 760);
-  }
+  const now = performance.now();
+  const items = Array.from({ length: actualCount }, () => ({
+    kind: "burst",
+    start: now,
+    delay: Math.random() * 70,
+    duration: 620 + Math.random() * 180,
+    x: hostRect.width * (0.36 + Math.random() * 0.28),
+    y: hostRect.height * (0.44 + Math.random() * 0.24),
+    angle: Math.random() * Math.PI * 2,
+    distance: 46 + Math.random() * 116,
+    radius: 3.5 + Math.random() * 5,
+    rotation: Math.random() * Math.PI,
+    spin: (Math.random() - 0.5) * 5,
+    color: randomItem(colors),
+    hot: "#fff8a5",
+    alpha: 0.95,
+  }));
+  enqueueFx(items);
 }
 
 function triggerScreenFx(className, duration = 420) {
@@ -1182,6 +1197,90 @@ function triggerScreenFx(className, duration = 420) {
   void phone.offsetWidth;
   phone.classList.add(className);
   window.setTimeout(() => phone.classList.remove(className), duration);
+}
+
+function resizeFxCanvas() {
+  if (!fxCanvas) return;
+  const rect = fxCanvas.getBoundingClientRect();
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const width = Math.max(1, Math.floor(rect.width * dpr));
+  const height = Math.max(1, Math.floor(rect.height * dpr));
+  if (fxCanvas.width !== width || fxCanvas.height !== height) {
+    fxCanvas.width = width;
+    fxCanvas.height = height;
+  }
+  state.fx.dpr = dpr;
+  state.fx.context = fxCanvas.getContext("2d");
+}
+
+function enqueueFx(items) {
+  if (!fxCanvas || document.hidden) return;
+  resizeFxCanvas();
+  state.fx.items.push(...items);
+  if (state.fx.items.length > 90) {
+    state.fx.items.splice(0, state.fx.items.length - 90);
+  }
+  if (!state.fx.frame) {
+    state.fx.frame = requestAnimationFrame(drawFx);
+  }
+}
+
+function drawFx(now) {
+  const context = state.fx.context;
+  if (!context || !fxCanvas) {
+    state.fx.frame = null;
+    return;
+  }
+
+  const dpr = state.fx.dpr || 1;
+  context.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
+
+  state.fx.items = state.fx.items.filter((item) => {
+    const elapsed = now - item.start - item.delay;
+    if (elapsed < 0) return true;
+    const t = Math.min(1, elapsed / item.duration);
+    const ease = 1 - (1 - t) ** 3;
+    let x = item.x + (item.tx || 0) * ease;
+    let y = item.y + (item.ty || 0) * ease;
+    let alpha = item.alpha ?? 1;
+    let radius = item.radius || 6;
+
+    if (item.kind === "burst") {
+      x += Math.cos(item.angle) * item.distance * ease;
+      y += Math.sin(item.angle) * item.distance * ease;
+      alpha *= 1 - t;
+      radius *= 1 + t * 0.4;
+    } else {
+      const arc = Math.sin(t * Math.PI) * (item.arc || 0);
+      y -= arc;
+      alpha *= t < 0.16 ? t / 0.16 : 1 - Math.max(0, t - 0.76) / 0.24;
+      radius *= 1 + Math.sin(t * Math.PI) * 0.45;
+    }
+
+    context.save();
+    context.globalAlpha = Math.max(0, alpha);
+    context.translate(x * dpr, y * dpr);
+    context.rotate((item.rotation || 0) + t * (item.spin || 0));
+    context.scale(dpr, dpr);
+    const gradient = context.createRadialGradient(-radius * 0.25, -radius * 0.25, 1, 0, 0, radius * 2.2);
+    gradient.addColorStop(0, "#ffffff");
+    gradient.addColorStop(0.28, item.hot || "#fff27a");
+    gradient.addColorStop(0.68, item.color || "#ff59d6");
+    gradient.addColorStop(1, "rgba(255,255,255,0)");
+    context.fillStyle = gradient;
+    context.beginPath();
+    context.arc(0, 0, radius, 0, Math.PI * 2);
+    context.fill();
+    context.restore();
+
+    return t < 1;
+  });
+
+  if (state.fx.items.length > 0) {
+    state.fx.frame = requestAnimationFrame(drawFx);
+  } else {
+    state.fx.frame = null;
+  }
 }
 
 function spawnCollectEnergy(cells) {
@@ -1194,24 +1293,33 @@ function spawnCollectEnergy(cells) {
   const targetX = targetRect.left + targetRect.width * 0.5 - hostRect.left;
   const targetY = targetRect.top + targetRect.height * 0.46 - hostRect.top;
 
-  const maxEnergy = window.innerWidth <= 520 ? 10 : 16;
+  const maxEnergy = window.innerWidth <= 520 ? 14 : 22;
   const points = Array.from(cells).slice(0, maxEnergy);
+  const now = performance.now();
+  const items = [];
   for (const key of points) {
     const tile = boardEl.querySelector(tileSelector(keyToPoint(key)));
     if (!tile) continue;
     const rect = tile.getBoundingClientRect();
     const startX = rect.left + rect.width * 0.5 - hostRect.left;
     const startY = rect.top + rect.height * 0.5 - hostRect.top;
-    const mote = document.createElement("span");
-    mote.className = "collect-energy";
-    mote.style.setProperty("--x", `${startX}px`);
-    mote.style.setProperty("--y", `${startY}px`);
-    mote.style.setProperty("--tx", `${targetX - startX}px`);
-    mote.style.setProperty("--ty", `${targetY - startY}px`);
-    mote.style.setProperty("--delay", `${Math.random() * 90}ms`);
-    host.appendChild(mote);
-    window.setTimeout(() => mote.remove(), 760);
+    items.push({
+      kind: "fly",
+      start: now,
+      delay: Math.random() * 110,
+      duration: 620 + Math.random() * 120,
+      x: startX,
+      y: startY,
+      tx: targetX - startX,
+      ty: targetY - startY,
+      arc: 24 + Math.random() * 26,
+      radius: 4.5 + Math.random() * 2,
+      color: "#ff58d4",
+      hot: "#fff37e",
+      alpha: 0.96,
+    });
   }
+  enqueueFx(items);
 }
 
 function spawnSlotEnergy(col, value) {
@@ -1225,19 +1333,30 @@ function spawnSlotEnergy(col, value) {
   const startY = hostRect.height * 0.48;
   const targetX = targetRect.left + targetRect.width * 0.5 - hostRect.left;
   const targetY = targetRect.top + targetRect.height * 0.48 - hostRect.top;
-  const count = value >= 100 ? 7 : value >= 50 ? 5 : value >= 20 ? 4 : 3;
+  const count = value >= 100 ? 12 : value >= 50 ? 9 : value >= 20 ? 6 : 4;
+  const now = performance.now();
+  const items = [];
 
   for (let i = 0; i < count; i += 1) {
-    const mote = document.createElement("span");
-    mote.className = value >= 50 ? "slot-energy jackpot-energy" : "slot-energy";
-    mote.style.setProperty("--x", `${startX + Math.random() * 54 - 27}px`);
-    mote.style.setProperty("--y", `${startY + Math.random() * 42 - 21}px`);
-    mote.style.setProperty("--tx", `${targetX - startX}px`);
-    mote.style.setProperty("--ty", `${targetY - startY}px`);
-    mote.style.setProperty("--delay", `${i * 34}ms`);
-    host.appendChild(mote);
-    window.setTimeout(() => mote.remove(), 840);
+    const x = startX + Math.random() * 54 - 27;
+    const y = startY + Math.random() * 42 - 21;
+    items.push({
+      kind: "fly",
+      start: now,
+      delay: i * 28,
+      duration: value >= 50 ? 760 : 660,
+      x,
+      y,
+      tx: targetX - x,
+      ty: targetY - y,
+      arc: value >= 50 ? 50 : 32,
+      radius: value >= 50 ? 7 : 5,
+      color: value >= 50 ? "#ff40df" : "#ffd958",
+      hot: value >= 50 ? "#ffffff" : "#fff8a6",
+      alpha: value >= 50 ? 1 : 0.92,
+    });
   }
+  enqueueFx(items);
 }
 
 function keyToPoint(key) {

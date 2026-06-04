@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Sweet Drop Riches Prototype</title>
-    <link rel="stylesheet" href="styles.css?v=symbol-rules-22" />
+    <link rel="stylesheet" href="styles.css?v=symbol-rules-23" />
   </head>
   <body>
     <main class="stage">
@@ -14,11 +14,12 @@
 
         <header class="topbar">
           <div class="brand" aria-label="Sweet Drop Riches">
-            <img class="brand-logo" src="assets/ui/logo-sweet-drop-riches.png?v=symbol-rules-22" alt="Sweet Drop Riches" />
+            <img class="brand-logo" src="assets/ui/logo-sweet-drop-riches.png?v=symbol-rules-23" alt="Sweet Drop Riches" />
           </div>
         </header>
 
         <div class="play-area">
+          <canvas id="fxCanvas" class="fx-canvas" aria-hidden="true"></canvas>
           <div class="board-shell">
             <div class="board-bar">
               <div class="special-meter" aria-label="特殊糖收集進度">
@@ -30,7 +31,7 @@
                   <i id="specialMeterFill"></i>
                 </div>
                 <div class="mini-slot" id="specialMiniSlot" aria-label="特殊糖小拉霸">
-                  <img id="miniSlotIcon" src="assets/symbols/special-colorbomb.png?v=symbol-rules-22" alt="" />
+                  <img id="miniSlotIcon" src="assets/symbols/special-colorbomb.png?v=symbol-rules-23" alt="" />
                 </div>
               </div>
             </div>
@@ -95,6 +96,6 @@
       </section>
     </main>
 
-    <script src="script.js?v=symbol-rules-22"></script>
+    <script src="script.js?v=symbol-rules-23"></script>
   </body>
 </html>
