@@ -1,17 +1,17 @@
 const ROWS = 9;
 const COLS = 5;
-const SYMBOL_VERSION = "symbol-rules-27";
+const SYMBOL_VERSION = "symbol-rules-28";
 const PERF_ENABLED = new URLSearchParams(window.location.search).has("perf");
 const SPECIAL_METER_TARGET = 20;
 const BET_STEPS = [20, 50, 100, 200, 500];
 const CANDIES = ["red", "blue", "green", "orange", "yellow", "purple"];
 const MULTIPLIER_VALUES = [5, 10, 20, 30, 50, 100];
 const WIN_TIERS = [
-  { ratio: 50, label: "EPIC WIN", sound: "jackpot", className: "tier-epic", duration: 1900, quick: 1000, particles: 72 },
-  { ratio: 30, label: "SUPER WIN", sound: "superWin", className: "tier-super", duration: 1650, quick: 860, particles: 58 },
-  { ratio: 20, label: "MEGA WIN", sound: "superWin", className: "tier-mega", duration: 1400, quick: 760, particles: 46 },
-  { ratio: 10, label: "BIG WIN", sound: "win", className: "tier-big", duration: 1120, quick: 620, particles: 34 },
-  { ratio: 5, label: "NICE", sound: "win", className: "tier-nice", duration: 820, quick: 480, particles: 22 },
+  { ratio: 100, label: "LEGENDARY WIN", sound: "jackpot", className: "tier-legendary", duration: 2500, quick: 2500, particles: 86, countVolume: 0.055 },
+  { ratio: 50, label: "EPIC WIN", sound: "jackpot", className: "tier-epic", duration: 2500, quick: 2500, particles: 72, countVolume: 0.05 },
+  { ratio: 30, label: "SUPER MEGA WIN", sound: "superWin", className: "tier-super", duration: 2500, quick: 2500, particles: 58, countVolume: 0.045 },
+  { ratio: 20, label: "MEGA WIN", sound: "superWin", className: "tier-mega", duration: 2500, quick: 2500, particles: 46, countVolume: 0.04 },
+  { ratio: 5, label: "BIG WIN", sound: "win", className: "tier-big", duration: 2500, quick: 2500, particles: 34, countVolume: 0.035 },
 ];
 
 const boardEl = document.getElementById("board");
@@ -1322,7 +1322,8 @@ async function maybeShowWinCard() {
   winAmountEl.textContent = "0.00";
   winOverlay.className = `win-overlay ${tier.className}`;
   winOverlay.classList.remove("hidden");
-  animateWinAmount(state.currentWin, resolveDelay(tier.duration * 0.72, tier.quick * 0.76));
+  animateWinAmount(state.currentWin, 2000);
+  playWinCountLoop(2000, tier.countVolume || 0.04);
   spawnParticles(tier.particles);
   triggerScreenFx(ratio >= 50 ? "fx-jackpot" : ratio >= 20 ? "fx-blast" : "fx-bump", ratio >= 50 ? 980 : 640);
   playSound(tier.sound || "win");
@@ -1345,6 +1346,25 @@ function animateWinAmount(target, duration) {
     }
   };
   requestAnimationFrame(tick);
+}
+
+function playWinCountLoop(duration, volume = 0.04) {
+  if (!state.sound) return;
+  const started = performance.now();
+  let step = 0;
+  const timer = window.setInterval(() => {
+    const elapsed = performance.now() - started;
+    if (elapsed >= duration || winOverlay.classList.contains("hidden")) {
+      window.clearInterval(timer);
+      playChord([880, 1175, 1568], 0.16, { volume: Math.min(0.08, volume + 0.018) });
+      return;
+    }
+    const progress = elapsed / duration;
+    const freq = 620 + progress * 520 + (step % 3) * 55;
+    playTone(freq, 0.045, { type: "triangle", volume });
+    if (step % 4 === 0) playTone(980 + progress * 620, 0.035, { type: "sine", volume: volume * 0.62 });
+    step += 1;
+  }, 78);
 }
 
 async function maybeFullDropBonus() {
