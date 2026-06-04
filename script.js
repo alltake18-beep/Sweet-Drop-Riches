@@ -1,6 +1,6 @@
 const ROWS = 9;
-const COLS = 5;
-const SYMBOL_VERSION = "symbol-rules-31";
+const COLS = 6;
+const SYMBOL_VERSION = "symbol-rules-32";
 const PERF_ENABLED = new URLSearchParams(window.location.search).has("perf");
 const SPECIAL_METER_TARGET = 20;
 const BET_STEPS = [20, 50, 100, 200, 500];
@@ -1980,16 +1980,25 @@ function findBoardEventCell({ allowMultiplierTarget = false } = {}) {
   return cells.length ? randomItem(cells) : null;
 }
 
-function surroundingPoints(row, col) {
+function surroundingPoints(row, col, radius = 1) {
   const points = [];
-  for (let r = row - 1; r <= row + 1; r += 1) {
-    for (let c = col - 1; c <= col + 1; c += 1) {
+  for (let r = row - radius; r <= row + radius; r += 1) {
+    for (let c = col - radius; c <= col + radius; c += 1) {
       if (r === row && c === col) continue;
       if (r < 0 || r >= ROWS || c < 0 || c >= COLS) continue;
       points.push({ row: r, col: c });
     }
   }
   return points;
+}
+
+function sniperStepDelays(steps) {
+  const normalTotal = steps * 80 + ((steps - 1) * steps * 10) / 2;
+  const quickTotal = steps * 38;
+  const total = state.fast ? quickTotal : normalTotal;
+  const weights = Array.from({ length: steps }, (_, index) => 0.42 + (index / Math.max(1, steps - 1)) ** 1.9 * 1.68);
+  const weightTotal = weights.reduce((sum, value) => sum + value, 0);
+  return weights.map((weight) => (weight / weightTotal) * total);
 }
 
 function cloneSniperResultTile(tile) {
@@ -2017,26 +2026,30 @@ async function playSniperEvent() {
 
   const finalTarget = randomItem(targets);
   const steps = state.fast ? 8 : 15;
+  const stepDelays = sniperStepDelays(steps);
   playSound("specialReady");
   for (let i = 0; i < steps; i += 1) {
     const point = i === steps - 1 ? finalTarget : randomItem(targets);
     state.sniperTarget = point;
     render();
     markSniperTarget(point);
-    await wait(resolveDelay(80 + i * 10, 38));
+    await wait(stepDelays[i]);
   }
 
   const targetTile = state.board[finalTarget.row][finalTarget.col];
   const resultTile = cloneSniperResultTile(targetTile);
-  for (const point of surroundingPoints(finalTarget.row, finalTarget.col)) {
+  const radius = Math.random() < 0.28 ? 2 : 1;
+  const transformedPoints = surroundingPoints(finalTarget.row, finalTarget.col, radius);
+  for (const point of transformedPoints) {
     state.board[point.row][point.col] = { ...resultTile, _eventTransform: true };
   }
   setStatus("狙擊槍鎖定");
   setEventPulse(true);
+  setStatus(radius === 2 ? "狙擊槍 24 格" : "狙擊槍 8 格");
   render();
   markSniperTarget(finalTarget);
-  spawnParticles(24);
-  triggerScreenFx("fx-bump", 420);
+  spawnParticles(radius === 2 ? 44 : 24);
+  triggerScreenFx(radius === 2 ? "fx-blast" : "fx-bump", radius === 2 ? 560 : 420);
   playSound(targetTile?.kind === "multiplier" ? "multiplierHigh" : "specialBlast");
   await wait(resolveDelay(620, 220));
 

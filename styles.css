@@ -450,7 +450,7 @@ button {
   position: relative;
   flex: 0 0 auto;
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   grid-template-rows: repeat(9, minmax(0, 1fr));
   gap: 3px;
   width: var(--board-width, 100%);
@@ -1254,7 +1254,7 @@ button {
 .drop-arrows,
 .slots {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 2px;
   width: var(--board-width, 100%);
 }
