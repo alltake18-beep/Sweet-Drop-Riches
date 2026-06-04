@@ -1,15 +1,16 @@
 const ROWS = 9;
 const COLS = 5;
-const SYMBOL_VERSION = "symbol-rules-19";
+const SYMBOL_VERSION = "symbol-rules-20";
 const SPECIAL_METER_TARGET = 20;
 const BET_STEPS = [20, 50, 100, 200, 500];
 const CANDIES = ["red", "blue", "green", "orange", "yellow", "purple"];
 const MULTIPLIER_VALUES = [5, 10, 20, 30, 50, 100];
 const WIN_TIERS = [
+  { ratio: 50, label: "EPIC WIN", sound: "jackpot" },
   { ratio: 30, label: "SUPER WIN" },
   { ratio: 20, label: "MEGA WIN" },
   { ratio: 10, label: "BIG WIN" },
-  { ratio: 5, label: "GOOD WIN" },
+  { ratio: 5, label: "NICE" },
 ];
 
 const boardEl = document.getElementById("board");
@@ -47,6 +48,9 @@ const state = {
   sound: true,
   mode: "normal",
   audioContext: null,
+  masterGain: null,
+  musicTimer: null,
+  musicStep: 0,
   pointer: null,
   ignoreClick: false,
   specialMeter: 0,
@@ -289,6 +293,9 @@ function renderBoard() {
       if (tile?._reward) {
         button.classList.add("reward-drop");
       }
+      if (tile?._spawn) {
+        button.classList.add("special-spawn");
+      }
       if (state.invalid === key) {
         button.classList.add("invalid");
       }
@@ -320,6 +327,7 @@ function renderSlots() {
     slot.className = "slot";
     if (value) slot.classList.add("flash");
     if (state.filledSlots.has(col)) slot.classList.add("filled");
+    if (value >= 50) slot.classList.add("jackpot-slot");
     slot.innerHTML = value ? `<strong>x${value}</strong>` : "<strong></strong>";
     slotsEl.appendChild(slot);
   }
@@ -699,7 +707,7 @@ async function processSpecialAwards() {
     state.miniSlotWin = true;
     state.miniSlotPreview = reward;
     render();
-    playSound("win");
+    playSound("specialReady");
     await wait(resolveDelay(520, 220));
 
     const target = findSpecialAwardCell(reward);
@@ -707,8 +715,8 @@ async function processSpecialAwards() {
       state.board[target.row][target.col] = specialRewardTile(reward);
       setStatus(`抽中${specialName(reward.special)}`);
       render();
-      spawnParticles(14);
-      playSound("collect");
+      spawnParticles(18);
+      playSound("specialSpawn");
       await wait(resolveDelay(520, 220));
       const tile = state.board[target.row][target.col];
       if (tile) delete tile._reward;
@@ -742,7 +750,7 @@ function collectMultipliers() {
 
   if (mergedThisCollection) {
     setStatus("倍數球合併");
-    playSound("collect");
+    playSound("multiplierMerge");
   }
 
   return collected;
@@ -986,10 +994,14 @@ async function resolveMove(initialMatches, preferredSpawn = null) {
     addWin(clearScore);
     const createdSpecial = chooseCreatedSpecial(matches, preferredSpawn);
     const expandedCells = expandSpecialEffects(matches.cells);
+    const hasSpecialBlast = Array.from(expandedCells).some((key) => {
+      const [row, col] = key.split(",").map(Number);
+      return Boolean(state.board[row][col]?.special);
+    });
     state.clearing = expandedCells;
     setStatus(cascades === 0 ? "消除收集" : `連鎖 ${cascades + 1}`);
     render();
-    playSound(cascades === 0 ? "match" : "cascade");
+    playSound(hasSpecialBlast ? "specialBlast" : cascades === 0 ? "match" : "cascade");
     spawnCollectEnergy(expandedCells);
     await wait(resolveDelay(330, 120));
 
@@ -1008,8 +1020,14 @@ async function resolveMove(initialMatches, preferredSpawn = null) {
         kind: "candy",
         type: createdSpecial.type,
         special: createdSpecial.special,
+        _spawn: true,
       };
       setStatus(`${specialName(createdSpecial.special)} 生成`);
+      render();
+      spawnParticles(12);
+      playSound("specialSpawn");
+      await wait(resolveDelay(260, 100));
+      delete state.board[createdSpecial.row][createdSpecial.col]._spawn;
     }
     state.clearing = new Set();
 
@@ -1020,17 +1038,19 @@ async function resolveMove(initialMatches, preferredSpawn = null) {
         state.slotFlash[item.col] = item.value;
         state.filledSlots.add(item.col);
         addWin(currentBet() * item.value);
+        spawnSlotEnergy(item.col, item.value);
       }
       setStatus(collected.map((item) => `第${item.col + 1}槽 x${item.value}`).join("  "));
       render();
-      spawnParticles(collected.length * 10);
-      playSound("collect");
+      spawnParticles(collected.length * 12);
+      playMultiplierCollectSound(Math.max(...collected.map((item) => item.value)));
       await wait(resolveDelay(520, 170));
     }
 
     collapseColumns();
     fillEmptyCells();
     render();
+    playSound("drop");
     await wait(resolveDelay(430, 170));
     clearFallMarks();
 
@@ -1059,7 +1079,7 @@ async function maybeShowWinCard() {
   winAmountEl.textContent = formatMoney(state.currentWin);
   winOverlay.classList.remove("hidden");
   spawnParticles(28);
-  playSound("win");
+  playSound(tier.sound || (ratio >= 30 ? "superWin" : "win"));
   await wait(resolveDelay(1080, 620));
   winOverlay.classList.add("hidden");
   return true;
@@ -1168,40 +1188,142 @@ function spawnCollectEnergy(cells) {
   }
 }
 
+function spawnSlotEnergy(col, value) {
+  const host = document.querySelector(".play-area");
+  const slot = slotsEl.children[col];
+  if (!host || !slot) return;
+
+  const hostRect = host.getBoundingClientRect();
+  const targetRect = slot.getBoundingClientRect();
+  const startX = hostRect.width * 0.5;
+  const startY = hostRect.height * 0.48;
+  const targetX = targetRect.left + targetRect.width * 0.5 - hostRect.left;
+  const targetY = targetRect.top + targetRect.height * 0.48 - hostRect.top;
+  const count = value >= 100 ? 12 : value >= 50 ? 9 : value >= 20 ? 6 : 4;
+
+  for (let i = 0; i < count; i += 1) {
+    const mote = document.createElement("span");
+    mote.className = value >= 50 ? "slot-energy jackpot-energy" : "slot-energy";
+    mote.style.setProperty("--x", `${startX + Math.random() * 54 - 27}px`);
+    mote.style.setProperty("--y", `${startY + Math.random() * 42 - 21}px`);
+    mote.style.setProperty("--tx", `${targetX - startX}px`);
+    mote.style.setProperty("--ty", `${targetY - startY}px`);
+    mote.style.setProperty("--delay", `${i * 28}ms`);
+    host.appendChild(mote);
+    window.setTimeout(() => mote.remove(), 920);
+  }
+}
+
 function keyToPoint(key) {
   const [row, col] = key.split(",").map(Number);
   return { row, col };
 }
 
-function playSound(kind) {
-  if (!state.sound) return;
+function ensureAudio() {
   const AudioContext = window.AudioContext || window.webkitAudioContext;
-  if (!AudioContext) return;
+  if (!AudioContext) return null;
   if (!state.audioContext) state.audioContext = new AudioContext();
+  if (!state.masterGain) {
+    state.masterGain = state.audioContext.createGain();
+    state.masterGain.gain.value = 0.42;
+    state.masterGain.connect(state.audioContext.destination);
+  }
+  if (state.audioContext.state === "suspended") state.audioContext.resume();
+  return state.audioContext;
+}
 
-  const context = state.audioContext;
+function playTone(freq, duration = 0.08, options = {}) {
+  const context = ensureAudio();
+  if (!context || !state.masterGain) return;
+  const now = context.currentTime + (options.delay || 0);
   const osc = context.createOscillator();
   const gain = context.createGain();
-  const now = context.currentTime;
-  const settings = {
-    move: [360, 0.04],
-    match: [620, 0.08],
-    cascade: [760, 0.07],
-    collect: [980, 0.12],
-    win: [1280, 0.2],
-    error: [150, 0.08],
-  }[kind] || [440, 0.06];
-
-  osc.type = kind === "error" ? "sawtooth" : "triangle";
-  osc.frequency.setValueAtTime(settings[0], now);
-  if (kind === "win") osc.frequency.exponentialRampToValueAtTime(520, now + settings[1]);
+  osc.type = options.type || "triangle";
+  osc.frequency.setValueAtTime(freq, now);
+  if (options.to) osc.frequency.exponentialRampToValueAtTime(Math.max(40, options.to), now + duration);
   gain.gain.setValueAtTime(0.0001, now);
-  gain.gain.exponentialRampToValueAtTime(0.08, now + 0.01);
-  gain.gain.exponentialRampToValueAtTime(0.0001, now + settings[1]);
+  gain.gain.exponentialRampToValueAtTime(options.volume || 0.08, now + 0.012);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
   osc.connect(gain);
-  gain.connect(context.destination);
+  gain.connect(state.masterGain);
   osc.start(now);
-  osc.stop(now + settings[1] + 0.02);
+  osc.stop(now + duration + 0.03);
+}
+
+function playChord(freqs, duration, options = {}) {
+  freqs.forEach((freq, index) => playTone(freq, duration, { ...options, delay: (options.delay || 0) + index * 0.012 }));
+}
+
+function startBackgroundMusic() {
+  if (!state.sound || state.musicTimer) return;
+  const notes = [196, 247, 294, 330, 294, 247, 220, 262];
+  state.musicTimer = window.setInterval(() => {
+    if (!state.sound || document.hidden) return;
+    const base = notes[state.musicStep % notes.length];
+    state.musicStep += 1;
+    playTone(base, 0.055, { type: "sine", volume: 0.018 });
+    if (state.musicStep % 4 === 0) playTone(98, 0.045, { type: "square", volume: 0.012 });
+  }, 430);
+}
+
+function stopBackgroundMusic() {
+  if (!state.musicTimer) return;
+  window.clearInterval(state.musicTimer);
+  state.musicTimer = null;
+}
+
+function playMultiplierCollectSound(value) {
+  if (value >= 100) {
+    playSound("jackpot");
+  } else if (value >= 50) {
+    playSound("superWin");
+  } else if (value >= 20) {
+    playSound("multiplierHigh");
+  } else {
+    playSound("slotProgress");
+  }
+}
+
+function playSound(kind) {
+  if (!state.sound) return;
+  ensureAudio();
+  startBackgroundMusic();
+
+  const soundMap = {
+    button: () => playChord([420, 630], 0.045, { volume: 0.04 }),
+    move: () => playTone(420, 0.065, { to: 720, volume: 0.055 }),
+    match: () => playChord([720, 920, 1120], 0.105, { volume: 0.07 }),
+    cascade: () => {
+      playTone(620, 0.07, { to: 380, type: "square", volume: 0.045 });
+      playTone(880, 0.06, { delay: 0.07, volume: 0.045 });
+    },
+    drop: () => playTone(260, 0.08, { to: 170, type: "sine", volume: 0.045 }),
+    specialReady: () => playChord([660, 990, 1320], 0.16, { volume: 0.07 }),
+    specialSpawn: () => {
+      playTone(780, 0.08, { to: 1320, volume: 0.07 });
+      playChord([990, 1485], 0.11, { delay: 0.09, volume: 0.06 });
+    },
+    specialBlast: () => {
+      playTone(140, 0.16, { to: 70, type: "sawtooth", volume: 0.08 });
+      playChord([720, 960, 1280], 0.12, { delay: 0.05, volume: 0.07 });
+    },
+    multiplierMerge: () => playChord([520, 780, 1040], 0.14, { volume: 0.07 }),
+    multiplierHigh: () => {
+      [620, 780, 980, 1240].forEach((freq, i) => playTone(freq, 0.08, { delay: i * 0.055, volume: 0.065 }));
+    },
+    slotProgress: () => playChord([520, 690], 0.075, { volume: 0.055 }),
+    win: () => [660, 880, 1100, 1320].forEach((freq, i) => playTone(freq, 0.1, { delay: i * 0.075, volume: 0.07 })),
+    superWin: () => {
+      [520, 660, 880, 1100, 1320, 1760].forEach((freq, i) => playTone(freq, 0.11, { delay: i * 0.065, type: i > 3 ? "square" : "triangle", volume: 0.075 }));
+    },
+    jackpot: () => {
+      [392, 523, 659, 784, 1047, 1319, 1568].forEach((freq, i) => playTone(freq, 0.16, { delay: i * 0.07, type: i > 3 ? "square" : "triangle", volume: 0.085 }));
+      playChord([262, 330, 392, 523], 0.42, { delay: 0.48, type: "sawtooth", volume: 0.055 });
+    },
+    error: () => playTone(150, 0.09, { to: 92, type: "sawtooth", volume: 0.055 }),
+  };
+
+  (soundMap[kind] || soundMap.button)();
 }
 
 boardEl.addEventListener("pointerdown", (event) => {
@@ -1261,31 +1383,41 @@ boardEl.addEventListener("click", (event) => {
 
 document.getElementById("betDown").addEventListener("click", () => {
   if (state.resolving) return;
+  playSound("button");
   state.betIndex = Math.max(0, state.betIndex - 1);
   render();
 });
 
 document.getElementById("betUp").addEventListener("click", () => {
   if (state.resolving) return;
+  playSound("button");
   state.betIndex = Math.min(BET_STEPS.length - 1, state.betIndex + 1);
   render();
 });
 
 fastButton.addEventListener("click", () => {
+  playSound("button");
   state.fast = !state.fast;
   render();
 });
 
 menuButton.addEventListener("click", () => {
+  playSound("button");
   menuPanel.classList.toggle("hidden");
 });
 
 closeMenu.addEventListener("click", () => {
+  playSound("button");
   menuPanel.classList.add("hidden");
 });
 
 soundMenuButton.addEventListener("click", () => {
   state.sound = !state.sound;
+  if (state.sound) {
+    playSound("button");
+  } else {
+    stopBackgroundMusic();
+  }
   render();
 });
 
