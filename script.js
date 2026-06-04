@@ -1,16 +1,16 @@
 const ROWS = 9;
 const COLS = 5;
-const SYMBOL_VERSION = "symbol-rules-20";
+const SYMBOL_VERSION = "symbol-rules-21";
 const SPECIAL_METER_TARGET = 20;
 const BET_STEPS = [20, 50, 100, 200, 500];
 const CANDIES = ["red", "blue", "green", "orange", "yellow", "purple"];
 const MULTIPLIER_VALUES = [5, 10, 20, 30, 50, 100];
 const WIN_TIERS = [
-  { ratio: 50, label: "EPIC WIN", sound: "jackpot" },
-  { ratio: 30, label: "SUPER WIN" },
-  { ratio: 20, label: "MEGA WIN" },
-  { ratio: 10, label: "BIG WIN" },
-  { ratio: 5, label: "NICE" },
+  { ratio: 50, label: "EPIC WIN", sound: "jackpot", className: "tier-epic" },
+  { ratio: 30, label: "SUPER WIN", sound: "superWin", className: "tier-super" },
+  { ratio: 20, label: "MEGA WIN", sound: "superWin", className: "tier-mega" },
+  { ratio: 10, label: "BIG WIN", sound: "win", className: "tier-big" },
+  { ratio: 5, label: "NICE", sound: "win", className: "tier-nice" },
 ];
 
 const boardEl = document.getElementById("board");
@@ -286,6 +286,7 @@ function renderBoard() {
       if (tile?._fall) {
         button.classList.add("falling");
         button.style.setProperty("--fall-y", `-${tile._fall * 118}%`);
+        button.style.setProperty("--fall-delay", `${Math.min(140, col * 22 + tile._fall * 12)}ms`);
       }
       if (tile?._merged) {
         button.classList.add("merged");
@@ -751,6 +752,7 @@ function collectMultipliers() {
   if (mergedThisCollection) {
     setStatus("倍數球合併");
     playSound("multiplierMerge");
+    triggerScreenFx("fx-bump", 360);
   }
 
   return collected;
@@ -1002,8 +1004,9 @@ async function resolveMove(initialMatches, preferredSpawn = null) {
     setStatus(cascades === 0 ? "消除收集" : `連鎖 ${cascades + 1}`);
     render();
     playSound(hasSpecialBlast ? "specialBlast" : cascades === 0 ? "match" : "cascade");
+    if (hasSpecialBlast) triggerScreenFx("fx-blast", 460);
     spawnCollectEnergy(expandedCells);
-    await wait(resolveDelay(330, 120));
+    await wait(resolveDelay(hasSpecialBlast ? 430 : 380, 150));
 
     let clearedCandyCount = 0;
     for (const key of expandedCells) {
@@ -1026,7 +1029,8 @@ async function resolveMove(initialMatches, preferredSpawn = null) {
       render();
       spawnParticles(12);
       playSound("specialSpawn");
-      await wait(resolveDelay(260, 100));
+      triggerScreenFx("fx-pop", 300);
+      await wait(resolveDelay(340, 140));
       delete state.board[createdSpecial.row][createdSpecial.col]._spawn;
     }
     state.clearing = new Set();
@@ -1043,8 +1047,11 @@ async function resolveMove(initialMatches, preferredSpawn = null) {
       setStatus(collected.map((item) => `第${item.col + 1}槽 x${item.value}`).join("  "));
       render();
       spawnParticles(collected.length * 12);
-      playMultiplierCollectSound(Math.max(...collected.map((item) => item.value)));
-      await wait(resolveDelay(520, 170));
+      const highCollect = Math.max(...collected.map((item) => item.value));
+      playMultiplierCollectSound(highCollect);
+      if (highCollect >= 100) triggerScreenFx("fx-jackpot", 780);
+      else if (highCollect >= 20) triggerScreenFx("fx-bump", 420);
+      await wait(resolveDelay(highCollect >= 100 ? 760 : highCollect >= 50 ? 640 : 540, 190));
     }
 
     collapseColumns();
@@ -1077,10 +1084,12 @@ async function maybeShowWinCard() {
   winLabelEl.textContent = tier.label;
   winMultiplierEl.textContent = `${Math.floor(ratio)}x`;
   winAmountEl.textContent = formatMoney(state.currentWin);
+  winOverlay.className = `win-overlay ${tier.className}`;
   winOverlay.classList.remove("hidden");
-  spawnParticles(28);
-  playSound(tier.sound || (ratio >= 30 ? "superWin" : "win"));
-  await wait(resolveDelay(1080, 620));
+  spawnParticles(ratio >= 50 ? 54 : ratio >= 30 ? 42 : ratio >= 20 ? 34 : 24);
+  triggerScreenFx(ratio >= 50 ? "fx-jackpot" : ratio >= 20 ? "fx-blast" : "fx-bump", ratio >= 50 ? 980 : 640);
+  playSound(tier.sound || "win");
+  await wait(resolveDelay(ratio >= 50 ? 1500 : ratio >= 20 ? 1250 : 980, 700));
   winOverlay.classList.add("hidden");
   return true;
 }
@@ -1094,6 +1103,7 @@ async function maybeFullDropBonus() {
   render();
   spawnParticles(30);
   playSound("win");
+  triggerScreenFx("fx-jackpot", 900);
   await wait(resolveDelay(800, 480));
   state.board = buildBoard();
   state.filledSlots = new Set();
@@ -1158,6 +1168,15 @@ function spawnParticles(count) {
     host.appendChild(particle);
     window.setTimeout(() => particle.remove(), 950);
   }
+}
+
+function triggerScreenFx(className, duration = 420) {
+  const phone = document.querySelector(".phone");
+  if (!phone) return;
+  phone.classList.remove("fx-bump", "fx-pop", "fx-blast", "fx-jackpot");
+  void phone.offsetWidth;
+  phone.classList.add(className);
+  window.setTimeout(() => phone.classList.remove(className), duration);
 }
 
 function spawnCollectEnergy(cells) {
@@ -1256,14 +1275,16 @@ function playChord(freqs, duration, options = {}) {
 
 function startBackgroundMusic() {
   if (!state.sound || state.musicTimer) return;
-  const notes = [196, 247, 294, 330, 294, 247, 220, 262];
+  const notes = [196, 247, 294, 330, 392, 330, 294, 247, 220, 262, 330, 392, 330, 262, 247, 220];
   state.musicTimer = window.setInterval(() => {
     if (!state.sound || document.hidden) return;
     const base = notes[state.musicStep % notes.length];
     state.musicStep += 1;
-    playTone(base, 0.055, { type: "sine", volume: 0.018 });
-    if (state.musicStep % 4 === 0) playTone(98, 0.045, { type: "square", volume: 0.012 });
-  }, 430);
+    playTone(base, 0.06, { type: "sine", volume: 0.016 });
+    if (state.musicStep % 2 === 0) playTone(base * 2, 0.035, { type: "triangle", volume: 0.008 });
+    if (state.musicStep % 4 === 0) playTone(98, 0.052, { type: "square", volume: 0.014 });
+    if (state.musicStep % 8 === 0) playTone(147, 0.045, { type: "sawtooth", volume: 0.01 });
+  }, 330);
 }
 
 function stopBackgroundMusic() {
