@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="170%">
+      <feDropShadow dx="0" dy="20" stdDeviation="16" flood-color="#050013" flood-opacity=".45"/>
+    </filter>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="10" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  
+  <defs>
+    <radialGradient id="g" cx="34%" cy="22%" r="74%"><stop stop-color="#87fbff"/><stop offset=".43" stop-color="#139fff"/><stop offset=".72" stop-color="#006ce2"/><stop offset="1" stop-color="#092181"/></radialGradient>
+    <radialGradient id="shine" cx="34%" cy="20%" r="34%"><stop stop-color="#fff" stop-opacity=".9"/><stop offset=".6" stop-color="#fff" stop-opacity=".18"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+  </defs>
+  <circle cx="256" cy="256" r="170" fill="url(#g)" stroke="#55e5ff" stroke-width="9" filter="url(#shadow)"/>
+  <path d="M115 260c20-109 123-187 232-153 80 25 121 101 94 176-32 91-147 130-235 72 82 4 145-31 167-91 16-45-4-86-45-102-49-19-110 8-132 58-16 37-1 72 32 83 35 12 73-9 80-43 5-24-10-42-33-44-29-3-54 22-51 54-43-45-8-118 60-133 78-18 151 36 151 117 0 91-86 166-190 159-96-6-169-77-173-168 14 12 29 17 43 15Z" fill="#003d9f" opacity=".45"/>
+  <path d="M137 322c93-20 161-77 200-170" fill="none" stroke="#f0ffff" stroke-width="32" stroke-linecap="round" opacity=".92"/>
+  <path d="M140 245c90 4 165-27 226-94" fill="none" stroke="#bff7ff" stroke-width="25" stroke-linecap="round" opacity=".56"/>
+  <ellipse cx="197" cy="153" rx="73" ry="32" fill="url(#shine)" transform="rotate(-22 197 153)"/>
+  <ellipse cx="176" cy="182" rx="25" ry="11" fill="#fff" opacity=".4" transform="rotate(-22 176 182)"/>
+
+</svg>

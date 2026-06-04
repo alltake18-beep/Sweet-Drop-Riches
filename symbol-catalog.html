@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sweet Drop Riches Symbol Catalog</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: "Noto Sans TC", "Microsoft JhengHei", Arial, sans-serif;
+        background: #0f0b2a;
+        color: #fff;
+      }
+
+      body {
+        margin: 0;
+        padding: 24px;
+        background:
+          radial-gradient(circle at 20% 0%, rgba(255, 71, 191, 0.18), transparent 32%),
+          radial-gradient(circle at 80% 10%, rgba(49, 192, 255, 0.14), transparent 34%),
+          #0f0b2a;
+      }
+
+      h1,
+      h2 {
+        margin: 0;
+        letter-spacing: 0;
+      }
+
+      h1 {
+        font-size: 28px;
+      }
+
+      h2 {
+        margin-top: 28px;
+        font-size: 18px;
+        color: #ffd967;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(116px, 1fr));
+        gap: 12px;
+        margin-top: 12px;
+      }
+
+      .symbol {
+        display: grid;
+        justify-items: center;
+        gap: 8px;
+        padding: 12px 8px 10px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.055);
+      }
+
+      .symbol img {
+        width: 82px;
+        height: 82px;
+        object-fit: contain;
+      }
+
+      .symbol span {
+        max-width: 100%;
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.78);
+        text-align: center;
+        overflow-wrap: anywhere;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Sweet Drop Riches Symbol Catalog</h1>
+
+    <h2>一般糖</h2>
+    <section class="grid" id="normalSymbols"></section>
+
+    <h2>特殊糖</h2>
+    <section class="grid" id="specialSymbols"></section>
+
+    <h2>倍數糖</h2>
+    <section class="grid" id="multiplierSymbols"></section>
+
+    <script>
+      const version = "symbol-rules-14";
+      const colors = ["blue", "green", "orange", "purple", "red", "yellow"];
+      const normal = colors.map((color) => [`${color}`, `assets/symbols/candy-${color}.png?v=${version}`]);
+      const special = [
+        ...colors.map((color) => [`horizontal-${color}`, `assets/symbols/special-horizontal-${color}.png?v=${version}`]),
+        ...colors.map((color) => [`vertical-${color}`, `assets/symbols/special-vertical-${color}.png?v=${version}`]),
+        ...colors.map((color) => [`bomb-${color}`, `assets/symbols/special-bomb-${color}.png?v=${version}`]),
+        ["colorbomb", `assets/symbols/special-colorbomb.png?v=${version}`],
+        ["fish", `assets/symbols/special-fish.png?v=${version}`],
+      ];
+      const multipliers = ["x5", "x10", "x20", "x30", "x50", "x100", "x200"].map((value) => [
+        value,
+        `assets/symbols/multiplier-${value}.svg?v=${version}`,
+      ]);
+
+      function render(targetId, items) {
+        const target = document.getElementById(targetId);
+        target.innerHTML = items
+          .map(
+            ([label, src]) => `
+              <div class="symbol">
+                <img src="${src}" alt="${label}" />
+                <span>${label}</span>
+              </div>
+            `,
+          )
+          .join("");
+      }
+
+      render("normalSymbols", normal);
+      render("specialSymbols", special);
+      render("multiplierSymbols", multipliers);
+    </script>
+  </body>
+</html>

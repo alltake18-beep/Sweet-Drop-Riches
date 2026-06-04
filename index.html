@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sweet Drop Riches Prototype</title>
+    <link rel="stylesheet" href="styles.css?v=symbol-rules-14" />
+  </head>
+  <body>
+    <main class="stage">
+      <section class="phone" aria-label="Sweet Drop Riches prototype">
+        <div class="ambient ambient-one"></div>
+        <div class="ambient ambient-two"></div>
+
+        <header class="topbar">
+          <div class="brand" aria-label="Sweet Drop Riches">
+            <span class="brand-small">Sweet Drop</span>
+            <span class="brand-large">Riches</span>
+          </div>
+        </header>
+
+        <div class="play-area">
+          <div class="board-shell">
+            <div class="board-bar">
+              <div class="slot-counter">
+                <span>7槽收集獎</span>
+                <strong id="slotProgress">0/7</strong>
+              </div>
+              <div class="special-meter" aria-label="特殊糖收集進度">
+                <div class="special-meter-copy">
+                  <span>特殊糖收集</span>
+                  <strong id="specialMeterText">0/20</strong>
+                </div>
+                <div class="special-meter-track">
+                  <i id="specialMeterFill"></i>
+                </div>
+                <div class="mini-slot" id="specialMiniSlot" aria-label="特殊糖小拉霸">
+                  <img id="miniSlotIcon" src="assets/symbols/special-colorbomb.png?v=symbol-rules-14" alt="" />
+                </div>
+              </div>
+              <button
+                class="mini-button"
+                id="soundToggle"
+                type="button"
+                title="音效"
+                aria-label="音效"
+              >
+                ♪
+              </button>
+            </div>
+
+            <div id="board" class="board" aria-label="7x7 糖果盤面"></div>
+
+            <div class="drop-arrows" aria-hidden="true">
+              <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+            </div>
+
+            <div id="slots" class="slots" aria-label="7 個倍數收集槽"></div>
+          </div>
+
+          <div id="winOverlay" class="win-overlay hidden" aria-live="polite">
+            <div class="win-rays"></div>
+            <div class="win-copy">
+              <em>本步總贏分</em>
+              <b id="winAmount">0.00</b>
+              <span id="winLabel">MEGA WIN</span>
+              <strong id="winMultiplier">20x</strong>
+            </div>
+          </div>
+
+          <div id="statusText" class="status-text">清出通道，追高倍糖果</div>
+        </div>
+
+        <footer class="hud">
+          <div class="hud-panel">
+            <span>BALANCE</span>
+            <strong id="balance">2,732.00</strong>
+          </div>
+          <div class="bet-panel">
+            <button id="betDown" type="button" title="降低 Bet" aria-label="降低 Bet">−</button>
+            <div>
+              <span>BET</span>
+              <strong id="bet">100</strong>
+            </div>
+            <button id="betUp" type="button" title="提高 Bet" aria-label="提高 Bet">+</button>
+          </div>
+          <button
+            class="icon-button"
+            id="fastButton"
+            type="button"
+            title="切換快速解析"
+            aria-label="切換快速解析"
+            aria-pressed="false"
+          >
+            ▶▶
+          </button>
+          <button class="icon-button" id="menuButton" type="button" title="選單" aria-label="選單">
+            ☰
+          </button>
+        </footer>
+
+        <div id="menuPanel" class="menu-panel hidden" role="dialog" aria-label="選單">
+          <div class="menu-head">
+            <strong>Sweet Drop Riches</strong>
+            <button id="closeMenu" type="button" aria-label="關閉">×</button>
+          </div>
+          <button id="newBoardButton" type="button">刷新盤面</button>
+          <button id="modeButton" type="button">一般模式</button>
+          <button id="soundMenuButton" type="button">音效開啟</button>
+        </div>
+      </section>
+    </main>
+
+    <script src="script.js?v=symbol-rules-14"></script>
+  </body>
+</html>

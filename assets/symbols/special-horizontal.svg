@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="170%">
+      <feDropShadow dx="0" dy="20" stdDeviation="16" flood-color="#050013" flood-opacity=".45"/>
+    </filter>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="10" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  
+  <defs><radialGradient id="g" cx="36%" cy="24%" r="72%"><stop stop-color="#eefcff"/><stop offset=".5" stop-color="#21a9ff"/><stop offset="1" stop-color="#0d3ca4"/></radialGradient></defs>
+  <circle cx="256" cy="256" r="160" fill="url(#g)" filter="url(#shadow)"/>
+  <path d="M94 184h322M80 256h352M94 328h322" stroke="#ffffff" stroke-width="42" stroke-linecap="round" opacity=".86"/>
+  <path d="M94 184h322M80 256h352M94 328h322" stroke="#1b8fff" stroke-width="22" stroke-linecap="round"/>
+  <ellipse cx="198" cy="140" rx="60" ry="30" fill="#fff" opacity=".75" transform="rotate(-20 198 140)"/>
+
+</svg>

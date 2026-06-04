@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="170%">
+      <feDropShadow dx="0" dy="20" stdDeviation="16" flood-color="#050013" flood-opacity=".45"/>
+    </filter>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="10" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  
+  <defs>
+    <radialGradient id="g" cx="38%" cy="25%" r="74%">
+      <stop offset="0" stop-color="#ffb7b3"/><stop offset=".3" stop-color="#ff3631"/><stop offset=".68" stop-color="#d4071d"/><stop offset="1" stop-color="#790016"/>
+    </radialGradient>
+    <radialGradient id="shine" cx="30%" cy="18%" r="36%"><stop stop-color="#fff" stop-opacity=".92"/><stop offset=".55" stop-color="#fff" stop-opacity=".2"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+  </defs>
+  <path d="M104 303c-27-75 43-172 146-204 98-30 189 9 215 84 29 84-40 188-153 223-100 31-181-28-208-103Z" fill="url(#g)" stroke="#ff7d58" stroke-width="8" filter="url(#shadow)"/>
+  <path d="M161 211c36-70 136-104 203-61 37 24 41 63 11 91-34 32-101 20-131-15-22-25-35-36-83-15Z" fill="#ff675e" opacity=".78"/>
+  <path d="M321 200c-49 3-86 40-85 84 38-24 79-19 111 11 25-43 14-79-26-95Z" fill="#a90018" opacity=".82"/>
+  <circle cx="302" cy="219" r="34" fill="none" stroke="#ffb3a8" stroke-width="20" opacity=".82"/>
+  <path d="M143 319c82 56 229 36 306-79-11 126-249 194-306 79Z" fill="#5e0014" opacity=".28"/>
+  <ellipse cx="204" cy="159" rx="72" ry="31" fill="url(#shine)" transform="rotate(-23 204 159)"/>
+  <ellipse cx="175" cy="190" rx="26" ry="11" fill="#fff" opacity=".42" transform="rotate(-23 175 190)"/>
+
+</svg>
