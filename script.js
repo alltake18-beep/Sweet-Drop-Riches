@@ -3,21 +3,21 @@ const COLS = 6;
 const SLOT_COUNT = 3;
 const MULTIPLIER_SIZE = 2;
 const MULTIPLIER_COLS = [0, 2, 4];
-const SYMBOL_VERSION = "symbol-rules-35";
+const SYMBOL_VERSION = "symbol-rules-36";
 const PERF_ENABLED = new URLSearchParams(window.location.search).has("perf");
-const SPECIAL_METER_TARGET = 20;
+const SPECIAL_METER_TARGET = 10;
 const BET_STEPS = [20, 50, 100, 200, 500];
 const CANDIES = ["red", "blue", "green", "orange", "purple"];
 const MULTIPLIER_VALUES = [5, 10, 20, 30, 50, 100];
 const COLLECTION_SLOT_ITEM_WEIGHTS = [
-  { kind: "chocolate", weight: 32 },
-  { kind: "multiplier", value: 5, weight: 18 },
-  { kind: "multiplier", value: 10, weight: 12 },
-  { kind: "multiplier", value: 20, weight: 7 },
-  { kind: "multiplier", value: 30, weight: 3 },
-  { kind: "multiplier", value: 50, weight: 1.5 },
-  { kind: "multiplier", value: 100, weight: 0.5 },
-  { kind: "flame", weight: 26 },
+  { kind: "chocolate", weight: 25 },
+  { kind: "multiplier", value: 5, weight: 10.714 },
+  { kind: "multiplier", value: 10, weight: 7.143 },
+  { kind: "multiplier", value: 20, weight: 4.167 },
+  { kind: "multiplier", value: 30, weight: 1.786 },
+  { kind: "multiplier", value: 50, weight: 0.893 },
+  { kind: "multiplier", value: 100, weight: 0.298 },
+  { kind: "flame", weight: 50 },
 ];
 const FLAME_PATTERN_WEIGHTS = [
   { kind: "col1", weight: 25 },
