@@ -1,6 +1,6 @@
-const ROWS = 7;
-const COLS = 7;
-const SYMBOL_VERSION = "symbol-rules-15";
+const ROWS = 9;
+const COLS = 5;
+const SYMBOL_VERSION = "symbol-rules-16";
 const SPECIAL_METER_TARGET = 20;
 const BET_STEPS = [20, 50, 100, 200, 500];
 const CANDIES = ["red", "blue", "green", "orange", "yellow", "purple"];
@@ -25,8 +25,7 @@ const fastButton = document.getElementById("fastButton");
 const menuButton = document.getElementById("menuButton");
 const closeMenu = document.getElementById("closeMenu");
 const menuPanel = document.getElementById("menuPanel");
-const newBoardButton = document.getElementById("newBoardButton");
-const modeButton = document.getElementById("modeButton");
+const soundMenuButton = document.getElementById("soundMenuButton");
 const winOverlay = document.getElementById("winOverlay");
 const winLabelEl = document.getElementById("winLabel");
 const winMultiplierEl = document.getElementById("winMultiplier");
@@ -335,7 +334,7 @@ function renderHud() {
   balanceEl.textContent = formatMoney(state.balance);
   betEl.textContent = currentBet().toLocaleString("en-US");
   fastButton.setAttribute("aria-pressed", String(state.fast));
-  modeButton.textContent = state.mode === "high" ? "High Roller" : "一般模式";
+  soundMenuButton.textContent = state.sound ? "音效開啟" : "音效關閉";
 }
 
 function render() {
@@ -346,7 +345,7 @@ function render() {
 }
 
 function syncBoardSize() {
-  boardEl.style.height = `${Math.round(boardEl.clientWidth)}px`;
+  boardEl.style.height = `${Math.round((boardEl.clientWidth * ROWS) / COLS)}px`;
 }
 
 function highestMultiplier() {
@@ -954,6 +953,7 @@ async function resolveMove(initialMatches, preferredSpawn = null) {
     setStatus(cascades === 0 ? "消除收集" : `連鎖 ${cascades + 1}`);
     render();
     playSound(cascades === 0 ? "match" : "cascade");
+    spawnCollectEnergy(expandedCells);
     await wait(resolveDelay(330, 120));
 
     let clearedCandyCount = 0;
@@ -1103,6 +1103,39 @@ function spawnParticles(count) {
   }
 }
 
+function spawnCollectEnergy(cells) {
+  const host = document.querySelector(".play-area");
+  const target = document.querySelector(".special-meter");
+  if (!host || !target) return;
+
+  const hostRect = host.getBoundingClientRect();
+  const targetRect = target.getBoundingClientRect();
+  const targetX = targetRect.left + targetRect.width * 0.5 - hostRect.left;
+  const targetY = targetRect.top + targetRect.height * 0.46 - hostRect.top;
+
+  for (const key of cells) {
+    const tile = boardEl.querySelector(tileSelector(keyToPoint(key)));
+    if (!tile) continue;
+    const rect = tile.getBoundingClientRect();
+    const startX = rect.left + rect.width * 0.5 - hostRect.left;
+    const startY = rect.top + rect.height * 0.5 - hostRect.top;
+    const mote = document.createElement("span");
+    mote.className = "collect-energy";
+    mote.style.setProperty("--x", `${startX}px`);
+    mote.style.setProperty("--y", `${startY}px`);
+    mote.style.setProperty("--tx", `${targetX - startX}px`);
+    mote.style.setProperty("--ty", `${targetY - startY}px`);
+    mote.style.setProperty("--delay", `${Math.random() * 90}ms`);
+    host.appendChild(mote);
+    window.setTimeout(() => mote.remove(), 820);
+  }
+}
+
+function keyToPoint(key) {
+  const [row, col] = key.split(",").map(Number);
+  return { row, col };
+}
+
 function playSound(kind) {
   if (!state.sound) return;
   const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -1214,16 +1247,9 @@ closeMenu.addEventListener("click", () => {
   menuPanel.classList.add("hidden");
 });
 
-newBoardButton.addEventListener("click", () => {
-  menuPanel.classList.add("hidden");
-  startNewBoard(true);
-});
-
-modeButton.addEventListener("click", () => {
-  if (state.resolving) return;
-  state.mode = state.mode === "normal" ? "high" : "normal";
-  menuPanel.classList.add("hidden");
-  startNewBoard(true);
+soundMenuButton.addEventListener("click", () => {
+  state.sound = !state.sound;
+  render();
 });
 
 window.addEventListener("resize", syncBoardSize);

@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Sweet Drop Riches Prototype</title>
-    <link rel="stylesheet" href="styles.css?v=symbol-rules-15" />
+    <link rel="stylesheet" href="styles.css?v=symbol-rules-16" />
   </head>
   <body>
     <main class="stage">
@@ -14,8 +14,7 @@
 
         <header class="topbar">
           <div class="brand" aria-label="Sweet Drop Riches">
-            <span class="brand-small">Sweet Drop</span>
-            <span class="brand-large">Riches</span>
+            <span class="brand-title">Sweet Drop Riches</span>
           </div>
         </header>
 
@@ -31,18 +30,18 @@
                   <i id="specialMeterFill"></i>
                 </div>
                 <div class="mini-slot" id="specialMiniSlot" aria-label="特殊糖小拉霸">
-                  <img id="miniSlotIcon" src="assets/symbols/special-colorbomb.png?v=symbol-rules-15" alt="" />
+                  <img id="miniSlotIcon" src="assets/symbols/special-colorbomb.png?v=symbol-rules-16" alt="" />
                 </div>
               </div>
             </div>
 
-            <div id="board" class="board" aria-label="7x7 糖果盤面"></div>
+            <div id="board" class="board" aria-label="5x9 糖果盤面"></div>
 
             <div class="drop-arrows" aria-hidden="true">
-              <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+              <span></span><span></span><span></span><span></span><span></span>
             </div>
 
-            <div id="slots" class="slots" aria-label="7 個倍數收集槽"></div>
+            <div id="slots" class="slots" aria-label="5 個倍數收集槽"></div>
           </div>
 
           <div id="winOverlay" class="win-overlay hidden" aria-live="polite">
@@ -91,12 +90,11 @@
             <strong>Sweet Drop Riches</strong>
             <button id="closeMenu" type="button" aria-label="關閉">×</button>
           </div>
-          <button id="newBoardButton" type="button">刷新盤面</button>
-          <button id="modeButton" type="button">一般模式</button>
+          <button id="soundMenuButton" type="button">音效開啟</button>
         </div>
       </section>
     </main>
 
-    <script src="script.js?v=symbol-rules-15"></script>
+    <script src="script.js?v=symbol-rules-16"></script>
   </body>
 </html>
