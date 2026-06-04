@@ -1,6 +1,6 @@
 const ROWS = 9;
 const COLS = 5;
-const SYMBOL_VERSION = "symbol-rules-17";
+const SYMBOL_VERSION = "symbol-rules-18";
 const SPECIAL_METER_TARGET = 20;
 const BET_STEPS = [20, 50, 100, 200, 500];
 const CANDIES = ["red", "blue", "green", "orange", "yellow", "purple"];
@@ -345,7 +345,44 @@ function render() {
 }
 
 function syncBoardSize() {
-  boardEl.style.height = `${Math.round((boardEl.clientWidth * ROWS) / COLS)}px`;
+  const phone = document.querySelector(".phone");
+  const topbar = document.querySelector(".topbar");
+  const playArea = document.querySelector(".play-area");
+  const boardShell = document.querySelector(".board-shell");
+  const boardBar = document.querySelector(".board-bar");
+  const dropArrows = document.querySelector(".drop-arrows");
+  const statusText = document.querySelector(".status-text");
+  const hud = document.querySelector(".hud");
+
+  if (!phone || !playArea || !boardShell || !boardBar || !dropArrows || !statusText || !hud) return;
+
+  const phoneStyles = getComputedStyle(phone);
+  const playStyles = getComputedStyle(playArea);
+  const shellStyles = getComputedStyle(boardShell);
+  const verticalPadding =
+    parseFloat(playStyles.paddingTop) +
+    parseFloat(playStyles.paddingBottom) +
+    parseFloat(shellStyles.paddingTop) +
+    parseFloat(shellStyles.paddingBottom) +
+    parseFloat(phoneStyles.borderTopWidth) +
+    parseFloat(phoneStyles.borderBottomWidth);
+  const fixedHeight =
+    topbar.getBoundingClientRect().height +
+    boardBar.getBoundingClientRect().height +
+    dropArrows.getBoundingClientRect().height +
+    slotsEl.getBoundingClientRect().height +
+    statusText.getBoundingClientRect().height +
+    hud.getBoundingClientRect().height +
+    verticalPadding +
+    10;
+  const viewportHeight = window.visualViewport?.height || window.innerHeight || phone.clientHeight;
+  const phoneHeight = Math.min(phone.clientHeight || viewportHeight, viewportHeight);
+  const maxByHeight = Math.max(220, ((phoneHeight - fixedHeight) * COLS) / ROWS);
+  const maxByWidth = Math.max(220, boardShell.clientWidth - parseFloat(shellStyles.paddingLeft) - parseFloat(shellStyles.paddingRight));
+  const width = Math.floor(Math.min(maxByWidth, maxByHeight));
+
+  phone.style.setProperty("--board-width", `${width}px`);
+  boardEl.style.height = `${Math.round((width * ROWS) / COLS)}px`;
 }
 
 function highestMultiplier() {
@@ -1253,6 +1290,7 @@ soundMenuButton.addEventListener("click", () => {
 });
 
 window.addEventListener("resize", syncBoardSize);
+window.visualViewport?.addEventListener("resize", syncBoardSize);
 
 window.setInterval(() => {
   if (state.resolving || state.miniSlotRolling || state.miniSlotWin) return;
