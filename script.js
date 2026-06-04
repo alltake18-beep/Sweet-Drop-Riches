@@ -1,6 +1,6 @@
 const ROWS = 9;
 const COLS = 5;
-const SYMBOL_VERSION = "symbol-rules-25";
+const SYMBOL_VERSION = "symbol-rules-26";
 const PERF_ENABLED = new URLSearchParams(window.location.search).has("perf");
 const SPECIAL_METER_TARGET = 20;
 const BET_STEPS = [20, 50, 100, 200, 500];
@@ -71,7 +71,11 @@ const state = {
     fps: 60,
     lastPanelUpdate: 0,
     resolveCount: 0,
+    phase: "idle",
+    phaseStarted: 0,
   },
+  layoutDirty: true,
+  layoutFrame: null,
   pointer: null,
   ignoreClick: false,
   specialMeter: 0,
@@ -113,6 +117,16 @@ function startPerfSpan(name) {
   return () => recordPerf(name, performance.now() - started);
 }
 
+function setPerfPhase(phase) {
+  if (!state.perf.enabled) return;
+  state.perf.phase = phase;
+  state.perf.phaseStarted = performance.now();
+}
+
+function setBoardBusy(isBusy) {
+  document.querySelector(".phone")?.classList.toggle("board-busy", isBusy);
+}
+
 function updatePerfPanel(force = false) {
   if (!state.perf.enabled || !perfPanel) return;
   const now = performance.now();
@@ -150,6 +164,7 @@ function initPerfMonitor() {
       if (gap > 50) {
         state.perf.slowFrames += 1;
         recordPerf("frame.gap", gap);
+        recordPerf(`frame.gap.${state.perf.phase || "idle"}`, gap);
       }
     }
     state.perf.lastFrame = now;
@@ -245,6 +260,39 @@ function specialAsset(special, type) {
     return `assets/symbols/special-${special}-${type}.png?v=${SYMBOL_VERSION}`;
   }
   return `assets/symbols/special-${special}.png?v=${SYMBOL_VERSION}`;
+}
+
+function allSymbolAssets() {
+  const assets = [
+    ...CANDIES.map(candyAsset),
+    ...MULTIPLIER_VALUES.map(multiplierAsset),
+    "assets/symbols/multiplier-x200.svg?v=" + SYMBOL_VERSION,
+    specialAsset("fish"),
+    specialAsset("colorbomb"),
+  ];
+  for (const type of CANDIES) {
+    assets.push(specialAsset("horizontal", type));
+    assets.push(specialAsset("vertical", type));
+    assets.push(specialAsset("bomb", type));
+  }
+  return Array.from(new Set(assets));
+}
+
+function preloadSymbolAssets() {
+  const done = startPerfSpan("assets.preload");
+  const promises = allSymbolAssets().map((src) => {
+    const image = new Image();
+    image.decoding = "async";
+    image.src = src;
+    return (image.decode ? image.decode() : new Promise((resolve) => {
+      image.onload = resolve;
+      image.onerror = resolve;
+    })).catch(() => {});
+  });
+  Promise.allSettled(promises).then(() => {
+    done();
+    if (state.perf.enabled) console.info("[Sweet Drop Riches] symbol assets preloaded", promises.length);
+  });
 }
 
 function randomSpecialReward() {
@@ -489,7 +537,19 @@ function render() {
   measurePerf("render.board", renderBoard);
   measurePerf("render.slots", renderSlots);
   measurePerf("render.hud", renderHud);
-  measurePerf("layout.sync", syncBoardSize);
+  scheduleBoardSizeSync();
+}
+
+function scheduleBoardSizeSync(force = false) {
+  if (!force && !state.layoutDirty) return;
+  state.layoutDirty = true;
+  if (state.layoutFrame) return;
+  state.layoutFrame = requestAnimationFrame(() => {
+    state.layoutFrame = null;
+    if (!state.layoutDirty) return;
+    state.layoutDirty = false;
+    measurePerf("layout.sync", syncBoardSize);
+  });
 }
 
 function syncBoardSize() {
@@ -1126,8 +1186,9 @@ async function handleTileClick(row, col) {
 }
 
 async function resolveMove(initialMatches, preferredSpawn = null) {
-  const resolveEnd = startPerfSpan("move.resolve.total");
   state.resolving = true;
+  setBoardBusy(true);
+  setPerfPhase("resolve");
   let matches = initialMatches;
   let cascades = 0;
   render();
@@ -1144,6 +1205,7 @@ async function resolveMove(initialMatches, preferredSpawn = null) {
     });
     matchEnd();
     state.clearing = expandedCells;
+    setPerfPhase(hasSpecialBlast ? "special-clear" : "clear");
     setStatus(cascades === 0 ? "消除收集" : `連鎖 ${cascades + 1}`);
     render();
     playSound(hasSpecialBlast ? "specialBlast" : cascades === 0 ? "match" : "cascade");
@@ -1165,6 +1227,7 @@ async function resolveMove(initialMatches, preferredSpawn = null) {
     clearEnd();
     addSpecialMeter(clearedCandyCount);
     if (createdSpecial) {
+      setPerfPhase("special-spawn");
       state.board[createdSpecial.row][createdSpecial.col] = {
         kind: "candy",
         type: createdSpecial.type,
@@ -1182,6 +1245,7 @@ async function resolveMove(initialMatches, preferredSpawn = null) {
     state.clearing = new Set();
 
     const collectEnd = startPerfSpan("move.collect.mult");
+    setPerfPhase("collect");
     const collected = collectMultipliers();
     collectEnd();
     if (collected.length > 0) {
@@ -1203,6 +1267,7 @@ async function resolveMove(initialMatches, preferredSpawn = null) {
     }
 
     const collapseEnd = startPerfSpan("move.collapse");
+    setPerfPhase("drop");
     collapseColumns();
     collapseEnd();
     const fillEnd = startPerfSpan("move.fill");
@@ -1223,10 +1288,11 @@ async function resolveMove(initialMatches, preferredSpawn = null) {
   const showedWinCard = await maybeShowWinCard();
   state.slotFlash = Array(COLS).fill(null);
   state.resolving = false;
+  setBoardBusy(false);
+  setPerfPhase("idle");
   render();
   await ensureLegalMove();
   setStatus(showedWinCard ? "大獎入帳" : "繼續追高倍糖果");
-  resolveEnd();
   if (state.perf.enabled) {
     state.perf.resolveCount += 1;
     updatePerfPanel(true);
@@ -1250,6 +1316,7 @@ async function maybeShowWinCard() {
   const tier = WIN_TIERS.find((item) => ratio >= item.ratio);
   if (!tier) return false;
 
+  setPerfPhase("win-card");
   winLabelEl.textContent = tier.label;
   winMultiplierEl.textContent = `${Math.floor(ratio)}x`;
   winAmountEl.textContent = formatMoney(state.currentWin);
@@ -1260,6 +1327,7 @@ async function maybeShowWinCard() {
   playSound(tier.sound || "win");
   await wait(resolveDelay(ratio >= 50 ? 1500 : ratio >= 20 ? 1250 : 980, 700));
   winOverlay.classList.add("hidden");
+  setPerfPhase("resolve");
   return true;
 }
 
@@ -1788,8 +1856,8 @@ soundMenuButton.addEventListener("click", () => {
   render();
 });
 
-window.addEventListener("resize", syncBoardSize);
-window.visualViewport?.addEventListener("resize", syncBoardSize);
+window.addEventListener("resize", () => scheduleBoardSizeSync(true));
+window.visualViewport?.addEventListener("resize", () => scheduleBoardSizeSync(true));
 
 window.setInterval(() => {
   if (state.resolving || state.miniSlotRolling || state.miniSlotWin) return;
@@ -1797,5 +1865,6 @@ window.setInterval(() => {
   renderHud();
 }, 1300);
 
+preloadSymbolAssets();
 initPerfMonitor();
 startNewBoard();

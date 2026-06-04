@@ -553,6 +553,31 @@ button {
   animation: special-float 2.2s ease-in-out infinite;
 }
 
+.phone.board-busy .special-img,
+.phone.board-busy .tile.special-candy::before,
+.phone.board-busy .tile.special-candy::after,
+.phone.board-busy .tile.multiplier::before,
+.phone.board-busy .tile.multiplier.value-100,
+.phone.board-busy .tile.multiplier.tier-legend,
+.phone.board-busy .tile.multiplier.tier-ultimate,
+.phone.board-busy .tile.multiplier.value-100 .multiplier-gem,
+.phone.board-busy .tile.multiplier.tier-legend .multiplier-gem,
+.phone.board-busy .tile.multiplier.tier-ultimate .multiplier-gem {
+  animation-play-state: paused;
+}
+
+.phone.board-busy .candy-img {
+  filter: none;
+}
+
+.phone.board-busy .special-img {
+  filter: drop-shadow(0 6px 4px rgba(0, 0, 0, 0.32));
+}
+
+.phone.board-busy .multiplier-img {
+  filter: drop-shadow(0 0 8px rgba(255, 221, 89, 0.62));
+}
+
 .tile.special-candy {
   z-index: 3;
   overflow: visible;
