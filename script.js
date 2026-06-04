@@ -3,21 +3,29 @@ const COLS = 6;
 const SLOT_COUNT = 3;
 const MULTIPLIER_SIZE = 2;
 const MULTIPLIER_COLS = [0, 2, 4];
-const SYMBOL_VERSION = "symbol-rules-34";
+const SYMBOL_VERSION = "symbol-rules-35";
 const PERF_ENABLED = new URLSearchParams(window.location.search).has("perf");
 const SPECIAL_METER_TARGET = 20;
 const BET_STEPS = [20, 50, 100, 200, 500];
 const CANDIES = ["red", "blue", "green", "orange", "purple"];
 const MULTIPLIER_VALUES = [5, 10, 20, 30, 50, 100];
 const COLLECTION_SLOT_ITEM_WEIGHTS = [
-  { kind: "chocolate", weight: 38 },
+  { kind: "chocolate", weight: 32 },
   { kind: "multiplier", value: 5, weight: 18 },
-  { kind: "multiplier", value: 10, weight: 14 },
-  { kind: "multiplier", value: 20, weight: 11 },
-  { kind: "multiplier", value: 30, weight: 6 },
-  { kind: "multiplier", value: 50, weight: 3 },
-  { kind: "multiplier", value: 100, weight: 1 },
-  { kind: "sniper", weight: 20 },
+  { kind: "multiplier", value: 10, weight: 12 },
+  { kind: "multiplier", value: 20, weight: 7 },
+  { kind: "multiplier", value: 30, weight: 3 },
+  { kind: "multiplier", value: 50, weight: 1.5 },
+  { kind: "multiplier", value: 100, weight: 0.5 },
+  { kind: "flame", weight: 26 },
+];
+const FLAME_PATTERN_WEIGHTS = [
+  { kind: "col1", weight: 25 },
+  { kind: "row1", weight: 25 },
+  { kind: "cross1", weight: 18 },
+  { kind: "col2", weight: 13 },
+  { kind: "row2", weight: 13 },
+  { kind: "cross2", weight: 6 },
 ];
 const MULTIPLIER_VALUE_WEIGHTS = {
   normal: [
@@ -129,6 +137,8 @@ const state = {
   miniSlotWin: false,
   eventPulse: false,
   sniperTarget: null,
+  flameCells: new Set(),
+  flameFinal: false,
 };
 
 function formatMoney(value) {
@@ -332,7 +342,7 @@ function allSymbolAssets() {
     "assets/symbols/multiplier-x200.svg?v=" + SYMBOL_VERSION,
     ...WIN_TIERS.map((tier) => winArtAsset(tier.art)),
     specialAsset("chocolate"),
-    `assets/ui/event-sniper.svg?v=${SYMBOL_VERSION}`,
+    flameIconAsset(),
     `assets/ui/event-chocolate.svg?v=${SYMBOL_VERSION}`,
   ];
   return Array.from(new Set(assets));
@@ -359,6 +369,10 @@ function sniperIconAsset() {
   return `assets/ui/event-sniper.svg?v=${SYMBOL_VERSION}`;
 }
 
+function flameIconAsset() {
+  return `assets/ui/event-flame.svg?v=${SYMBOL_VERSION}`;
+}
+
 function randomBoardEvent() {
   const item = weightedPick(COLLECTION_SLOT_ITEM_WEIGHTS);
   if (item.kind === "chocolate") return { kind: item.kind, type: randomItem(CANDIES) };
@@ -368,12 +382,14 @@ function randomBoardEvent() {
 
 function eventPreviewAsset(event) {
   if (event.kind === "multiplier") return multiplierAsset(event.value || 10);
+  if (event.kind === "flame") return flameIconAsset();
   if (event.kind === "sniper") return sniperIconAsset();
   return `assets/ui/event-chocolate.svg?v=${SYMBOL_VERSION}`;
 }
 
 function eventName(event) {
   if (event.kind === "multiplier") return `x${event.value} 倍數糖`;
+  if (event.kind === "flame") return "火焰槍";
   if (event.kind === "sniper") return "狙擊槍";
   return "巧克力糖";
 }
@@ -649,6 +665,12 @@ function renderBoard() {
       if (state.invalid === key) {
         classes.push("invalid");
       }
+      const flameOnCell =
+        state.flameCells?.has(key) ||
+        (coveredMultiplier && multiplierCells(coveredMultiplier).some((cell) => state.flameCells?.has(`${cell.row},${cell.col}`)));
+      if (flameOnCell) {
+        classes.push(state.flameFinal ? "flame-final" : "flame-warning");
+      }
 
       if (coveredMultiplier && !anchorMultiplier) {
         classes.push("multiplier-covered");
@@ -657,6 +679,7 @@ function renderBoard() {
         if (tile.special) classes.push("special-candy", `special-${tile.special}`);
       } else if (tile?.kind === "multiplier") {
         classes.push("multiplier", "multiplier-anchor", `value-${tile.value}`, multiplierTierClass(tile.value));
+        if (tile._flameResist) classes.push("flame-resisted");
         button.style.setProperty("grid-column", `${tile.col + 1} / span ${MULTIPLIER_SIZE}`);
         button.style.setProperty("grid-row", `${tile.row + 1} / span ${MULTIPLIER_SIZE}`);
         button.style.setProperty("z-index", tile._reward || tile._eventTransform ? "24" : "8");
@@ -2253,9 +2276,9 @@ async function processSpecialAwards() {
     playSound("specialReady");
     await wait(resolveDelay(460, 180));
 
-    if (event.kind === "sniper") {
-      setStatus("狙擊槍");
-      await playSniperEvent();
+    if (event.kind === "flame") {
+      setStatus("火焰槍");
+      await playFlameEvent();
     } else {
       const target = findBoardEventCell({ useMultiplierRows: event.kind === "multiplier" });
       if (target) {
@@ -2322,6 +2345,183 @@ function canMultiplierDrop(multiplier) {
 
 function mergeAdjacentMultipliers() {
   return false;
+}
+
+function flameBurnChance(value) {
+  if (value >= 100) return 0.18;
+  if (value >= 50) return 0.28;
+  if (value >= 20) return 0.4;
+  return 0.55;
+}
+
+function pointKey(point) {
+  return `${point.row},${point.col}`;
+}
+
+function flamePatternCells(pattern) {
+  const cells = new Set();
+  const add = (row, col) => {
+    if (row >= 0 && row < ROWS && col >= 0 && col < COLS) cells.add(`${row},${col}`);
+  };
+
+  if (pattern.kind === "col1") {
+    for (let row = 0; row < ROWS; row += 1) add(row, pattern.col);
+  } else if (pattern.kind === "row1") {
+    for (let col = 0; col < COLS; col += 1) add(pattern.row, col);
+  } else if (pattern.kind === "cross1") {
+    for (let row = 0; row < ROWS; row += 1) add(row, pattern.col);
+    for (let col = 0; col < COLS; col += 1) add(pattern.row, col);
+  } else if (pattern.kind === "col2") {
+    for (let row = 0; row < ROWS; row += 1) {
+      add(row, pattern.col);
+      add(row, pattern.col + 1);
+    }
+  } else if (pattern.kind === "row2") {
+    for (let col = 0; col < COLS; col += 1) {
+      add(pattern.row, col);
+      add(pattern.row + 1, col);
+    }
+  } else if (pattern.kind === "cross2") {
+    for (let row = 0; row < ROWS; row += 1) {
+      add(row, pattern.col);
+      add(row, pattern.col + 1);
+    }
+    for (let col = 0; col < COLS; col += 1) {
+      add(pattern.row, col);
+      add(pattern.row + 1, col);
+    }
+  }
+
+  return cells;
+}
+
+function randomFlamePattern() {
+  const picked = weightedPick(FLAME_PATTERN_WEIGHTS);
+  if (picked.kind === "col1") return { kind: picked.kind, col: Math.floor(Math.random() * COLS) };
+  if (picked.kind === "row1") return { kind: picked.kind, row: Math.floor(Math.random() * ROWS) };
+  if (picked.kind === "cross1") {
+    return { kind: picked.kind, row: Math.floor(Math.random() * ROWS), col: Math.floor(Math.random() * COLS) };
+  }
+  if (picked.kind === "col2") return { kind: picked.kind, col: Math.floor(Math.random() * (COLS - 1)) };
+  if (picked.kind === "row2") return { kind: picked.kind, row: Math.floor(Math.random() * (ROWS - 1)) };
+  return {
+    kind: picked.kind,
+    row: Math.floor(Math.random() * (ROWS - 1)),
+    col: Math.floor(Math.random() * (COLS - 1)),
+  };
+}
+
+function flameTouchedMultipliers(flameCells) {
+  const touched = new Map();
+  for (const multiplier of state.multipliers) {
+    if (multiplierCells(multiplier).some((cell) => flameCells.has(pointKey(cell)))) {
+      touched.set(multiplier.id, multiplier);
+    }
+  }
+  return Array.from(touched.values());
+}
+
+function clearFlameMarks() {
+  state.flameCells = new Set();
+  state.flameFinal = false;
+  for (const multiplier of state.multipliers) {
+    if (multiplier._flameResist) delete multiplier._flameResist;
+  }
+}
+
+async function playFlameEvent() {
+  const steps = state.fast ? 7 : 13;
+  const stepDelays = sniperStepDelays(steps);
+  let finalCells = new Set();
+  playSound("specialReady");
+
+  for (let i = 0; i < steps; i += 1) {
+    finalCells = flamePatternCells(randomFlamePattern());
+    state.flameCells = finalCells;
+    state.flameFinal = false;
+    render();
+    await wait(stepDelays[i]);
+  }
+
+  state.flameCells = finalCells;
+  state.flameFinal = true;
+  setEventPulse(true);
+  render();
+  triggerScreenFx("fx-bump", 420);
+  playSound("specialBlast");
+  await wait(resolveDelay(260, 120));
+
+  const clearedCells = new Set();
+  let clearedCandyCount = 0;
+  const resisted = [];
+  const destroyedIds = new Set();
+
+  for (const multiplier of flameTouchedMultipliers(finalCells)) {
+    if (Math.random() < flameBurnChance(multiplier.value)) {
+      destroyedIds.add(multiplier.id);
+      for (const cell of multiplierCells(multiplier)) {
+        clearedCells.add(pointKey(cell));
+      }
+    } else {
+      multiplier._flameResist = true;
+      resisted.push(multiplier);
+    }
+  }
+
+  state.multipliers = state.multipliers.filter((multiplier) => !destroyedIds.has(multiplier.id));
+
+  for (const key of finalCells) {
+    const { row, col } = keyToPoint(key);
+    if (multiplierAt(row, col)) continue;
+    if (state.board[row][col]?.kind === "candy") {
+      clearedCandyCount += 1;
+      clearedCells.add(key);
+    }
+  }
+
+  state.clearing = new Set(clearedCells);
+  render();
+  spawnParticles(Math.min(48, Math.max(18, clearedCells.size * 2 + destroyedIds.size * 8)));
+  if (destroyedIds.size) triggerScreenFx("fx-blast", 520);
+  await wait(resolveDelay(420, 160));
+
+  for (const key of clearedCells) {
+    const { row, col } = keyToPoint(key);
+    state.board[row][col] = null;
+  }
+  addSpecialMeter(clearedCandyCount);
+  state.lastClearedCells = new Set(clearedCells);
+  const collected = collectMultipliers();
+  state.lastClearedCells = null;
+  state.clearing = new Set();
+
+  collapseColumns();
+  fillEmptyCells();
+  render();
+  playSound("drop");
+  await wait(resolveDelay(430, 170));
+
+  if (collected.length > 0) {
+    state.slotFlash = Array(SLOT_COUNT).fill(null);
+    for (const item of collected) {
+      state.slotFlash[item.col] = item.value;
+      state.filledSlots.add(item.col);
+      addWin(currentBet() * item.value);
+      spawnSlotEnergy(item.col, item.value);
+    }
+    const highCollect = Math.max(...collected.map((item) => item.value));
+    playMultiplierCollectSound(highCollect);
+    if (highCollect >= 100) triggerScreenFx("fx-jackpot", 780);
+    else if (highCollect >= 20) triggerScreenFx("fx-bump", 420);
+    await wait(resolveDelay(highCollect >= 100 ? 760 : highCollect >= 50 ? 640 : 540, 190));
+  }
+
+  if (resisted.length) await wait(resolveDelay(260, 120));
+  clearFlameMarks();
+  clearFallMarks();
+  setEventPulse(false);
+  render();
+  return clearedCells.size > 0 || resisted.length > 0;
 }
 
 function multiplierSpawnPoint(value = 10, flags = {}) {
@@ -2542,6 +2742,64 @@ function reshuffleBoard() {
   }
 
   setStatus("?日撌脫???");
+}
+
+async function processSpecialAwards() {
+  while (state.pendingSpecialAwards > 0) {
+    state.pendingSpecialAwards -= 1;
+    const event = randomBoardEvent();
+    state.miniSlotRolling = true;
+    specialMiniSlotEl.classList.remove("win");
+
+    const steps = state.fast ? 5 : 9;
+    for (let i = 0; i < steps; i += 1) {
+      state.miniSlotPreview = randomBoardEvent();
+      render();
+      await wait(resolveDelay(120, 55));
+    }
+
+    state.miniSlotRolling = false;
+    state.miniSlotWin = true;
+    state.miniSlotPreview = event;
+    setEventPulse(true);
+    render();
+    playSound("specialReady");
+    await wait(resolveDelay(460, 180));
+
+    if (event.kind === "flame") {
+      setStatus("火焰槍");
+      await playFlameEvent();
+    } else if (event.kind === "multiplier") {
+      const multiplier = multiplierSpawnPoint(event.value, { _reward: true });
+      if (multiplier) {
+        state.multipliers.push(multiplier);
+        setStatus(`收集${eventName(event)}`);
+        render();
+        spawnParticles(event.value >= 50 ? 28 : 18);
+        triggerScreenFx(event.value >= 50 ? "fx-bump" : "fx-pop", 360);
+        playSound("multiplierHigh");
+        await wait(resolveDelay(520, 200));
+        delete multiplier._reward;
+      }
+    } else {
+      const target = findBoardEventCell();
+      if (target) {
+        state.board[target.row][target.col] = chocolateTile(event.type, true);
+        setStatus(`收集${eventName(event)}`);
+        render();
+        spawnParticles(18);
+        triggerScreenFx("fx-pop", 360);
+        playSound("specialSpawn");
+        await wait(resolveDelay(520, 200));
+        const tile = state.board[target.row][target.col];
+        if (tile) delete tile._reward;
+      }
+    }
+
+    state.miniSlotWin = false;
+    setEventPulse(false);
+    render();
+  }
 }
 
 window.addEventListener("resize", () => scheduleBoardSizeSync(true));

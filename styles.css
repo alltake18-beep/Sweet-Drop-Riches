@@ -728,6 +728,49 @@ button {
   filter: drop-shadow(0 0 8px rgba(255, 232, 82, 0.88));
 }
 
+.tile.flame-warning {
+  z-index: 18;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 215, 160, 0.18), transparent 54%),
+    linear-gradient(180deg, rgba(255, 72, 54, 0.34), rgba(95, 12, 22, 0.48));
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 108, 74, 0.58),
+    0 0 14px rgba(255, 58, 47, 0.28);
+}
+
+.tile.flame-final {
+  z-index: 26;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(255, 244, 138, 0.36), transparent 38%),
+    linear-gradient(180deg, rgba(255, 126, 43, 0.7), rgba(160, 8, 35, 0.72));
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 226, 117, 0.86),
+    0 0 22px rgba(255, 59, 42, 0.72);
+  animation: flame-cell-hit 340ms ease-in-out infinite alternate;
+}
+
+.tile.multiplier.flame-resisted {
+  animation: flame-resist-shake 520ms cubic-bezier(0.18, 0.84, 0.24, 1) both;
+  animation-play-state: running !important;
+  box-shadow:
+    0 0 0 3px rgba(255, 211, 94, 0.28),
+    0 0 28px rgba(255, 74, 31, 0.74),
+    inset 0 0 18px rgba(70, 13, 11, 0.7);
+  filter: saturate(1.2) brightness(0.92);
+}
+
+.tile.multiplier.flame-resisted::after {
+  inset: -4px;
+  border-radius: 12px;
+  border: 2px solid rgba(255, 112, 38, 0.88);
+  background:
+    linear-gradient(132deg, transparent 0 38%, rgba(255, 213, 89, 0.9) 39% 41%, transparent 42%),
+    linear-gradient(42deg, transparent 0 55%, rgba(255, 95, 38, 0.8) 56% 58%, transparent 59%),
+    radial-gradient(circle at 20% 82%, rgba(22, 7, 4, 0.7), transparent 18%),
+    radial-gradient(circle at 78% 18%, rgba(68, 16, 5, 0.62), transparent 20%);
+  filter: drop-shadow(0 0 10px rgba(255, 91, 35, 0.86));
+}
+
 .tile.multiplier-covered {
   visibility: hidden;
   pointer-events: none;
@@ -2398,6 +2441,38 @@ button {
   50% {
     opacity: 1;
     transform: scale(1.08) rotate(10deg);
+  }
+}
+
+@keyframes flame-cell-hit {
+  from {
+    transform: scale(0.98);
+    filter: brightness(1.05) saturate(1.12);
+  }
+  to {
+    transform: scale(1.04);
+    filter: brightness(1.32) saturate(1.36);
+  }
+}
+
+@keyframes flame-resist-shake {
+  0% {
+    transform: translateX(0) scale(1.04);
+  }
+  18% {
+    transform: translateX(-4px) scale(1.07) rotate(-1deg);
+  }
+  34% {
+    transform: translateX(4px) scale(1.06) rotate(1deg);
+  }
+  52% {
+    transform: translateX(-3px) scale(1.05) rotate(-0.6deg);
+  }
+  72% {
+    transform: translateX(2px) scale(1.04) rotate(0.4deg);
+  }
+  100% {
+    transform: translateX(0) scale(1.02);
   }
 }
 

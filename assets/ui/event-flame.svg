@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Flame gun">
+  <defs>
+    <linearGradient id="body" x1="18" y1="72" x2="114" y2="72" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2b2f58"/>
+      <stop offset=".5" stop-color="#5862a8"/>
+      <stop offset="1" stop-color="#171b3c"/>
+    </linearGradient>
+    <linearGradient id="fire" x1="95" y1="33" x2="122" y2="66" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fff48a"/>
+      <stop offset=".42" stop-color="#ff8b2b"/>
+      <stop offset="1" stop-color="#ff255d"/>
+    </linearGradient>
+  </defs>
+  <path d="M18 66c0-10 8-18 18-18h44c10 0 18 8 18 18v14c0 7-5 12-12 12H31c-7 0-13-6-13-13V66Z" fill="url(#body)" stroke="#ffe37a" stroke-width="5"/>
+  <path d="M41 91h25l-8 25H36l5-25Z" fill="#202447" stroke="#ffe37a" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M87 54h23c8 0 14 6 14 14s-6 14-14 14H87V54Z" fill="#121633" stroke="#ffe37a" stroke-width="5"/>
+  <path d="M105 57c8-17 4-26 16-43 0 17 9 21 5 35 8-6 10-14 10-14 7 16 1 32-12 38-10 5-20 0-19-16Z" fill="url(#fire)" transform="translate(-8 5)"/>
+  <circle cx="43" cy="70" r="9" fill="#53dcff"/>
+  <path d="M55 67h26" stroke="#fff6a5" stroke-width="6" stroke-linecap="round"/>
+</svg>
