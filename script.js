@@ -3,9 +3,9 @@ const COLS = 6;
 const SLOT_COUNT = 3;
 const MULTIPLIER_SIZE = 2;
 const MULTIPLIER_COLS = [0, 2, 4];
-const SYMBOL_VERSION = "symbol-rules-36";
+const SYMBOL_VERSION = "symbol-rules-37";
 const PERF_ENABLED = new URLSearchParams(window.location.search).has("perf");
-const SPECIAL_METER_TARGET = 10;
+const SPECIAL_METER_TARGET = 20;
 const BET_STEPS = [20, 50, 100, 200, 500];
 const CANDIES = ["red", "blue", "green", "orange", "purple"];
 const MULTIPLIER_VALUES = [5, 10, 20, 30, 50, 100];
@@ -2306,41 +2306,65 @@ async function processSpecialAwards() {
 
 function collectMultipliers() {
   const collected = [];
+  let changed = true;
+  let guard = 0;
 
-  for (const multiplier of state.multipliers) {
-    if (canMultiplierDrop(multiplier)) {
-      multiplier.row += 1;
-      multiplier._fall = Math.max(multiplier._fall || 0, 1);
+  while (changed && guard < ROWS) {
+    changed = false;
+    guard += 1;
+
+    const activeMultipliers = [...state.multipliers].sort((a, b) => b.row - a.row);
+    for (const multiplier of activeMultipliers) {
+      if (!state.multipliers.some((item) => item.id === multiplier.id)) continue;
+      const distance = multiplierDropDistance(multiplier);
+      if (distance > 0) {
+        multiplier.row += distance;
+        multiplier._fall = Math.max(multiplier._fall || 0, distance);
+        changed = true;
+      }
     }
 
-    if (multiplier.row >= ROWS - MULTIPLIER_SIZE) {
-      collected.push({ col: slotIndexFromMultiplier(multiplier), value: multiplier.value });
+    const collectedNow = state.multipliers.filter((multiplier) => multiplier.row >= ROWS - MULTIPLIER_SIZE);
+    if (collectedNow.length) {
+      for (const multiplier of collectedNow) {
+        collected.push({ col: slotIndexFromMultiplier(multiplier), value: multiplier.value });
+      }
+      const collectedIds = new Set(collectedNow.map((multiplier) => multiplier.id));
+      state.multipliers = state.multipliers.filter((multiplier) => !collectedIds.has(multiplier.id));
+      changed = true;
     }
-  }
-
-  if (collected.length) {
-    const collectedIds = new Set(
-      state.multipliers
-        .filter((multiplier) => multiplier.row >= ROWS - MULTIPLIER_SIZE)
-        .map((multiplier) => multiplier.id)
-    );
-    state.multipliers = state.multipliers.filter((multiplier) => !collectedIds.has(multiplier.id));
   }
 
   return collected;
 }
 
-function canMultiplierDrop(multiplier) {
-  if (multiplier.row >= ROWS - MULTIPLIER_SIZE) return false;
-  const belowRow = multiplier.row + MULTIPLIER_SIZE;
-  const leftKey = `${belowRow},${multiplier.col}`;
-  const rightKey = `${belowRow},${multiplier.col + 1}`;
-  return (
-    state.lastClearedCells?.has(leftKey) &&
-    state.lastClearedCells?.has(rightKey) &&
-    !state.board[belowRow][multiplier.col] &&
-    !state.board[belowRow][multiplier.col + 1]
+function multiplierDropDistance(multiplier) {
+  if (multiplier.row >= ROWS - MULTIPLIER_SIZE) return 0;
+  return Math.min(
+    multiplierColumnDropDistance(multiplier, multiplier.col),
+    multiplierColumnDropDistance(multiplier, multiplier.col + 1)
   );
+}
+
+function multiplierColumnDropDistance(multiplier, col) {
+  let distance = 0;
+  for (let row = multiplier.row + MULTIPLIER_SIZE; row < ROWS; row += 1) {
+    if (state.board[row][col] || multiplierAtExcept(row, col, multiplier)) break;
+    distance += 1;
+  }
+  return distance;
+}
+
+function multiplierAtExcept(row, col, ignoredMultiplier) {
+  return state.multipliers.find((multiplier) => {
+    if (multiplier.id === ignoredMultiplier.id) return false;
+    return (
+      row >= multiplier.row &&
+      row < multiplier.row + MULTIPLIER_SIZE &&
+      col >= multiplier.col &&
+      col < multiplier.col + MULTIPLIER_SIZE
+    );
+  });
 }
 
 function mergeAdjacentMultipliers() {
