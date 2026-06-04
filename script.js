@@ -3,9 +3,9 @@ const COLS = 6;
 const SLOT_COUNT = 3;
 const MULTIPLIER_SIZE = 2;
 const MULTIPLIER_COLS = [0, 2, 4];
-const SYMBOL_VERSION = "symbol-rules-39";
+const SYMBOL_VERSION = "symbol-rules-40";
 const PERF_ENABLED = new URLSearchParams(window.location.search).has("perf");
-const SPECIAL_METER_TARGET = 20;
+const SPECIAL_METER_TARGET = 15;
 const BET_STEPS = [20, 50, 100, 200, 500];
 const CANDIES = ["red", "blue", "green", "orange", "purple"];
 const MULTIPLIER_VALUES = [5, 10, 20, 30, 50, 100];
@@ -27,34 +27,23 @@ const FLAME_PATTERN_WEIGHTS = [
   { kind: "row2", weight: 13 },
   { kind: "cross2", weight: 6 },
 ];
-const MULTIPLIER_VALUE_WEIGHTS = {
-  normal: [
-    { value: 5, weight: 28 },
-    { value: 10, weight: 24 },
-    { value: 20, weight: 22 },
-    { value: 30, weight: 14 },
-    { value: 50, weight: 8 },
-    { value: 100, weight: 4 },
-  ],
-  high: [
-    { value: 5, weight: 12 },
-    { value: 10, weight: 18 },
-    { value: 20, weight: 26 },
-    { value: 30, weight: 22 },
-    { value: 50, weight: 14 },
-    { value: 100, weight: 8 },
-  ],
-};
+const MULTIPLIER_VALUE_WEIGHTS = [
+  { value: 5, weight: 28 },
+  { value: 10, weight: 24 },
+  { value: 20, weight: 22 },
+  { value: 30, weight: 14 },
+  { value: 50, weight: 8 },
+  { value: 100, weight: 4 },
+];
 const MULTIPLIER_ROW_WEIGHTS = [
-  { row: 0, weight: 6 },
-  { row: 1, weight: 8 },
-  { row: 2, weight: 10 },
-  { row: 3, weight: 12 },
-  { row: 4, weight: 14 },
-  { row: 5, weight: 16 },
-  { row: 6, weight: 16 },
-  { row: 7, weight: 12 },
-  { row: 8, weight: 6 },
+  { row: 0, weight: 18 },
+  { row: 1, weight: 17 },
+  { row: 2, weight: 16 },
+  { row: 3, weight: 14 },
+  { row: 4, weight: 12 },
+  { row: 5, weight: 10 },
+  { row: 6, weight: 8 },
+  { row: 7, weight: 5 },
 ];
 const WIN_TIERS = [
   { ratio: 100, label: "LEGENDARY WIN", art: "legendary", sound: "jackpot", className: "tier-legendary", duration: 2500, quick: 2500, particles: 86, countVolume: 0.055 },
@@ -101,7 +90,6 @@ const state = {
   resolving: false,
   fast: false,
   sound: true,
-  mode: "normal",
   audioContext: null,
   masterGain: null,
   musicTimer: null,
@@ -281,8 +269,7 @@ function randomCandy(exclude = [], options = {}) {
 }
 
 function weightedMultiplier() {
-  const table = state.mode === "high" ? MULTIPLIER_VALUE_WEIGHTS.high : MULTIPLIER_VALUE_WEIGHTS.normal;
-  return { kind: "multiplier", value: weightedPick(table).value };
+  return { kind: "multiplier", value: weightedPick(MULTIPLIER_VALUE_WEIGHTS).value };
 }
 
 function multiplierTierClass(value) {
@@ -570,7 +557,7 @@ function startNewBoard(keepScore = false) {
     state.currentWin = 0;
     state.lastWin = 0;
   }
-  setStatus(state.mode === "high" ? "High Roller 盤面已刷新" : "一般盤面已刷新");
+  setStatus("一般盤面已刷新");
   render();
 }
 
@@ -2346,23 +2333,20 @@ function collectMultipliers() {
     const activeMultipliers = [...state.multipliers].sort((a, b) => b.row - a.row);
     for (const multiplier of activeMultipliers) {
       if (!state.multipliers.some((item) => item.id === multiplier.id)) continue;
+
       const distance = multiplierDropDistance(multiplier);
       if (distance > 0) {
         multiplier.row += distance;
         multiplier._fall = Math.max(multiplier._fall || 0, distance);
         changed = true;
       }
-    }
 
-    const collectedNow = state.multipliers.filter((multiplier) => multiplier.row >= ROWS - MULTIPLIER_SIZE);
-    if (collectedNow.length) {
-      for (const multiplier of collectedNow) {
+      if (multiplier.row >= ROWS - MULTIPLIER_SIZE) {
         collected.push({ col: slotIndexFromMultiplier(multiplier), value: multiplier.value });
+        state.multipliers = state.multipliers.filter((item) => item.id !== multiplier.id);
+        clearMultiplierFootprints();
+        changed = true;
       }
-      const collectedIds = new Set(collectedNow.map((multiplier) => multiplier.id));
-      state.multipliers = state.multipliers.filter((multiplier) => !collectedIds.has(multiplier.id));
-      clearMultiplierFootprints();
-      changed = true;
     }
   }
 
