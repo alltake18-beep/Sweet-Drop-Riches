@@ -1,6 +1,6 @@
 const ROWS = 9;
 const COLS = 5;
-const SYMBOL_VERSION = "symbol-rules-21";
+const SYMBOL_VERSION = "symbol-rules-22";
 const SPECIAL_METER_TARGET = 20;
 const BET_STEPS = [20, 50, 100, 200, 500];
 const CANDIES = ["red", "blue", "green", "orange", "yellow", "purple"];
@@ -51,6 +51,8 @@ const state = {
   masterGain: null,
   musicTimer: null,
   musicStep: 0,
+  activeTones: 0,
+  lastSoundAt: {},
   pointer: null,
   ignoreClick: false,
   specialMeter: 0,
@@ -1155,8 +1157,11 @@ function reshuffleBoard() {
 function spawnParticles(count) {
   const colors = ["#ffdf5f", "#ff58c8", "#35c8ff", "#83ff58", "#ff8138", "#ffffff"];
   const host = document.querySelector(".play-area");
+  if (!host || document.hidden) return;
 
-  for (let i = 0; i < count; i += 1) {
+  const limit = window.innerWidth <= 520 ? 12 : 20;
+  const actualCount = Math.min(count, limit);
+  for (let i = 0; i < actualCount; i += 1) {
     const particle = document.createElement("span");
     particle.className = "particle";
     particle.style.setProperty("--x", `${35 + Math.random() * 30}%`);
@@ -1166,7 +1171,7 @@ function spawnParticles(count) {
     particle.style.setProperty("--r", `${Math.random() * 180}deg`);
     particle.style.setProperty("--color", randomItem(colors));
     host.appendChild(particle);
-    window.setTimeout(() => particle.remove(), 950);
+    window.setTimeout(() => particle.remove(), 760);
   }
 }
 
@@ -1189,7 +1194,9 @@ function spawnCollectEnergy(cells) {
   const targetX = targetRect.left + targetRect.width * 0.5 - hostRect.left;
   const targetY = targetRect.top + targetRect.height * 0.46 - hostRect.top;
 
-  for (const key of cells) {
+  const maxEnergy = window.innerWidth <= 520 ? 10 : 16;
+  const points = Array.from(cells).slice(0, maxEnergy);
+  for (const key of points) {
     const tile = boardEl.querySelector(tileSelector(keyToPoint(key)));
     if (!tile) continue;
     const rect = tile.getBoundingClientRect();
@@ -1203,7 +1210,7 @@ function spawnCollectEnergy(cells) {
     mote.style.setProperty("--ty", `${targetY - startY}px`);
     mote.style.setProperty("--delay", `${Math.random() * 90}ms`);
     host.appendChild(mote);
-    window.setTimeout(() => mote.remove(), 820);
+    window.setTimeout(() => mote.remove(), 760);
   }
 }
 
@@ -1218,7 +1225,7 @@ function spawnSlotEnergy(col, value) {
   const startY = hostRect.height * 0.48;
   const targetX = targetRect.left + targetRect.width * 0.5 - hostRect.left;
   const targetY = targetRect.top + targetRect.height * 0.48 - hostRect.top;
-  const count = value >= 100 ? 12 : value >= 50 ? 9 : value >= 20 ? 6 : 4;
+  const count = value >= 100 ? 7 : value >= 50 ? 5 : value >= 20 ? 4 : 3;
 
   for (let i = 0; i < count; i += 1) {
     const mote = document.createElement("span");
@@ -1227,9 +1234,9 @@ function spawnSlotEnergy(col, value) {
     mote.style.setProperty("--y", `${startY + Math.random() * 42 - 21}px`);
     mote.style.setProperty("--tx", `${targetX - startX}px`);
     mote.style.setProperty("--ty", `${targetY - startY}px`);
-    mote.style.setProperty("--delay", `${i * 28}ms`);
+    mote.style.setProperty("--delay", `${i * 34}ms`);
     host.appendChild(mote);
-    window.setTimeout(() => mote.remove(), 920);
+    window.setTimeout(() => mote.remove(), 840);
   }
 }
 
@@ -1254,6 +1261,9 @@ function ensureAudio() {
 function playTone(freq, duration = 0.08, options = {}) {
   const context = ensureAudio();
   if (!context || !state.masterGain) return;
+  const maxTones = window.innerWidth <= 520 ? 10 : 14;
+  if (state.activeTones >= maxTones) return;
+  state.activeTones += 1;
   const now = context.currentTime + (options.delay || 0);
   const osc = context.createOscillator();
   const gain = context.createGain();
@@ -1267,6 +1277,9 @@ function playTone(freq, duration = 0.08, options = {}) {
   gain.connect(state.masterGain);
   osc.start(now);
   osc.stop(now + duration + 0.03);
+  window.setTimeout(() => {
+    state.activeTones = Math.max(0, state.activeTones - 1);
+  }, Math.max(80, (duration + (options.delay || 0) + 0.08) * 1000));
 }
 
 function playChord(freqs, duration, options = {}) {
@@ -1280,11 +1293,10 @@ function startBackgroundMusic() {
     if (!state.sound || document.hidden) return;
     const base = notes[state.musicStep % notes.length];
     state.musicStep += 1;
-    playTone(base, 0.06, { type: "sine", volume: 0.016 });
-    if (state.musicStep % 2 === 0) playTone(base * 2, 0.035, { type: "triangle", volume: 0.008 });
-    if (state.musicStep % 4 === 0) playTone(98, 0.052, { type: "square", volume: 0.014 });
-    if (state.musicStep % 8 === 0) playTone(147, 0.045, { type: "sawtooth", volume: 0.01 });
-  }, 330);
+    playTone(base, 0.055, { type: "sine", volume: 0.012 });
+    if (state.musicStep % 4 === 0) playTone(98, 0.048, { type: "square", volume: 0.01 });
+    if (state.musicStep % 8 === 0) playTone(base * 2, 0.04, { type: "triangle", volume: 0.006 });
+  }, 620);
 }
 
 function stopBackgroundMusic() {
@@ -1307,6 +1319,18 @@ function playMultiplierCollectSound(value) {
 
 function playSound(kind) {
   if (!state.sound) return;
+  const throttle = {
+    button: 55,
+    move: 55,
+    match: 90,
+    cascade: 120,
+    drop: 150,
+    slotProgress: 95,
+  };
+  const now = performance.now();
+  const minGap = throttle[kind] || 28;
+  if ((state.lastSoundAt[kind] || 0) + minGap > now) return;
+  state.lastSoundAt[kind] = now;
   ensureAudio();
   startBackgroundMusic();
 
