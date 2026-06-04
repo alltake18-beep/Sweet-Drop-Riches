@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Sweet Drop Riches Prototype</title>
-    <link rel="stylesheet" href="styles.css?v=symbol-rules-26" />
+    <link rel="stylesheet" href="styles.css?v=symbol-rules-27" />
   </head>
   <body>
     <main class="stage">
@@ -14,7 +14,7 @@
 
         <header class="topbar">
           <div class="brand" aria-label="Sweet Drop Riches">
-            <img class="brand-logo" src="assets/ui/logo-sweet-drop-riches.png?v=symbol-rules-26" alt="Sweet Drop Riches" />
+            <img class="brand-logo" src="assets/ui/logo-sweet-drop-riches.png?v=symbol-rules-27" alt="Sweet Drop Riches" />
           </div>
         </header>
 
@@ -31,7 +31,7 @@
                   <i id="specialMeterFill"></i>
                 </div>
                 <div class="mini-slot" id="specialMiniSlot" aria-label="特殊糖小拉霸">
-                  <img id="miniSlotIcon" src="assets/symbols/special-colorbomb.png?v=symbol-rules-26" alt="" />
+                  <img id="miniSlotIcon" src="assets/symbols/special-colorbomb.png?v=symbol-rules-27" alt="" />
                 </div>
               </div>
             </div>
@@ -46,8 +46,13 @@
           </div>
 
           <div id="winOverlay" class="win-overlay hidden" aria-live="polite">
+            <div class="win-backdrop"></div>
             <div class="win-rays"></div>
+            <div class="win-coins" aria-hidden="true">
+              <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+            </div>
             <div class="win-copy">
+              <i class="win-crown"></i>
               <em>本步總贏分</em>
               <b id="winAmount">0.00</b>
               <span id="winLabel">MEGA WIN</span>
@@ -97,6 +102,6 @@
       </section>
     </main>
 
-    <script src="script.js?v=symbol-rules-26"></script>
+    <script src="script.js?v=symbol-rules-27"></script>
   </body>
 </html>

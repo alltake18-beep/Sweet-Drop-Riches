@@ -1463,90 +1463,129 @@ button {
   place-items: center;
   pointer-events: none;
   overflow: hidden;
+  perspective: 720px;
 }
 
-.win-overlay.tier-nice .win-copy {
-  transform: rotate(-2deg) scale(0.92);
-}
-
-.win-overlay.tier-big .win-rays {
-  width: 360px;
-  height: 360px;
-}
-
-.win-overlay.tier-mega .win-copy,
-.win-overlay.tier-super .win-copy,
-.win-overlay.tier-epic .win-copy {
-  animation: win-pop 860ms cubic-bezier(0.22, 1.28, 0.36, 1);
-}
-
-.win-overlay.tier-mega .win-rays,
-.win-overlay.tier-super .win-rays,
-.win-overlay.tier-epic .win-rays {
-  width: 410px;
-  height: 410px;
-  opacity: 1;
-}
-
-.win-overlay.tier-super .win-copy,
-.win-overlay.tier-epic .win-copy {
-  border-color: #fff4a8;
-  box-shadow:
-    0 0 42px rgba(255, 76, 215, 0.95),
-    0 0 28px rgba(255, 224, 91, 0.78),
-    0 22px 44px rgba(0, 0, 0, 0.58),
-    inset 0 0 0 2px rgba(255, 255, 255, 0.18);
-}
-
-.win-overlay.tier-epic .win-copy {
+.win-backdrop {
+  position: absolute;
+  inset: 0;
   background:
-    radial-gradient(circle at 50% 12%, rgba(255, 255, 255, 0.75), transparent 19%),
-    linear-gradient(180deg, rgba(255, 225, 91, 0.45), rgba(255, 65, 214, 0.58) 42%, rgba(42, 6, 84, 0.96));
-}
-
-.win-overlay.tier-epic .win-rays {
-  width: 520px;
-  height: 520px;
-  animation-duration: 680ms;
+    radial-gradient(circle at 50% 42%, rgba(255, 219, 83, 0.32), transparent 22%),
+    radial-gradient(circle at 50% 58%, rgba(255, 42, 220, 0.22), transparent 34%),
+    rgba(8, 2, 28, 0.42);
+  animation: win-backdrop-in 360ms ease both;
 }
 
 .win-rays {
   position: absolute;
-  width: 330px;
-  height: 330px;
+  width: 350px;
+  height: 350px;
   border-radius: 50%;
   background:
-    repeating-conic-gradient(from 0deg, rgba(255, 216, 67, 0.82) 0deg 9deg, rgba(255, 97, 207, 0.12) 9deg 18deg),
-    radial-gradient(circle, rgba(255, 255, 255, 0.86), rgba(255, 207, 45, 0.2) 42%, transparent 65%);
-  animation: ray-spin 1.1s linear infinite;
-  opacity: 0.88;
+    repeating-conic-gradient(from 0deg, rgba(255, 222, 72, 0.82) 0deg 8deg, rgba(255, 93, 218, 0.1) 8deg 17deg),
+    radial-gradient(circle, rgba(255, 255, 255, 0.86), rgba(255, 207, 45, 0.2) 42%, transparent 66%);
+  animation: ray-spin 1.15s linear infinite, win-rays-in 520ms ease both;
+  opacity: 0.86;
+}
+
+.win-coins {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.win-coins i {
+  position: absolute;
+  left: calc(10% + var(--i, 0) * 10%);
+  bottom: -34px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 35% 24%, #fff8ba 0 16%, transparent 17%),
+    linear-gradient(135deg, #fff170, #ffb02e 50%, #9d4d08);
+  border: 2px solid #fff2a4;
+  box-shadow: 0 0 14px rgba(255, 220, 82, 0.72);
+  animation: win-coin-rise 980ms ease-out both;
+}
+
+.win-coins i:nth-child(1) { --i: 0; animation-delay: 20ms; }
+.win-coins i:nth-child(2) { --i: 1; animation-delay: 120ms; }
+.win-coins i:nth-child(3) { --i: 2; animation-delay: 70ms; }
+.win-coins i:nth-child(4) { --i: 3; animation-delay: 180ms; }
+.win-coins i:nth-child(5) { --i: 4; animation-delay: 40ms; }
+.win-coins i:nth-child(6) { --i: 5; animation-delay: 150ms; }
+.win-coins i:nth-child(7) { --i: 6; animation-delay: 90ms; }
+.win-coins i:nth-child(8) { --i: 7; animation-delay: 210ms; }
 }
 
 .win-copy {
   position: relative;
-  min-width: min(340px, 92%);
-  padding: 18px 18px 24px;
+  z-index: 2;
+  min-width: min(352px, 92%);
+  padding: 26px 18px 24px;
   display: grid;
   justify-items: center;
-  border-radius: 8px;
+  border-radius: 12px;
+  border: 3px solid #ffe889;
   background:
-    radial-gradient(circle at 50% 14%, rgba(255, 255, 255, 0.58), transparent 20%),
-    linear-gradient(180deg, rgba(255, 114, 225, 0.34), rgba(81, 15, 137, 0.86) 44%, rgba(35, 7, 64, 0.92));
-  border: 2px solid rgba(255, 237, 117, 0.9);
+    linear-gradient(180deg, rgba(255, 247, 173, 0.34), transparent 24%),
+    radial-gradient(circle at 50% 8%, rgba(255, 255, 255, 0.72), transparent 18%),
+    linear-gradient(180deg, #ff4ee6 0%, #a82ee2 42%, #3c087d 100%);
   box-shadow:
-    0 0 30px rgba(255, 76, 215, 0.8),
-    0 18px 36px rgba(0, 0, 0, 0.52),
-    inset 0 0 0 2px rgba(255, 255, 255, 0.14);
+    0 0 38px rgba(255, 70, 220, 0.78),
+    0 0 24px rgba(255, 226, 90, 0.7),
+    0 24px 46px rgba(0, 0, 0, 0.6),
+    inset 0 0 0 2px rgba(255, 255, 255, 0.18);
   transform: rotate(-3deg);
-  animation: win-pop 860ms cubic-bezier(0.22, 1.28, 0.36, 1);
+  animation: win-card-in 860ms cubic-bezier(0.16, 1.2, 0.28, 1) both;
   text-align: center;
+}
+
+.win-copy::before,
+.win-copy::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+
+.win-copy::before {
+  inset: -12px;
+  border-radius: 16px;
+  border: 2px solid rgba(255, 246, 171, 0.58);
+  box-shadow: inset 0 0 18px rgba(255, 244, 151, 0.3);
+}
+
+.win-copy::after {
+  left: 8%;
+  right: 8%;
+  top: 8px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.58), transparent);
+  mix-blend-mode: screen;
+}
+
+.win-crown {
+  position: absolute;
+  top: -24px;
+  width: 92px;
+  height: 38px;
+  background:
+    radial-gradient(circle at 50% 8%, #fff 0 8%, transparent 9%),
+    linear-gradient(145deg, transparent 0 18%, #ffd84f 19% 34%, transparent 35%),
+    linear-gradient(215deg, transparent 0 18%, #ffd84f 19% 34%, transparent 35%),
+    linear-gradient(180deg, #fff07e, #f2a51f);
+  clip-path: polygon(0 100%, 8% 28%, 28% 68%, 50% 0, 72% 68%, 92% 28%, 100% 100%);
+  filter: drop-shadow(0 0 10px rgba(255, 226, 82, 0.8));
 }
 
 .win-copy em {
   position: relative;
   z-index: 1;
   color: #fff3a8;
-  font-size: 16px;
+  font-size: 15px;
   font-style: normal;
   font-weight: 900;
   text-shadow: 0 2px 0 #6f224f;
@@ -1555,9 +1594,9 @@ button {
 .win-copy b {
   position: relative;
   z-index: 1;
-  margin: 6px 0 12px;
-  color: #fff182;
-  font-size: 48px;
+  margin: 6px 0 10px;
+  color: #fff7a8;
+  font-size: 46px;
   line-height: 0.95;
   text-shadow:
     0 3px 0 #8f3319,
@@ -1571,8 +1610,8 @@ button {
   font-weight: 900;
   line-height: 0.92;
   text-transform: uppercase;
-  color: #ffec51;
-  -webkit-text-stroke: 2px #8710a8;
+  color: #ffed55;
+  -webkit-text-stroke: 2px #75108f;
   text-shadow:
     0 4px 0 #4f0871,
     0 10px 18px rgba(0, 0, 0, 0.42),
@@ -1580,12 +1619,97 @@ button {
 }
 
 .win-copy span {
-  font-size: 54px;
+  font-size: 56px;
 }
 
 .win-copy strong {
   margin-top: 10px;
   font-size: 62px;
+}
+
+.win-overlay.tier-nice .win-backdrop {
+  background: rgba(8, 2, 28, 0.22);
+}
+
+.win-overlay.tier-nice .win-copy {
+  min-width: min(260px, 82%);
+  padding: 20px 14px 18px;
+  transform: rotate(-2deg) scale(0.9);
+}
+
+.win-overlay.tier-nice .win-rays {
+  width: 250px;
+  height: 250px;
+  opacity: 0.58;
+}
+
+.win-overlay.tier-nice .win-coins i:nth-child(n + 5) {
+  display: none;
+}
+
+.win-overlay.tier-nice .win-copy span {
+  font-size: 42px;
+}
+
+.win-overlay.tier-nice .win-copy strong {
+  font-size: 44px;
+}
+
+.win-overlay.tier-big .win-copy {
+  min-width: min(318px, 90%);
+}
+
+.win-overlay.tier-big .win-rays {
+  width: 360px;
+  height: 360px;
+}
+
+.win-overlay.tier-mega .win-rays,
+.win-overlay.tier-super .win-rays {
+  width: 430px;
+  height: 430px;
+  opacity: 1;
+}
+
+.win-overlay.tier-mega .win-copy {
+  background:
+    linear-gradient(180deg, rgba(255, 247, 173, 0.38), transparent 24%),
+    radial-gradient(circle at 50% 8%, rgba(255, 255, 255, 0.76), transparent 18%),
+    linear-gradient(180deg, #ff66f1 0%, #982ee7 38%, #33117e 100%);
+}
+
+.win-overlay.tier-super .win-copy,
+.win-overlay.tier-epic .win-copy {
+  min-width: min(374px, 94%);
+  border-color: #fff4a8;
+  box-shadow:
+    0 0 50px rgba(255, 76, 215, 0.95),
+    0 0 34px rgba(255, 224, 91, 0.82),
+    0 24px 48px rgba(0, 0, 0, 0.62),
+    inset 0 0 0 2px rgba(255, 255, 255, 0.22);
+}
+
+.win-overlay.tier-super .win-copy span,
+.win-overlay.tier-epic .win-copy span {
+  font-size: 60px;
+}
+
+.win-overlay.tier-super .win-copy strong,
+.win-overlay.tier-epic .win-copy strong {
+  font-size: 70px;
+}
+
+.win-overlay.tier-epic .win-copy {
+  background:
+    radial-gradient(circle at 50% 12%, rgba(255, 255, 255, 0.85), transparent 19%),
+    linear-gradient(180deg, #ffe66b 0%, #ff55e4 34%, #5b18dc 62%, #25034f 100%);
+  animation-name: jackpot-card-in;
+}
+
+.win-overlay.tier-epic .win-rays {
+  width: 540px;
+  height: 540px;
+  animation-duration: 620ms;
 }
 
 .particle {
@@ -2001,6 +2125,79 @@ button {
   }
   100% {
     transform: scale(1) rotate(-3deg);
+  }
+}
+
+@keyframes win-card-in {
+  0% {
+    transform: translateY(30px) rotateX(42deg) rotate(-7deg) scale(0.42);
+    opacity: 0;
+  }
+  46% {
+    transform: translateY(-8px) rotateX(0deg) rotate(-3deg) scale(1.12);
+    opacity: 1;
+  }
+  68% {
+    transform: translateY(2px) rotate(-3deg) scale(0.96);
+  }
+  100% {
+    transform: translateY(0) rotate(-3deg) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes jackpot-card-in {
+  0% {
+    transform: translateY(34px) rotateX(48deg) rotate(-7deg) scale(0.36);
+    opacity: 0;
+  }
+  38% {
+    transform: translateY(-10px) rotateX(0deg) rotate(-3deg) scale(1.18);
+    opacity: 1;
+  }
+  56% {
+    transform: translateY(2px) rotate(-3deg) scale(0.94);
+  }
+  72% {
+    transform: translateY(-3px) rotate(-3deg) scale(1.06);
+  }
+  100% {
+    transform: translateY(0) rotate(-3deg) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes win-backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes win-rays-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.45) rotate(0deg);
+  }
+  100% {
+    opacity: 0.86;
+    transform: scale(1) rotate(80deg);
+  }
+}
+
+@keyframes win-coin-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0.5) rotate(0deg);
+  }
+  18% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-260px) scale(1.08) rotate(540deg);
   }
 }
 

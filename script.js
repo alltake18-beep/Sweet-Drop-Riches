@@ -1,17 +1,17 @@
 const ROWS = 9;
 const COLS = 5;
-const SYMBOL_VERSION = "symbol-rules-26";
+const SYMBOL_VERSION = "symbol-rules-27";
 const PERF_ENABLED = new URLSearchParams(window.location.search).has("perf");
 const SPECIAL_METER_TARGET = 20;
 const BET_STEPS = [20, 50, 100, 200, 500];
 const CANDIES = ["red", "blue", "green", "orange", "yellow", "purple"];
 const MULTIPLIER_VALUES = [5, 10, 20, 30, 50, 100];
 const WIN_TIERS = [
-  { ratio: 50, label: "EPIC WIN", sound: "jackpot", className: "tier-epic" },
-  { ratio: 30, label: "SUPER WIN", sound: "superWin", className: "tier-super" },
-  { ratio: 20, label: "MEGA WIN", sound: "superWin", className: "tier-mega" },
-  { ratio: 10, label: "BIG WIN", sound: "win", className: "tier-big" },
-  { ratio: 5, label: "NICE", sound: "win", className: "tier-nice" },
+  { ratio: 50, label: "EPIC WIN", sound: "jackpot", className: "tier-epic", duration: 1900, quick: 1000, particles: 72 },
+  { ratio: 30, label: "SUPER WIN", sound: "superWin", className: "tier-super", duration: 1650, quick: 860, particles: 58 },
+  { ratio: 20, label: "MEGA WIN", sound: "superWin", className: "tier-mega", duration: 1400, quick: 760, particles: 46 },
+  { ratio: 10, label: "BIG WIN", sound: "win", className: "tier-big", duration: 1120, quick: 620, particles: 34 },
+  { ratio: 5, label: "NICE", sound: "win", className: "tier-nice", duration: 820, quick: 480, particles: 22 },
 ];
 
 const boardEl = document.getElementById("board");
@@ -1319,16 +1319,32 @@ async function maybeShowWinCard() {
   setPerfPhase("win-card");
   winLabelEl.textContent = tier.label;
   winMultiplierEl.textContent = `${Math.floor(ratio)}x`;
-  winAmountEl.textContent = formatMoney(state.currentWin);
+  winAmountEl.textContent = "0.00";
   winOverlay.className = `win-overlay ${tier.className}`;
   winOverlay.classList.remove("hidden");
-  spawnParticles(ratio >= 50 ? 54 : ratio >= 30 ? 42 : ratio >= 20 ? 34 : 24);
+  animateWinAmount(state.currentWin, resolveDelay(tier.duration * 0.72, tier.quick * 0.76));
+  spawnParticles(tier.particles);
   triggerScreenFx(ratio >= 50 ? "fx-jackpot" : ratio >= 20 ? "fx-blast" : "fx-bump", ratio >= 50 ? 980 : 640);
   playSound(tier.sound || "win");
-  await wait(resolveDelay(ratio >= 50 ? 1500 : ratio >= 20 ? 1250 : 980, 700));
+  await wait(resolveDelay(tier.duration, tier.quick));
   winOverlay.classList.add("hidden");
   setPerfPhase("resolve");
   return true;
+}
+
+function animateWinAmount(target, duration) {
+  const started = performance.now();
+  const tick = (now) => {
+    const t = Math.min(1, (now - started) / duration);
+    const eased = 1 - (1 - t) ** 3;
+    winAmountEl.textContent = formatMoney(target * eased);
+    if (t < 1 && !winOverlay.classList.contains("hidden")) {
+      requestAnimationFrame(tick);
+    } else {
+      winAmountEl.textContent = formatMoney(target);
+    }
+  };
+  requestAnimationFrame(tick);
 }
 
 async function maybeFullDropBonus() {
