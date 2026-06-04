@@ -1,6 +1,6 @@
 const ROWS = 7;
 const COLS = 7;
-const SYMBOL_VERSION = "symbol-rules-14";
+const SYMBOL_VERSION = "symbol-rules-15";
 const SPECIAL_METER_TARGET = 20;
 const BET_STEPS = [20, 50, 100, 200, 500];
 const CANDIES = ["red", "blue", "green", "orange", "yellow", "purple"];
@@ -14,7 +14,6 @@ const WIN_TIERS = [
 
 const boardEl = document.getElementById("board");
 const slotsEl = document.getElementById("slots");
-const slotProgressEl = document.getElementById("slotProgress");
 const specialMeterTextEl = document.getElementById("specialMeterText");
 const specialMeterFillEl = document.getElementById("specialMeterFill");
 const specialMiniSlotEl = document.getElementById("specialMiniSlot");
@@ -23,8 +22,6 @@ const balanceEl = document.getElementById("balance");
 const betEl = document.getElementById("bet");
 const statusTextEl = document.getElementById("statusText");
 const fastButton = document.getElementById("fastButton");
-const soundToggle = document.getElementById("soundToggle");
-const soundMenuButton = document.getElementById("soundMenuButton");
 const menuButton = document.getElementById("menuButton");
 const closeMenu = document.getElementById("closeMenu");
 const menuPanel = document.getElementById("menuPanel");
@@ -330,7 +327,6 @@ function renderSlots() {
 }
 
 function renderHud() {
-  slotProgressEl.textContent = `${state.filledSlots.size}/7`;
   specialMeterTextEl.textContent = `${Math.min(state.specialMeter, SPECIAL_METER_TARGET)}/${SPECIAL_METER_TARGET}`;
   specialMeterFillEl.style.width = `${Math.min(100, (state.specialMeter / SPECIAL_METER_TARGET) * 100)}%`;
   miniSlotIconEl.src = specialAsset(state.miniSlotPreview.special, state.miniSlotPreview.type);
@@ -339,8 +335,6 @@ function renderHud() {
   balanceEl.textContent = formatMoney(state.balance);
   betEl.textContent = currentBet().toLocaleString("en-US");
   fastButton.setAttribute("aria-pressed", String(state.fast));
-  soundToggle.textContent = state.sound ? "♪" : "×";
-  soundMenuButton.textContent = state.sound ? "音效開啟" : "音效關閉";
   modeButton.textContent = state.mode === "high" ? "High Roller" : "一般模式";
 }
 
@@ -1211,14 +1205,6 @@ fastButton.addEventListener("click", () => {
   state.fast = !state.fast;
   render();
 });
-
-function toggleSound() {
-  state.sound = !state.sound;
-  render();
-}
-
-soundToggle.addEventListener("click", toggleSound);
-soundMenuButton.addEventListener("click", toggleSound);
 
 menuButton.addEventListener("click", () => {
   menuPanel.classList.toggle("hidden");

@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Sweet Drop Riches Prototype</title>
-    <link rel="stylesheet" href="styles.css?v=symbol-rules-14" />
+    <link rel="stylesheet" href="styles.css?v=symbol-rules-15" />
   </head>
   <body>
     <main class="stage">
@@ -22,10 +22,6 @@
         <div class="play-area">
           <div class="board-shell">
             <div class="board-bar">
-              <div class="slot-counter">
-                <span>7槽收集獎</span>
-                <strong id="slotProgress">0/7</strong>
-              </div>
               <div class="special-meter" aria-label="特殊糖收集進度">
                 <div class="special-meter-copy">
                   <span>特殊糖收集</span>
@@ -35,18 +31,9 @@
                   <i id="specialMeterFill"></i>
                 </div>
                 <div class="mini-slot" id="specialMiniSlot" aria-label="特殊糖小拉霸">
-                  <img id="miniSlotIcon" src="assets/symbols/special-colorbomb.png?v=symbol-rules-14" alt="" />
+                  <img id="miniSlotIcon" src="assets/symbols/special-colorbomb.png?v=symbol-rules-15" alt="" />
                 </div>
               </div>
-              <button
-                class="mini-button"
-                id="soundToggle"
-                type="button"
-                title="音效"
-                aria-label="音效"
-              >
-                ♪
-              </button>
             </div>
 
             <div id="board" class="board" aria-label="7x7 糖果盤面"></div>
@@ -106,11 +93,10 @@
           </div>
           <button id="newBoardButton" type="button">刷新盤面</button>
           <button id="modeButton" type="button">一般模式</button>
-          <button id="soundMenuButton" type="button">音效開啟</button>
         </div>
       </section>
     </main>
 
-    <script src="script.js?v=symbol-rules-14"></script>
+    <script src="script.js?v=symbol-rules-15"></script>
   </body>
 </html>
