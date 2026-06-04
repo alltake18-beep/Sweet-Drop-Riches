@@ -1,6 +1,6 @@
 const ROWS = 9;
 const COLS = 5;
-const SYMBOL_VERSION = "symbol-rules-16";
+const SYMBOL_VERSION = "symbol-rules-17";
 const SPECIAL_METER_TARGET = 20;
 const BET_STEPS = [20, 50, 100, 200, 500];
 const CANDIES = ["red", "blue", "green", "orange", "yellow", "purple"];

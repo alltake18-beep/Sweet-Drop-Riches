@@ -49,7 +49,7 @@ button {
 .phone {
   position: relative;
   width: min(430px, 100%);
-  height: auto;
+  height: min(100dvh, 920px);
   min-height: 0;
   display: flex;
   flex-direction: column;
@@ -227,6 +227,7 @@ button {
   position: relative;
   display: flex;
   flex-direction: column;
+  align-items: center;
   min-height: 0;
   padding: 6px;
   border-radius: 7px;
@@ -386,7 +387,7 @@ button {
   grid-template-columns: repeat(5, minmax(0, 1fr));
   grid-template-rows: repeat(9, minmax(0, 1fr));
   gap: 2px;
-  width: 100%;
+  width: var(--board-width, 100%);
   aspect-ratio: 5 / 9;
   padding: 3px;
   border-radius: 6px;
@@ -1078,6 +1079,7 @@ button {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 2px;
+  width: var(--board-width, 100%);
 }
 
 .drop-arrows {
@@ -1688,8 +1690,9 @@ button {
   }
 
   .phone {
+    --board-width: min(100%, calc((100dvh - 246px) * 5 / 9));
     width: 100vw;
-    height: auto;
+    height: 100dvh;
     min-height: 0;
     border-radius: 0;
     border-left: 0;
@@ -1699,11 +1702,99 @@ button {
   .phone::before {
     border-radius: 0;
   }
+
+  .topbar {
+    padding: 8px 12px 5px;
+  }
+
+  .brand {
+    width: min(350px, 100%);
+    padding: 5px 10px 7px;
+    border-radius: 9px;
+    box-shadow:
+      0 3px 0 #4c126f,
+      0 0 0 2px rgba(110, 35, 184, 0.82),
+      0 8px 18px rgba(0, 0, 0, 0.32),
+      inset 0 1px 0 rgba(255, 255, 255, 0.72),
+      inset 0 -4px 0 rgba(82, 18, 112, 0.34);
+  }
+
+  .brand::after {
+    bottom: -8px;
+    height: 11px;
+  }
+
+  .brand-title {
+    font-size: clamp(27px, 7.4vw, 34px);
+  }
+
+  .play-area {
+    padding: 0 8px 2px;
+  }
+
+  .board-shell {
+    flex: 0 0 auto;
+    padding: 5px;
+  }
+
+  .board-bar {
+    width: var(--board-width, 100%);
+    min-height: 38px;
+    padding-bottom: 4px;
+  }
+
+  .special-meter {
+    grid-template-columns: minmax(0, 1fr) 38px;
+    grid-template-rows: auto 8px;
+    padding: 4px 4px 4px 7px;
+  }
+
+  .special-meter-copy strong {
+    font-size: 12px;
+  }
+
+  .mini-slot {
+    width: 38px;
+    height: 38px;
+  }
+
+  .drop-arrows {
+    height: 20px;
+  }
+
+  .drop-arrows span {
+    height: 20px;
+  }
+
+  .drop-arrows span::before {
+    height: 12px;
+    width: 8px;
+  }
+
+  .drop-arrows span::after {
+    border-left-width: 8px;
+    border-right-width: 8px;
+    border-top-width: 9px;
+  }
+
+  .slots {
+    height: 50px;
+  }
+
+  .status-text {
+    min-height: 26px;
+    padding-top: 4px;
+    font-size: 12px;
+  }
+
+  .hud {
+    padding: 5px 8px 8px;
+  }
 }
 
 @media (max-width: 430px) {
   .topbar {
-    padding: 12px 13px 7px;
+    padding: 8px 12px 5px;
   }
 
   .brand {
@@ -1711,7 +1802,7 @@ button {
   }
 
   .brand-title {
-    font-size: clamp(28px, 8vw, 34px);
+    font-size: clamp(25px, 7.5vw, 32px);
   }
 
   .win-copy {
@@ -1733,13 +1824,13 @@ button {
   .hud {
     grid-template-columns: 0.98fr 1.08fr 42px 42px;
     gap: 5px;
-    padding: 7px 8px 12px;
+    padding: 5px 8px 8px;
   }
 
   .hud-panel,
   .bet-panel,
   .icon-button {
-    min-height: 54px;
+    min-height: 49px;
   }
 
   .hud-panel strong,
