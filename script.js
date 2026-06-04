@@ -1,6 +1,6 @@
 const ROWS = 9;
 const COLS = 5;
-const SYMBOL_VERSION = "symbol-rules-23";
+const SYMBOL_VERSION = "symbol-rules-24";
 const SPECIAL_METER_TARGET = 20;
 const BET_STEPS = [20, 50, 100, 200, 500];
 const CANDIES = ["red", "blue", "green", "orange", "yellow", "purple"];
@@ -270,60 +270,93 @@ function tileLabel(tile) {
   return `${tile.type} 糖果`;
 }
 
-function renderBoard() {
-  boardEl.innerHTML = "";
+function tileSignature(tile) {
+  if (!tile) return "empty";
+  if (tile.kind === "multiplier") return `m:${tile.value}`;
+  return `c:${tile.type}:${tile.special || "normal"}`;
+}
 
+function tileMarkup(tile) {
+  if (!tile) return "";
+  if (tile.kind === "candy") {
+    const asset = tile.special ? specialAsset(tile.special, tile.type) : candyAsset(tile.type);
+    const imageClass = tile.special ? "special-img" : "candy-img";
+    return `<img class="symbol-img ${imageClass}" src="${asset}" alt="">`;
+  }
+  if (tile.kind === "multiplier") {
+    return `<img class="symbol-img multiplier-img" src="${multiplierAsset(tile.value)}" alt="">`;
+  }
+  return "";
+}
+
+function ensureBoardButtons() {
+  const expected = ROWS * COLS;
+  if (boardEl.children.length === expected) return;
+  boardEl.innerHTML = "";
   for (let row = 0; row < ROWS; row += 1) {
     for (let col = 0; col < COLS; col += 1) {
-      const tile = state.board[row][col];
       const button = document.createElement("button");
-      const key = `${row},${col}`;
-
       button.type = "button";
       button.className = "tile";
       button.dataset.row = row;
       button.dataset.col = col;
-      button.disabled = state.resolving;
-      button.setAttribute("aria-label", tileLabel(tile));
+      boardEl.appendChild(button);
+    }
+  }
+}
+
+function renderBoard() {
+  ensureBoardButtons();
+
+  for (let row = 0; row < ROWS; row += 1) {
+    for (let col = 0; col < COLS; col += 1) {
+      const tile = state.board[row][col];
+      const button = boardEl.children[row * COLS + col];
+      const key = `${row},${col}`;
+      const classes = ["tile"];
 
       if (state.selected?.row === row && state.selected?.col === col) {
-        button.classList.add("selected");
+        classes.push("selected");
       }
-  if (state.clearing.has(key)) {
-        button.classList.add("clearing");
+      if (state.clearing.has(key)) {
+        classes.push("clearing");
       }
       if (tile?._fall) {
-        button.classList.add("falling");
+        classes.push("falling");
         button.style.setProperty("--fall-y", `-${tile._fall * 118}%`);
         button.style.setProperty("--fall-delay", `${Math.min(140, col * 22 + tile._fall * 12)}ms`);
+      } else {
+        button.style.removeProperty("--fall-y");
+        button.style.removeProperty("--fall-delay");
       }
       if (tile?._merged) {
-        button.classList.add("merged");
+        classes.push("merged");
       }
       if (tile?._reward) {
-        button.classList.add("reward-drop");
+        classes.push("reward-drop");
       }
       if (tile?._spawn) {
-        button.classList.add("special-spawn");
+        classes.push("special-spawn");
       }
       if (state.invalid === key) {
-        button.classList.add("invalid");
+        classes.push("invalid");
       }
 
       if (tile?.kind === "candy") {
-        button.classList.add("candy", `candy-${tile.type}`);
-        if (tile.special) button.classList.add("special-candy", `special-${tile.special}`);
-        const asset = tile.special ? specialAsset(tile.special, tile.type) : candyAsset(tile.type);
-        const imageClass = tile.special ? "special-img" : "candy-img";
-        button.innerHTML = state.clearing.has(key)
-          ? `<img class="symbol-img ${imageClass}" src="${asset}" alt=""><span class="clear-burst"></span><span class="clear-sparks"></span>`
-          : `<img class="symbol-img ${imageClass}" src="${asset}" alt="">`;
+        classes.push("candy", `candy-${tile.type}`);
+        if (tile.special) classes.push("special-candy", `special-${tile.special}`);
       } else if (tile?.kind === "multiplier") {
-        button.classList.add("multiplier", `value-${tile.value}`, multiplierTierClass(tile.value));
-        button.innerHTML = `<img class="symbol-img multiplier-img" src="${multiplierAsset(tile.value)}" alt="">`;
+        classes.push("multiplier", `value-${tile.value}`, multiplierTierClass(tile.value));
       }
 
-      boardEl.appendChild(button);
+      const signature = tileSignature(tile);
+      if (button.dataset.signature !== signature) {
+        button.innerHTML = tileMarkup(tile);
+        button.dataset.signature = signature;
+      }
+      button.className = classes.join(" ");
+      button.disabled = state.resolving;
+      button.setAttribute("aria-label", tileLabel(tile));
     }
   }
 }
@@ -1015,6 +1048,7 @@ async function resolveMove(initialMatches, preferredSpawn = null) {
     render();
     playSound(hasSpecialBlast ? "specialBlast" : cascades === 0 ? "match" : "cascade");
     if (hasSpecialBlast) triggerScreenFx("fx-blast", 460);
+    spawnClearBursts(expandedCells, hasSpecialBlast);
     spawnCollectEnergy(expandedCells);
     await wait(resolveDelay(hasSpecialBlast ? 430 : 380, 150));
 
@@ -1187,6 +1221,47 @@ function spawnParticles(count) {
     hot: "#fff8a5",
     alpha: 0.95,
   }));
+  enqueueFx(items);
+}
+
+function spawnClearBursts(cells, intense = false) {
+  const host = document.querySelector(".play-area");
+  if (!host || document.hidden) return;
+
+  const hostRect = host.getBoundingClientRect();
+  const maxCells = window.innerWidth <= 520 ? 18 : 28;
+  const points = Array.from(cells).slice(0, maxCells);
+  const now = performance.now();
+  const colors = ["#ffdf5f", "#ff58c8", "#35c8ff", "#83ff58", "#ff8138", "#ffffff"];
+  const items = [];
+
+  for (const key of points) {
+    const tile = boardEl.querySelector(tileSelector(keyToPoint(key)));
+    if (!tile) continue;
+    const rect = tile.getBoundingClientRect();
+    const x = rect.left + rect.width * 0.5 - hostRect.left;
+    const y = rect.top + rect.height * 0.5 - hostRect.top;
+    const sparks = intense ? 5 : 3;
+    for (let i = 0; i < sparks; i += 1) {
+      items.push({
+        kind: "burst",
+        start: now,
+        delay: Math.random() * 60,
+        duration: intense ? 520 + Math.random() * 160 : 420 + Math.random() * 120,
+        x,
+        y,
+        angle: Math.random() * Math.PI * 2,
+        distance: (intense ? 32 : 22) + Math.random() * (intense ? 64 : 42),
+        radius: (intense ? 4.5 : 3.2) + Math.random() * 3,
+        rotation: Math.random() * Math.PI,
+        spin: (Math.random() - 0.5) * 5,
+        color: randomItem(colors),
+        hot: "#fff8a5",
+        alpha: intense ? 1 : 0.88,
+      });
+    }
+  }
+
   enqueueFx(items);
 }
 
