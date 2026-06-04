@@ -1,10 +1,10 @@
 const ROWS = 9;
 const COLS = 5;
-const SYMBOL_VERSION = "symbol-rules-29";
+const SYMBOL_VERSION = "symbol-rules-30";
 const PERF_ENABLED = new URLSearchParams(window.location.search).has("perf");
 const SPECIAL_METER_TARGET = 20;
 const BET_STEPS = [20, 50, 100, 200, 500];
-const CANDIES = ["red", "blue", "green", "orange", "yellow", "purple"];
+const CANDIES = ["red", "blue", "green", "orange", "purple"];
 const MULTIPLIER_VALUES = [5, 10, 20, 30, 50, 100];
 const WIN_TIERS = [
   { ratio: 100, label: "LEGENDARY WIN", art: "legendary", sound: "jackpot", className: "tier-legendary", duration: 2500, quick: 2500, particles: 86, countVolume: 0.055 },
@@ -81,9 +81,10 @@ const state = {
   ignoreClick: false,
   specialMeter: 0,
   pendingSpecialAwards: 0,
-  miniSlotPreview: { special: "colorbomb", type: "purple" },
+  miniSlotPreview: { kind: "chocolate", type: "purple" },
   miniSlotRolling: false,
   miniSlotWin: false,
+  sniperTarget: null,
 };
 
 function formatMoney(value) {
@@ -207,9 +208,7 @@ function randomItem(items) {
 
 function randomCandy(exclude = [], options = {}) {
   const pool = CANDIES.filter((type) => !exclude.includes(type));
-  const tile = { kind: "candy", type: randomItem(pool.length ? pool : CANDIES) };
-  if (options.allowFish && Math.random() < 0.025) tile.special = "fish";
-  return tile;
+  return { kind: "candy", type: randomItem(pool.length ? pool : CANDIES) };
 }
 
 function weightedMultiplier() {
@@ -245,11 +244,11 @@ function multiplierAsset(value) {
 }
 
 function isGenericSpecial(special) {
-  return special === "fish" || special === "colorbomb";
+  return special === "chocolate";
 }
 
 function isMatchableCandy(tile) {
-  return tile?.kind === "candy" && !isGenericSpecial(tile.special);
+  return tile?.kind === "candy" && !tile.special;
 }
 
 function isOrdinaryCandy(tile) {
@@ -257,6 +256,9 @@ function isOrdinaryCandy(tile) {
 }
 
 function specialAsset(special, type) {
+  if (special === "chocolate") {
+    return `assets/symbols/special-colorbomb.png?v=${SYMBOL_VERSION}`;
+  }
   if (special === "horizontal" || special === "vertical" || special === "bomb") {
     return `assets/symbols/special-${special}-${type}.png?v=${SYMBOL_VERSION}`;
   }
@@ -273,14 +275,8 @@ function allSymbolAssets() {
     ...MULTIPLIER_VALUES.map(multiplierAsset),
     "assets/symbols/multiplier-x200.svg?v=" + SYMBOL_VERSION,
     ...WIN_TIERS.map((tier) => winArtAsset(tier.art)),
-    specialAsset("fish"),
-    specialAsset("colorbomb"),
+    specialAsset("chocolate"),
   ];
-  for (const type of CANDIES) {
-    assets.push(specialAsset("horizontal", type));
-    assets.push(specialAsset("vertical", type));
-    assets.push(specialAsset("bomb", type));
-  }
   return Array.from(new Set(assets));
 }
 
@@ -301,20 +297,49 @@ function preloadSymbolAssets() {
   });
 }
 
-function randomSpecialReward() {
-  const special = randomItem(["horizontal", "vertical", "bomb", "fish", "colorbomb"]);
-  return {
-    special,
-    type: special === "fish" || special === "colorbomb" ? randomItem(CANDIES) : randomItem(CANDIES),
-  };
+function sniperIconAsset() {
+  return `data:image/svg+xml,${encodeURIComponent(`
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96">
+      <defs>
+        <radialGradient id="g" cx="50%" cy="50%" r="56%">
+          <stop offset="0" stop-color="#fff7aa"/>
+          <stop offset=".42" stop-color="#ff46d8"/>
+          <stop offset="1" stop-color="#31d7ff"/>
+        </radialGradient>
+      </defs>
+      <circle cx="48" cy="48" r="33" fill="none" stroke="url(#g)" stroke-width="8"/>
+      <circle cx="48" cy="48" r="12" fill="none" stroke="#fff" stroke-width="5"/>
+      <path d="M48 4v23M48 69v23M4 48h23M69 48h23" stroke="#ffe56b" stroke-width="8" stroke-linecap="round"/>
+      <circle cx="48" cy="48" r="4" fill="#fff"/>
+    </svg>
+  `)}`;
 }
 
-function specialRewardTile(reward) {
+function randomBoardEvent() {
+  const kind = randomItem(["chocolate", "multiplier", "sniper"]);
+  if (kind === "chocolate") return { kind, type: randomItem(CANDIES) };
+  if (kind === "multiplier") return { kind, value: weightedMultiplier().value };
+  return { kind };
+}
+
+function eventPreviewAsset(event) {
+  if (event.kind === "multiplier") return multiplierAsset(event.value || 10);
+  if (event.kind === "sniper") return sniperIconAsset();
+  return specialAsset("chocolate");
+}
+
+function eventName(event) {
+  if (event.kind === "multiplier") return `x${event.value} 倍數糖`;
+  if (event.kind === "sniper") return "狙擊槍";
+  return "巧克力糖";
+}
+
+function chocolateTile(type = randomItem(CANDIES), reward = false) {
   return {
     kind: "candy",
-    type: reward.type,
-    special: reward.special,
-    _reward: true,
+    type,
+    special: "chocolate",
+    _reward: reward,
   };
 }
 
@@ -528,6 +553,8 @@ function renderSlots() {
 }
 
 function renderHud() {
+  document.querySelector(".special-meter-copy span").textContent = "事件收集";
+  specialMiniSlotEl.setAttribute("aria-label", "事件預覽");
   specialMeterTextEl.textContent = `${Math.min(state.specialMeter, SPECIAL_METER_TARGET)}/${SPECIAL_METER_TARGET}`;
   specialMeterFillEl.style.width = `${Math.min(100, (state.specialMeter / SPECIAL_METER_TARGET) * 100)}%`;
   miniSlotIconEl.src = specialAsset(state.miniSlotPreview.special, state.miniSlotPreview.type);
@@ -1289,6 +1316,11 @@ async function resolveMove(initialMatches, preferredSpawn = null) {
   }
 
   await processSpecialAwards();
+  const eventMatches = measurePerf("event.findMatches", () => findMatches(state.board));
+  if (eventMatches.cells.size > 0) {
+    await resolveMove(eventMatches);
+    return;
+  }
   state.lastWin = state.currentWin;
   await maybeFullDropBonus();
   const showedWinCard = await maybeShowWinCard();
@@ -1899,6 +1931,174 @@ soundMenuButton.addEventListener("click", () => {
   }
   render();
 });
+
+function randomSpecialReward() {
+  return randomBoardEvent();
+}
+
+function chooseCreatedSpecial() {
+  return null;
+}
+
+function tileLabel(tile) {
+  if (!tile) return "空格";
+  if (tile.kind === "multiplier") return `x${tile.value} 倍數糖`;
+  if (tile.special === "chocolate") return "巧克力糖";
+  return `${tile.type} 糖果`;
+}
+
+function specialName(special) {
+  return special === "chocolate" ? "巧克力糖" : "特殊物件";
+}
+
+function specialEffectCells(row, col, tile) {
+  if (tile.special === "chocolate") return candyCellsByType(tile._targetType || tile.type, false);
+  return new Set();
+}
+
+function renderHud() {
+  document.querySelector(".special-meter-copy span").textContent = "事件收集";
+  specialMiniSlotEl.setAttribute("aria-label", "事件預覽");
+  specialMeterTextEl.textContent = `${Math.min(state.specialMeter, SPECIAL_METER_TARGET)}/${SPECIAL_METER_TARGET}`;
+  specialMeterFillEl.style.width = `${Math.min(100, (state.specialMeter / SPECIAL_METER_TARGET) * 100)}%`;
+  miniSlotIconEl.src = eventPreviewAsset(state.miniSlotPreview);
+  specialMiniSlotEl.classList.toggle("rolling", state.miniSlotRolling);
+  specialMiniSlotEl.classList.toggle("win", state.miniSlotWin);
+  balanceEl.textContent = formatMoney(state.balance);
+  betEl.textContent = currentBet().toLocaleString("en-US");
+  fastButton.setAttribute("aria-pressed", String(state.fast));
+  soundMenuButton.textContent = state.sound ? "音效開啟" : "音效關閉";
+}
+
+function findBoardEventCell({ allowMultiplierTarget = false } = {}) {
+  const cells = [];
+  for (let row = 0; row < ROWS; row += 1) {
+    for (let col = 0; col < COLS; col += 1) {
+      const tile = state.board[row][col];
+      if (isOrdinaryCandy(tile) || (allowMultiplierTarget && tile?.kind === "multiplier")) {
+        cells.push({ row, col });
+      }
+    }
+  }
+  return cells.length ? randomItem(cells) : null;
+}
+
+function surroundingPoints(row, col) {
+  const points = [];
+  for (let r = row - 1; r <= row + 1; r += 1) {
+    for (let c = col - 1; c <= col + 1; c += 1) {
+      if (r === row && c === col) continue;
+      if (r < 0 || r >= ROWS || c < 0 || c >= COLS) continue;
+      points.push({ row: r, col: c });
+    }
+  }
+  return points;
+}
+
+function cloneSniperResultTile(tile) {
+  if (tile?.kind === "multiplier") {
+    return { kind: "multiplier", value: tile.value, _reward: true };
+  }
+  return { kind: "candy", type: tile?.type || randomItem(CANDIES), _reward: true };
+}
+
+function markSniperTarget(point) {
+  boardEl.querySelectorAll(".sniper-target").forEach((tile) => tile.classList.remove("sniper-target"));
+  if (!point) return;
+  boardEl.querySelector(tileSelector(point))?.classList.add("sniper-target");
+}
+
+async function playSniperEvent() {
+  const targets = [];
+  for (let row = 0; row < ROWS; row += 1) {
+    for (let col = 0; col < COLS; col += 1) {
+      const tile = state.board[row][col];
+      if (isOrdinaryCandy(tile) || tile?.kind === "multiplier") targets.push({ row, col });
+    }
+  }
+  if (!targets.length) return false;
+
+  const finalTarget = randomItem(targets);
+  const steps = state.fast ? 8 : 15;
+  playSound("specialReady");
+  for (let i = 0; i < steps; i += 1) {
+    const point = i === steps - 1 ? finalTarget : randomItem(targets);
+    state.sniperTarget = point;
+    render();
+    markSniperTarget(point);
+    await wait(resolveDelay(80 + i * 10, 38));
+  }
+
+  const targetTile = state.board[finalTarget.row][finalTarget.col];
+  const resultTile = cloneSniperResultTile(targetTile);
+  for (const point of surroundingPoints(finalTarget.row, finalTarget.col)) {
+    state.board[point.row][point.col] = { ...resultTile, _reward: true };
+  }
+  setStatus("狙擊槍鎖定");
+  render();
+  markSniperTarget(finalTarget);
+  spawnParticles(24);
+  triggerScreenFx("fx-bump", 420);
+  playSound(targetTile?.kind === "multiplier" ? "multiplierHigh" : "specialBlast");
+  await wait(resolveDelay(620, 220));
+
+  state.sniperTarget = null;
+  markSniperTarget(null);
+  for (const row of state.board) {
+    for (const tile of row) {
+      if (tile?._reward) delete tile._reward;
+    }
+  }
+  return true;
+}
+
+async function processSpecialAwards() {
+  while (state.pendingSpecialAwards > 0) {
+    state.pendingSpecialAwards -= 1;
+    const event = randomBoardEvent();
+    state.miniSlotRolling = true;
+    specialMiniSlotEl.classList.remove("win");
+
+    const steps = state.fast ? 5 : 9;
+    for (let i = 0; i < steps; i += 1) {
+      state.miniSlotPreview = randomBoardEvent();
+      render();
+      await wait(resolveDelay(120, 55));
+    }
+
+    state.miniSlotRolling = false;
+    state.miniSlotWin = true;
+    state.miniSlotPreview = event;
+    render();
+    playSound("specialReady");
+    await wait(resolveDelay(460, 180));
+
+    if (event.kind === "sniper") {
+      setStatus("狙擊槍");
+      await playSniperEvent();
+    } else {
+      const target = findBoardEventCell();
+      if (target) {
+        if (event.kind === "multiplier") {
+          state.board[target.row][target.col] = { kind: "multiplier", value: event.value, _reward: true };
+        } else {
+          state.board[target.row][target.col] = chocolateTile(event.type, true);
+        }
+        setStatus(`抽中${eventName(event)}`);
+        render();
+        spawnParticles(event.kind === "multiplier" && event.value >= 50 ? 28 : 18);
+        triggerScreenFx(event.kind === "multiplier" && event.value >= 50 ? "fx-bump" : "fx-pop", 360);
+        playSound(event.kind === "multiplier" ? "multiplierHigh" : "specialSpawn");
+        await wait(resolveDelay(520, 200));
+        const tile = state.board[target.row][target.col];
+        if (tile) delete tile._reward;
+      }
+    }
+
+    state.miniSlotWin = false;
+    render();
+  }
+}
 
 window.addEventListener("resize", () => scheduleBoardSizeSync(true));
 window.visualViewport?.addEventListener("resize", () => scheduleBoardSizeSync(true));
