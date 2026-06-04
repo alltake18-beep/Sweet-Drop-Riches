@@ -1278,6 +1278,27 @@ button {
   text-shadow: 0 0 12px rgba(255, 188, 60, 0.58);
 }
 
+.perf-panel {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 86px;
+  z-index: 40;
+  max-height: 42%;
+  overflow: auto;
+  padding: 8px 9px;
+  border: 1px solid rgba(97, 232, 255, 0.55);
+  border-radius: 8px;
+  background: rgba(4, 7, 23, 0.86);
+  color: #dffaff;
+  font-family: Consolas, "SFMono-Regular", monospace;
+  font-size: 10px;
+  line-height: 1.35;
+  white-space: pre-wrap;
+  pointer-events: none;
+  box-shadow: 0 0 18px rgba(38, 219, 255, 0.22);
+}
+
 .hud {
   position: relative;
   z-index: 6;

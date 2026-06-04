@@ -1,6 +1,7 @@
 const ROWS = 9;
 const COLS = 5;
-const SYMBOL_VERSION = "symbol-rules-24";
+const SYMBOL_VERSION = "symbol-rules-25";
+const PERF_ENABLED = new URLSearchParams(window.location.search).has("perf");
 const SPECIAL_METER_TARGET = 20;
 const BET_STEPS = [20, 50, 100, 200, 500];
 const CANDIES = ["red", "blue", "green", "orange", "yellow", "purple"];
@@ -16,6 +17,7 @@ const WIN_TIERS = [
 const boardEl = document.getElementById("board");
 const slotsEl = document.getElementById("slots");
 const fxCanvas = document.getElementById("fxCanvas");
+const perfPanel = document.getElementById("perfPanel");
 const specialMeterTextEl = document.getElementById("specialMeterText");
 const specialMeterFillEl = document.getElementById("specialMeterFill");
 const specialMiniSlotEl = document.getElementById("specialMiniSlot");
@@ -60,6 +62,16 @@ const state = {
     items: [],
     frame: null,
   },
+  perf: {
+    enabled: PERF_ENABLED,
+    metrics: {},
+    slowFrames: 0,
+    longTasks: 0,
+    lastFrame: 0,
+    fps: 60,
+    lastPanelUpdate: 0,
+    resolveCount: 0,
+  },
   pointer: null,
   ignoreClick: false,
   specialMeter: 0,
@@ -74,6 +86,91 @@ function formatMoney(value) {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
+}
+
+function recordPerf(name, duration) {
+  if (!state.perf.enabled) return;
+  const metric = state.perf.metrics[name] || { count: 0, total: 0, max: 0, slow: 0 };
+  metric.count += 1;
+  metric.total += duration;
+  metric.max = Math.max(metric.max, duration);
+  if (duration > 16.7) metric.slow += 1;
+  state.perf.metrics[name] = metric;
+  updatePerfPanel();
+}
+
+function measurePerf(name, fn) {
+  if (!state.perf.enabled) return fn();
+  const started = performance.now();
+  const result = fn();
+  recordPerf(name, performance.now() - started);
+  return result;
+}
+
+function startPerfSpan(name) {
+  if (!state.perf.enabled) return () => {};
+  const started = performance.now();
+  return () => recordPerf(name, performance.now() - started);
+}
+
+function updatePerfPanel(force = false) {
+  if (!state.perf.enabled || !perfPanel) return;
+  const now = performance.now();
+  if (!force && now - state.perf.lastPanelUpdate < 420) return;
+  state.perf.lastPanelUpdate = now;
+  perfPanel.classList.remove("hidden");
+
+  const rows = Object.entries(state.perf.metrics)
+    .map(([name, metric]) => ({
+      name,
+      avg: metric.total / metric.count,
+      max: metric.max,
+      slow: metric.slow,
+    }))
+    .sort((a, b) => b.max - a.max)
+    .slice(0, 10)
+    .map((item) => `${item.name.padEnd(18)} avg ${item.avg.toFixed(1).padStart(5)}  max ${item.max.toFixed(1).padStart(5)}  slow ${item.slow}`);
+
+  perfPanel.textContent = [
+    `PERF MODE  fps ${state.perf.fps.toFixed(0)}  slowFrames ${state.perf.slowFrames}  longTasks ${state.perf.longTasks}`,
+    ...rows,
+  ].join("\n");
+}
+
+function initPerfMonitor() {
+  if (!state.perf.enabled) return;
+  perfPanel?.classList.remove("hidden");
+  console.info("[Sweet Drop Riches] perf mode enabled. Use ?perf=1 to show the panel.");
+
+  const tick = (now) => {
+    if (state.perf.lastFrame) {
+      const gap = now - state.perf.lastFrame;
+      const fps = 1000 / Math.max(gap, 1);
+      state.perf.fps = state.perf.fps * 0.88 + fps * 0.12;
+      if (gap > 50) {
+        state.perf.slowFrames += 1;
+        recordPerf("frame.gap", gap);
+      }
+    }
+    state.perf.lastFrame = now;
+    updatePerfPanel();
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+
+  if ("PerformanceObserver" in window) {
+    try {
+      const observer = new PerformanceObserver((list) => {
+        for (const entry of list.getEntries()) {
+          state.perf.longTasks += 1;
+          recordPerf("browser.longtask", entry.duration);
+        }
+      });
+      observer.observe({ entryTypes: ["longtask"] });
+    } catch (error) {
+      console.info("[Sweet Drop Riches] Long Task observer unavailable", error);
+    }
+  }
 }
 
 function currentBet() {
@@ -389,10 +486,10 @@ function renderHud() {
 }
 
 function render() {
-  renderBoard();
-  renderSlots();
-  renderHud();
-  syncBoardSize();
+  measurePerf("render.board", renderBoard);
+  measurePerf("render.slots", renderSlots);
+  measurePerf("render.hud", renderHud);
+  measurePerf("layout.sync", syncBoardSize);
 }
 
 function syncBoardSize() {
@@ -1029,12 +1126,14 @@ async function handleTileClick(row, col) {
 }
 
 async function resolveMove(initialMatches, preferredSpawn = null) {
+  const resolveEnd = startPerfSpan("move.resolve.total");
   state.resolving = true;
   let matches = initialMatches;
   let cascades = 0;
   render();
 
   while (matches.cells.size > 0) {
+    const matchEnd = startPerfSpan("move.match.expand");
     const clearScore = scoreRuns(matches.runs);
     addWin(clearScore);
     const createdSpecial = chooseCreatedSpecial(matches, preferredSpawn);
@@ -1043,6 +1142,7 @@ async function resolveMove(initialMatches, preferredSpawn = null) {
       const [row, col] = key.split(",").map(Number);
       return Boolean(state.board[row][col]?.special);
     });
+    matchEnd();
     state.clearing = expandedCells;
     setStatus(cascades === 0 ? "消除收集" : `連鎖 ${cascades + 1}`);
     render();
@@ -1053,6 +1153,7 @@ async function resolveMove(initialMatches, preferredSpawn = null) {
     await wait(resolveDelay(hasSpecialBlast ? 430 : 380, 150));
 
     let clearedCandyCount = 0;
+    const clearEnd = startPerfSpan("move.clear.data");
     for (const key of expandedCells) {
       const [row, col] = key.split(",").map(Number);
       if (createdSpecial && key === `${createdSpecial.row},${createdSpecial.col}`) continue;
@@ -1061,6 +1162,7 @@ async function resolveMove(initialMatches, preferredSpawn = null) {
         state.board[row][col] = null;
       }
     }
+    clearEnd();
     addSpecialMeter(clearedCandyCount);
     if (createdSpecial) {
       state.board[createdSpecial.row][createdSpecial.col] = {
@@ -1079,7 +1181,9 @@ async function resolveMove(initialMatches, preferredSpawn = null) {
     }
     state.clearing = new Set();
 
+    const collectEnd = startPerfSpan("move.collect.mult");
     const collected = collectMultipliers();
+    collectEnd();
     if (collected.length > 0) {
       state.slotFlash = Array(COLS).fill(null);
       for (const item of collected) {
@@ -1098,14 +1202,18 @@ async function resolveMove(initialMatches, preferredSpawn = null) {
       await wait(resolveDelay(highCollect >= 100 ? 760 : highCollect >= 50 ? 640 : 540, 190));
     }
 
+    const collapseEnd = startPerfSpan("move.collapse");
     collapseColumns();
+    collapseEnd();
+    const fillEnd = startPerfSpan("move.fill");
     fillEmptyCells();
+    fillEnd();
     render();
     playSound("drop");
     await wait(resolveDelay(430, 170));
     clearFallMarks();
 
-    matches = findMatches(state.board);
+    matches = measurePerf("move.findMatches", () => findMatches(state.board));
     cascades += 1;
   }
 
@@ -1118,6 +1226,23 @@ async function resolveMove(initialMatches, preferredSpawn = null) {
   render();
   await ensureLegalMove();
   setStatus(showedWinCard ? "大獎入帳" : "繼續追高倍糖果");
+  resolveEnd();
+  if (state.perf.enabled) {
+    state.perf.resolveCount += 1;
+    updatePerfPanel(true);
+    console.table(
+      Object.entries(state.perf.metrics)
+        .map(([name, metric]) => ({
+          name,
+          avg: +(metric.total / metric.count).toFixed(2),
+          max: +metric.max.toFixed(2),
+          count: metric.count,
+          slow: metric.slow,
+        }))
+        .sort((a, b) => b.max - a.max)
+        .slice(0, 16)
+    );
+  }
 }
 
 async function maybeShowWinCard() {
@@ -1306,6 +1431,7 @@ function drawFx(now) {
     state.fx.frame = null;
     return;
   }
+  const perfEnd = startPerfSpan("fx.draw");
 
   const dpr = state.fx.dpr || 1;
   context.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
@@ -1356,6 +1482,7 @@ function drawFx(now) {
   } else {
     state.fx.frame = null;
   }
+  perfEnd();
 }
 
 function spawnCollectEnergy(cells) {
@@ -1513,6 +1640,7 @@ function playMultiplierCollectSound(value) {
 
 function playSound(kind) {
   if (!state.sound) return;
+  recordPerf(`sound.${kind}`, 0);
   const throttle = {
     button: 55,
     move: 55,
@@ -1669,4 +1797,5 @@ window.setInterval(() => {
   renderHud();
 }, 1300);
 
+initPerfMonitor();
 startNewBoard();
