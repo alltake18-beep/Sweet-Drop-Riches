@@ -1755,6 +1755,70 @@ button {
   opacity: 0.56;
 }
 
+/* Final win presentation: bitmap art is the title, CSS text is fallback only. */
+.win-overlay .win-copy {
+  flex-direction: column !important;
+  width: min(84vw, 360px) !important;
+  max-width: 360px !important;
+  min-width: 0 !important;
+  gap: 2px;
+}
+
+.win-title-art {
+  display: block;
+  width: min(82vw, 350px);
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+  filter:
+    drop-shadow(0 9px 0 rgba(32, 5, 56, 0.55))
+    drop-shadow(0 0 18px rgba(255, 80, 220, 0.62));
+}
+
+.win-copy #winLabel {
+  display: none !important;
+}
+
+.win-copy #winMultiplier {
+  display: block;
+  order: 2;
+  margin-top: -6px;
+  color: #fff076;
+  font-size: clamp(38px, 12.8vw, 64px);
+  line-height: 0.9;
+  white-space: nowrap;
+  -webkit-text-stroke: 2px #74138d;
+  text-shadow:
+    0 4px 0 #42105a,
+    0 8px 0 #22042e,
+    0 0 18px rgba(255, 224, 88, 0.86);
+}
+
+.win-copy #winAmount {
+  display: block;
+  order: 3;
+  margin-top: 8px;
+  color: #fff8bd;
+  font-size: clamp(22px, 6.8vw, 36px);
+  line-height: 1;
+  white-space: nowrap;
+  -webkit-text-stroke: 1px #8a3714;
+  text-shadow:
+    0 2px 0 #64220c,
+    0 0 14px rgba(255, 222, 88, 0.86);
+}
+
+.win-overlay.tier-super .win-title-art,
+.win-overlay.tier-legendary .win-title-art {
+  width: min(84vw, 360px);
+}
+
+.win-overlay.tier-big .win-title-art {
+  width: min(74vw, 310px);
+}
+
 .win-overlay.tier-nice .win-backdrop {
   background: rgba(8, 2, 28, 0.22);
 }
@@ -2547,4 +2611,92 @@ button {
   .icon-button {
     font-size: 19px;
   }
+}
+
+/* Final override: win title is bitmap art, never live CSS text. */
+.win-overlay .win-copy {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: min(84vw, 360px) !important;
+  min-width: 0 !important;
+  max-width: 360px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+  transform: none;
+}
+
+.win-overlay .win-copy::before,
+.win-overlay .win-copy::after,
+.win-overlay .win-crown,
+.win-overlay .win-copy em,
+.win-overlay #winLabel {
+  display: none !important;
+}
+
+.win-overlay .win-title-art {
+  display: block !important;
+  order: 1;
+  width: min(82vw, 350px);
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+  filter:
+    drop-shadow(0 8px 0 rgba(26, 4, 45, 0.55))
+    drop-shadow(0 0 16px rgba(255, 78, 220, 0.6));
+}
+
+.win-overlay.tier-big .win-title-art {
+  width: min(74vw, 310px);
+}
+
+.win-overlay.tier-super .win-title-art,
+.win-overlay.tier-legendary .win-title-art {
+  width: min(84vw, 360px);
+}
+
+.win-overlay #winMultiplier {
+  display: block !important;
+  order: 2;
+  margin: -5px 0 0 !important;
+  color: #fff076 !important;
+  font-size: clamp(38px, 12.8vw, 64px) !important;
+  line-height: 0.9 !important;
+  white-space: nowrap;
+  -webkit-text-stroke: 2px #74138d;
+  text-shadow:
+    0 4px 0 #42105a,
+    0 8px 0 #22042e,
+    0 0 18px rgba(255, 224, 88, 0.86) !important;
+}
+
+.win-overlay #winAmount {
+  display: block !important;
+  order: 3;
+  margin: 8px 0 0 !important;
+  color: #fff8bd !important;
+  font-size: clamp(22px, 6.8vw, 36px) !important;
+  line-height: 1 !important;
+  white-space: nowrap;
+  -webkit-text-stroke: 1px #8a3714;
+  text-shadow:
+    0 2px 0 #64220c,
+    0 0 14px rgba(255, 222, 88, 0.86) !important;
+}
+
+.win-overlay .win-rays {
+  width: min(72vw, 320px) !important;
+  height: min(72vw, 320px) !important;
+  opacity: 0.42 !important;
+}
+
+.win-overlay.tier-epic .win-rays,
+.win-overlay.tier-legendary .win-rays {
+  width: min(80vw, 380px) !important;
+  height: min(80vw, 380px) !important;
+  opacity: 0.5 !important;
 }

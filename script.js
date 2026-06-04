@@ -1,17 +1,17 @@
 const ROWS = 9;
 const COLS = 5;
-const SYMBOL_VERSION = "symbol-rules-28";
+const SYMBOL_VERSION = "symbol-rules-29";
 const PERF_ENABLED = new URLSearchParams(window.location.search).has("perf");
 const SPECIAL_METER_TARGET = 20;
 const BET_STEPS = [20, 50, 100, 200, 500];
 const CANDIES = ["red", "blue", "green", "orange", "yellow", "purple"];
 const MULTIPLIER_VALUES = [5, 10, 20, 30, 50, 100];
 const WIN_TIERS = [
-  { ratio: 100, label: "LEGENDARY WIN", sound: "jackpot", className: "tier-legendary", duration: 2500, quick: 2500, particles: 86, countVolume: 0.055 },
-  { ratio: 50, label: "EPIC WIN", sound: "jackpot", className: "tier-epic", duration: 2500, quick: 2500, particles: 72, countVolume: 0.05 },
-  { ratio: 30, label: "SUPER MEGA WIN", sound: "superWin", className: "tier-super", duration: 2500, quick: 2500, particles: 58, countVolume: 0.045 },
-  { ratio: 20, label: "MEGA WIN", sound: "superWin", className: "tier-mega", duration: 2500, quick: 2500, particles: 46, countVolume: 0.04 },
-  { ratio: 5, label: "BIG WIN", sound: "win", className: "tier-big", duration: 2500, quick: 2500, particles: 34, countVolume: 0.035 },
+  { ratio: 100, label: "LEGENDARY WIN", art: "legendary", sound: "jackpot", className: "tier-legendary", duration: 2500, quick: 2500, particles: 86, countVolume: 0.055 },
+  { ratio: 50, label: "EPIC WIN", art: "epic", sound: "jackpot", className: "tier-epic", duration: 2500, quick: 2500, particles: 72, countVolume: 0.05 },
+  { ratio: 30, label: "SUPER MEGA WIN", art: "super-mega", sound: "superWin", className: "tier-super", duration: 2500, quick: 2500, particles: 58, countVolume: 0.045 },
+  { ratio: 20, label: "MEGA WIN", art: "mega", sound: "superWin", className: "tier-mega", duration: 2500, quick: 2500, particles: 46, countVolume: 0.04 },
+  { ratio: 5, label: "BIG WIN", art: "big", sound: "win", className: "tier-big", duration: 2500, quick: 2500, particles: 34, countVolume: 0.035 },
 ];
 
 const boardEl = document.getElementById("board");
@@ -32,6 +32,7 @@ const menuPanel = document.getElementById("menuPanel");
 const soundMenuButton = document.getElementById("soundMenuButton");
 const winOverlay = document.getElementById("winOverlay");
 const winLabelEl = document.getElementById("winLabel");
+const winTitleArtEl = document.getElementById("winTitleArt");
 const winMultiplierEl = document.getElementById("winMultiplier");
 const winAmountEl = document.getElementById("winAmount");
 
@@ -262,11 +263,16 @@ function specialAsset(special, type) {
   return `assets/symbols/special-${special}.png?v=${SYMBOL_VERSION}`;
 }
 
+function winArtAsset(name) {
+  return `assets/ui/wins/win-${name}.png?v=${SYMBOL_VERSION}`;
+}
+
 function allSymbolAssets() {
   const assets = [
     ...CANDIES.map(candyAsset),
     ...MULTIPLIER_VALUES.map(multiplierAsset),
     "assets/symbols/multiplier-x200.svg?v=" + SYMBOL_VERSION,
+    ...WIN_TIERS.map((tier) => winArtAsset(tier.art)),
     specialAsset("fish"),
     specialAsset("colorbomb"),
   ];
@@ -1318,6 +1324,8 @@ async function maybeShowWinCard() {
 
   setPerfPhase("win-card");
   winLabelEl.textContent = tier.label;
+  winTitleArtEl.src = winArtAsset(tier.art);
+  winTitleArtEl.alt = tier.label;
   winMultiplierEl.textContent = `${Math.floor(ratio)}x`;
   winAmountEl.textContent = "0.00";
   winOverlay.className = `win-overlay ${tier.className}`;
