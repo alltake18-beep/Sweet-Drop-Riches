@@ -2283,7 +2283,7 @@ function collectMultipliers() {
   const collected = [];
 
   for (const multiplier of state.multipliers) {
-    if (multiplier.row < ROWS - MULTIPLIER_SIZE) {
+    if (canMultiplierDrop(multiplier)) {
       multiplier.row += 1;
       multiplier._fall = Math.max(multiplier._fall || 0, 1);
     }
@@ -2303,6 +2303,12 @@ function collectMultipliers() {
   }
 
   return collected;
+}
+
+function canMultiplierDrop(multiplier) {
+  if (multiplier.row >= ROWS - MULTIPLIER_SIZE) return false;
+  const belowRow = multiplier.row + MULTIPLIER_SIZE;
+  return !state.board[belowRow][multiplier.col] && !state.board[belowRow][multiplier.col + 1];
 }
 
 function mergeAdjacentMultipliers() {
