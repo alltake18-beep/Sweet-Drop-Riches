@@ -3,7 +3,7 @@ const COLS = 6;
 const SLOT_COUNT = 3;
 const MULTIPLIER_SIZE = 2;
 const MULTIPLIER_COLS = [0, 2, 4];
-const SYMBOL_VERSION = "symbol-rules-42";
+const SYMBOL_VERSION = "symbol-rules-43";
 const PERF_ENABLED = new URLSearchParams(window.location.search).has("perf");
 const SPECIAL_METER_TARGET = 15;
 const BET_STEPS = [20, 50, 100, 200, 500];
@@ -1557,7 +1557,8 @@ async function resolveMove(initialMatches, preferredSpawn = null) {
     cascades += 1;
   }
 
-  await processSpecialAwards();
+  const resolvedByAwards = await processSpecialAwards();
+  if (resolvedByAwards) return;
   const eventMatches = measurePerf("event.findMatches", () => findMatches(state.board));
   if (eventMatches.cells.size > 0) {
     await resolveMove(eventMatches);
@@ -2637,6 +2638,16 @@ function multiplierSpawnPoint(value = 10, flags = {}) {
   return point ? createMultiplier(value, point.row, point.col, flags) : null;
 }
 
+async function resolveEventCascadeIfNeeded() {
+  const matches = measurePerf("event.cascade.findMatches", () => findMatches(state.board));
+  if (matches.cells.size === 0) return false;
+  state.miniSlotWin = false;
+  setEventPulse(false);
+  render();
+  await resolveMove(matches);
+  return true;
+}
+
 async function playCandyClearEvent(type) {
   const clearedCells = candyCellsByType(type, false);
   if (!clearedCells.size) return false;
@@ -2952,10 +2963,13 @@ async function processSpecialAwards() {
       await playCandyClearEvent(event.type || randomVisibleCandyType());
     }
 
+    if (await resolveEventCascadeIfNeeded()) return true;
+
     state.miniSlotWin = false;
     setEventPulse(false);
     render();
   }
+  return false;
 }
 
 window.addEventListener("resize", () => scheduleBoardSizeSync(true));
