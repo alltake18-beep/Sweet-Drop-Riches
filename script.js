@@ -3,7 +3,7 @@ const COLS = 6;
 const SLOT_COUNT = 3;
 const MULTIPLIER_SIZE = 2;
 const MULTIPLIER_COLS = [0, 2, 4];
-const SYMBOL_VERSION = "symbol-rules-40";
+const SYMBOL_VERSION = "symbol-rules-41";
 const PERF_ENABLED = new URLSearchParams(window.location.search).has("perf");
 const SPECIAL_METER_TARGET = 15;
 const BET_STEPS = [20, 50, 100, 200, 500];
@@ -308,6 +308,10 @@ function isOrdinaryCandy(tile) {
   return tile?.kind === "candy" && !tile.special;
 }
 
+function isVisibleOrdinaryCandy(row, col) {
+  return !multiplierAt(row, col) && isOrdinaryCandy(state.board[row]?.[col]);
+}
+
 function specialAsset(special, type) {
   if (special === "chocolate") {
     return `assets/symbols/special-chocolate.svg?v=${SYMBOL_VERSION}`;
@@ -412,6 +416,18 @@ function multiplierCells(multiplier) {
   return cells;
 }
 
+function clearMultiplierFootprint(board, multiplier) {
+  for (const cell of multiplierCells(multiplier)) {
+    board[cell.row][cell.col] = null;
+  }
+}
+
+function clearMultiplierFootprintsOnBoard(board, multipliers) {
+  for (const multiplier of multipliers) {
+    clearMultiplierFootprint(board, multiplier);
+  }
+}
+
 function multiplierCellKeys(multiplier) {
   return multiplierCells(multiplier).map((cell) => `${cell.row},${cell.col}`);
 }
@@ -433,8 +449,14 @@ function slotIndexFromMultiplier(multiplier) {
   return Math.max(0, Math.min(SLOT_COUNT - 1, Math.floor(multiplier.col / MULTIPLIER_SIZE)));
 }
 
-function canPlaceMultiplierAt(row, col, multipliers = state.multipliers, ignore = null) {
+function canPlaceMultiplierAt(row, col, multipliers = state.multipliers, ignore = null, board = state.board) {
   if (row < 0 || row > ROWS - MULTIPLIER_SIZE || !MULTIPLIER_COLS.includes(col)) return false;
+  for (let r = row; r < row + MULTIPLIER_SIZE; r += 1) {
+    for (let c = col; c < col + MULTIPLIER_SIZE; c += 1) {
+      const tile = board?.[r]?.[c];
+      if (tile && !isOrdinaryCandy(tile)) return false;
+    }
+  }
   return !multipliers.some((multiplier) => {
     if (ignore && multiplier.id === ignore.id) return false;
     return !(
@@ -481,9 +503,11 @@ function addMultipliers(board) {
   const multipliers = [];
 
   while (multipliers.length < count) {
-    const point = pickMultiplierSpawnCell(board, (cell) => canPlaceMultiplierAt(cell.row, cell.col, multipliers));
+    const point = pickMultiplierSpawnCell(board, (cell) => canPlaceMultiplierAt(cell.row, cell.col, multipliers, null, board));
     if (!point) break;
-    multipliers.push(createMultiplier(weightedMultiplier().value, point.row, point.col));
+    const multiplier = createMultiplier(weightedMultiplier().value, point.row, point.col);
+    multipliers.push(multiplier);
+    clearMultiplierFootprint(board, multiplier);
   }
 
   return multipliers;
@@ -522,6 +546,7 @@ function buildBoard() {
     forcePlayablePattern(board);
   }
 
+  clearMultiplierFootprintsOnBoard(board, multipliers);
   return { board, multipliers };
 }
 
@@ -969,6 +994,7 @@ function candyCellsInLine(axis, index) {
   for (let row = 0; row < ROWS; row += 1) {
     for (let col = 0; col < COLS; col += 1) {
       if ((axis === "row" && row !== index) || (axis === "col" && col !== index)) continue;
+      if (multiplierAt(row, col)) continue;
       if (state.board[row][col]?.kind === "candy") cells.add(`${row},${col}`);
     }
   }
@@ -980,6 +1006,7 @@ function candyCellsInArea(centerRow, centerCol, radius) {
   for (let row = centerRow - radius; row <= centerRow + radius; row += 1) {
     for (let col = centerCol - radius; col <= centerCol + radius; col += 1) {
       if (row < 0 || row >= ROWS || col < 0 || col >= COLS) continue;
+      if (multiplierAt(row, col)) continue;
       if (state.board[row][col]?.kind === "candy") cells.add(`${row},${col}`);
     }
   }
@@ -991,6 +1018,7 @@ function candyCellsByType(type, includeSpecial = true) {
   for (let row = 0; row < ROWS; row += 1) {
     for (let col = 0; col < COLS; col += 1) {
       const tile = state.board[row][col];
+      if (multiplierAt(row, col)) continue;
       if (tile?.kind === "candy" && tile.type === type && (includeSpecial || !tile.special)) cells.add(`${row},${col}`);
     }
   }
@@ -1446,7 +1474,7 @@ async function resolveMove(initialMatches, preferredSpawn = null) {
       const [row, col] = key.split(",").map(Number);
       if (createdSpecial && key === `${createdSpecial.row},${createdSpecial.col}`) continue;
       if (state.board[row][col]?.kind === "candy") {
-        clearedCandyCount += 1;
+        if (isVisibleOrdinaryCandy(row, col)) clearedCandyCount += 1;
         state.board[row][col] = null;
       }
     }
@@ -1913,7 +1941,7 @@ function ensureAudio() {
   if (!state.audioContext) state.audioContext = new AudioContext();
   if (!state.masterGain) {
     state.masterGain = state.audioContext.createGain();
-    state.masterGain.gain.value = 0.42;
+    state.masterGain.gain.value = 0.58;
     state.masterGain.connect(state.audioContext.destination);
   }
   if (state.audioContext.state === "suspended") state.audioContext.resume();
@@ -1923,7 +1951,7 @@ function ensureAudio() {
 function playTone(freq, duration = 0.08, options = {}) {
   const context = ensureAudio();
   if (!context || !state.masterGain) return;
-  const maxTones = window.innerWidth <= 520 ? 10 : 14;
+  const maxTones = window.innerWidth <= 520 ? 14 : 18;
   if (state.activeTones >= maxTones) return;
   state.activeTones += 1;
   const now = context.currentTime + (options.delay || 0);
@@ -1955,9 +1983,9 @@ function startBackgroundMusic() {
     if (!state.sound || document.hidden) return;
     const base = notes[state.musicStep % notes.length];
     state.musicStep += 1;
-    playTone(base, 0.055, { type: "sine", volume: 0.012 });
-    if (state.musicStep % 4 === 0) playTone(98, 0.048, { type: "square", volume: 0.01 });
-    if (state.musicStep % 8 === 0) playTone(base * 2, 0.04, { type: "triangle", volume: 0.006 });
+    playTone(base, 0.055, { type: "sine", volume: 0.024 });
+    if (state.musicStep % 4 === 0) playTone(98, 0.048, { type: "square", volume: 0.018 });
+    if (state.musicStep % 8 === 0) playTone(base * 2, 0.04, { type: "triangle", volume: 0.012 });
   }, 620);
 }
 
@@ -2006,27 +2034,27 @@ function playSound(kind) {
       playTone(880, 0.06, { delay: 0.07, volume: 0.045 });
     },
     drop: () => playTone(260, 0.08, { to: 170, type: "sine", volume: 0.045 }),
-    specialReady: () => playChord([660, 990, 1320], 0.16, { volume: 0.07 }),
+    specialReady: () => playChord([660, 990, 1320], 0.16, { volume: 0.105 }),
     specialSpawn: () => {
-      playTone(780, 0.08, { to: 1320, volume: 0.07 });
-      playChord([990, 1485], 0.11, { delay: 0.09, volume: 0.06 });
+      playTone(780, 0.08, { to: 1320, volume: 0.105 });
+      playChord([990, 1485], 0.11, { delay: 0.09, volume: 0.09 });
     },
     specialBlast: () => {
-      playTone(140, 0.16, { to: 70, type: "sawtooth", volume: 0.08 });
-      playChord([720, 960, 1280], 0.12, { delay: 0.05, volume: 0.07 });
+      playTone(140, 0.18, { to: 70, type: "sawtooth", volume: 0.13 });
+      playChord([720, 960, 1280], 0.13, { delay: 0.05, volume: 0.105 });
     },
-    multiplierMerge: () => playChord([520, 780, 1040], 0.14, { volume: 0.07 }),
+    multiplierMerge: () => playChord([520, 780, 1040], 0.14, { volume: 0.1 }),
     multiplierHigh: () => {
-      [620, 780, 980, 1240].forEach((freq, i) => playTone(freq, 0.08, { delay: i * 0.055, volume: 0.065 }));
+      [620, 780, 980, 1240].forEach((freq, i) => playTone(freq, 0.09, { delay: i * 0.055, volume: 0.1 }));
     },
-    slotProgress: () => playChord([520, 690], 0.075, { volume: 0.055 }),
-    win: () => [660, 880, 1100, 1320].forEach((freq, i) => playTone(freq, 0.1, { delay: i * 0.075, volume: 0.07 })),
+    slotProgress: () => playChord([520, 690], 0.075, { volume: 0.085 }),
+    win: () => [660, 880, 1100, 1320].forEach((freq, i) => playTone(freq, 0.11, { delay: i * 0.075, volume: 0.105 })),
     superWin: () => {
-      [520, 660, 880, 1100, 1320, 1760].forEach((freq, i) => playTone(freq, 0.11, { delay: i * 0.065, type: i > 3 ? "square" : "triangle", volume: 0.075 }));
+      [520, 660, 880, 1100, 1320, 1760].forEach((freq, i) => playTone(freq, 0.12, { delay: i * 0.065, type: i > 3 ? "square" : "triangle", volume: 0.11 }));
     },
     jackpot: () => {
-      [392, 523, 659, 784, 1047, 1319, 1568].forEach((freq, i) => playTone(freq, 0.16, { delay: i * 0.07, type: i > 3 ? "square" : "triangle", volume: 0.085 }));
-      playChord([262, 330, 392, 523], 0.42, { delay: 0.48, type: "sawtooth", volume: 0.055 });
+      [392, 523, 659, 784, 1047, 1319, 1568].forEach((freq, i) => playTone(freq, 0.17, { delay: i * 0.07, type: i > 3 ? "square" : "triangle", volume: 0.12 }));
+      playChord([262, 330, 392, 523], 0.42, { delay: 0.48, type: "sawtooth", volume: 0.085 });
     },
     error: () => playTone(150, 0.09, { to: 92, type: "sawtooth", volume: 0.055 }),
   };
@@ -2384,11 +2412,7 @@ function multiplierAtExcept(row, col, ignoredMultiplier) {
 }
 
 function clearMultiplierFootprints() {
-  for (const multiplier of state.multipliers) {
-    for (const cell of multiplierCells(multiplier)) {
-      state.board[cell.row][cell.col] = null;
-    }
-  }
+  clearMultiplierFootprintsOnBoard(state.board, state.multipliers);
 }
 
 function mergeAdjacentMultipliers() {
@@ -2503,8 +2527,13 @@ async function playFlameEvent() {
   let clearedCandyCount = 0;
   const resisted = [];
   const destroyedIds = new Set();
+  const coveredMultiplierCells = new Set();
+  const touchedMultipliers = flameTouchedMultipliers(finalCells);
 
-  for (const multiplier of flameTouchedMultipliers(finalCells)) {
+  for (const multiplier of touchedMultipliers) {
+    for (const cell of multiplierCells(multiplier)) {
+      coveredMultiplierCells.add(pointKey(cell));
+    }
     if (Math.random() < flameBurnChance(multiplier.value)) {
       destroyedIds.add(multiplier.id);
       for (const cell of multiplierCells(multiplier)) {
@@ -2520,9 +2549,10 @@ async function playFlameEvent() {
 
   for (const key of finalCells) {
     const { row, col } = keyToPoint(key);
+    if (coveredMultiplierCells.has(key)) continue;
     if (multiplierAt(row, col)) continue;
     if (state.board[row][col]?.kind === "candy") {
-      clearedCandyCount += 1;
+      if (isVisibleOrdinaryCandy(row, col)) clearedCandyCount += 1;
       clearedCells.add(key);
     }
   }
@@ -2532,6 +2562,11 @@ async function playFlameEvent() {
   spawnParticles(Math.min(48, Math.max(18, clearedCells.size * 2 + destroyedIds.size * 8)));
   if (destroyedIds.size) triggerScreenFx("fx-blast", 520);
   await wait(resolveDelay(420, 160));
+
+  state.flameCells = new Set();
+  state.flameFinal = false;
+  render();
+  await wait(resolveDelay(150, 70));
 
   for (const key of clearedCells) {
     const { row, col } = keyToPoint(key);
@@ -2743,6 +2778,7 @@ async function processSpecialAwards() {
       const multiplier = multiplierSpawnPoint(event.value, { _reward: true });
       if (multiplier) {
         state.multipliers.push(multiplier);
+        clearMultiplierFootprint(state.board, multiplier);
         setStatus(`?賭葉${eventName(event)}`);
         render();
         spawnParticles(event.value >= 50 ? 28 : 18);
@@ -2780,7 +2816,10 @@ function reshuffleBoard() {
     state.multipliers = [];
     for (const value of values) {
       const multiplier = multiplierSpawnPoint(value);
-      if (multiplier) state.multipliers.push(multiplier);
+      if (multiplier) {
+        state.multipliers.push(multiplier);
+        clearMultiplierFootprint(state.board, multiplier);
+      }
     }
     attempts += 1;
   } while ((!hasLegalMove(state.board) || findMatches(state.board).cells.size > 0) && attempts < 80);
@@ -2821,6 +2860,7 @@ async function processSpecialAwards() {
       const multiplier = multiplierSpawnPoint(event.value, { _reward: true });
       if (multiplier) {
         state.multipliers.push(multiplier);
+        clearMultiplierFootprint(state.board, multiplier);
         setStatus(`收集${eventName(event)}`);
         render();
         spawnParticles(event.value >= 50 ? 28 : 18);
