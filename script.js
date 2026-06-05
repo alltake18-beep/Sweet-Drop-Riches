@@ -3,7 +3,7 @@ const COLS = 6;
 const SLOT_COUNT = 3;
 const MULTIPLIER_SIZE = 2;
 const MULTIPLIER_COLS = [0, 2, 4];
-const SYMBOL_VERSION = "symbol-rules-44";
+const SYMBOL_VERSION = "symbol-rules-45";
 const PERF_ENABLED = new URLSearchParams(window.location.search).has("perf");
 const SPECIAL_METER_TARGET = 15;
 const BET_STEPS = [20, 50, 100, 200, 500];
@@ -2370,6 +2370,20 @@ async function processSpecialAwards() {
   }
 }
 
+function boardGravitySignature() {
+  const cells = [];
+  for (let row = 0; row < ROWS; row += 1) {
+    for (let col = 0; col < COLS; col += 1) {
+      cells.push(tileSignature(state.board[row][col]));
+    }
+  }
+  const multipliers = state.multipliers
+    .map((multiplier) => `${multiplier.id}:${multiplier.row}:${multiplier.col}:${multiplier.value}`)
+    .sort()
+    .join("|");
+  return `${cells.join(",")}::${multipliers}`;
+}
+
 function collectMultipliers() {
   const collected = [];
   let changed = true;
@@ -2377,7 +2391,8 @@ function collectMultipliers() {
 
   clearMultiplierFootprints();
 
-  while (changed && guard < ROWS) {
+  while (changed && guard < ROWS * 2) {
+    const before = boardGravitySignature();
     changed = false;
     guard += 1;
 
@@ -2399,6 +2414,9 @@ function collectMultipliers() {
         changed = true;
       }
     }
+
+    collapseColumns();
+    changed = changed || before !== boardGravitySignature();
   }
 
   clearMultiplierFootprints();
