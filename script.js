@@ -4,7 +4,7 @@ const SLOT_COUNT = 3;
 const MULTIPLIER_SIZE = 2;
 const MULTIPLIER_SIZES = [1, 2];
 const MULTIPLIER_COLS = [0, 2, 4];
-const SYMBOL_VERSION = "symbol-rules-46-size";
+const SYMBOL_VERSION = "symbol-rules-47-size-rate";
 const PERF_ENABLED = new URLSearchParams(window.location.search).has("perf");
 const SPECIAL_METER_TARGET = 15;
 const BET_STEPS = [20, 50, 100, 200, 500];
@@ -40,7 +40,22 @@ const MULTIPLIER_VALUE_WEIGHTS = [
   { value: 50, weight: 8 },
   { value: 100, weight: 4 },
 ];
-const MULTIPLIER_ROW_WEIGHTS = [
+const MULTIPLIER_SIZE_WEIGHTS = [
+  { size: 1, weight: 50 },
+  { size: 2, weight: 50 },
+];
+const MULTIPLIER_ANCHOR_ROW_WEIGHTS_1X1 = [
+  { row: 0, weight: 18 },
+  { row: 1, weight: 17 },
+  { row: 2, weight: 16 },
+  { row: 3, weight: 14 },
+  { row: 4, weight: 12 },
+  { row: 5, weight: 10 },
+  { row: 6, weight: 8 },
+  { row: 7, weight: 5 },
+  { row: 8, weight: 3 },
+];
+const MULTIPLIER_ANCHOR_ROW_WEIGHTS_2X2 = [
   { row: 0, weight: 18 },
   { row: 1, weight: 17 },
   { row: 2, weight: 16 },
@@ -464,7 +479,11 @@ function multiplierColsForSize(size) {
 }
 
 function randomMultiplierSize() {
-  return Math.random() < 0.5 ? 1 : 2;
+  return weightedPick(MULTIPLIER_SIZE_WEIGHTS).size;
+}
+
+function multiplierAnchorRowWeights(size) {
+  return size === 1 ? MULTIPLIER_ANCHOR_ROW_WEIGHTS_1X1 : MULTIPLIER_ANCHOR_ROW_WEIGHTS_2X2;
 }
 
 function multiplierSpawnOptions(size) {
@@ -541,7 +560,7 @@ function addMultipliers(board) {
 
 function pickMultiplierSpawnCell(board, predicate = () => true, size = MULTIPLIER_SIZE) {
   const options = multiplierSpawnOptions(size);
-  const rowOrder = MULTIPLIER_ROW_WEIGHTS
+  const rowOrder = multiplierAnchorRowWeights(size)
     .filter((item) => item.row <= options.rowLimit)
     .map((item) => ({ ...item }));
   while (rowOrder.length) {
