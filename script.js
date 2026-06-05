@@ -2,8 +2,9 @@ const ROWS = 9;
 const COLS = 6;
 const SLOT_COUNT = 3;
 const MULTIPLIER_SIZE = 2;
+const MULTIPLIER_SIZES = [1, 2];
 const MULTIPLIER_COLS = [0, 2, 4];
-const SYMBOL_VERSION = "symbol-rules-45";
+const SYMBOL_VERSION = "symbol-rules-46-size";
 const PERF_ENABLED = new URLSearchParams(window.location.search).has("perf");
 const SPECIAL_METER_TARGET = 15;
 const BET_STEPS = [20, 50, 100, 200, 500];
@@ -410,10 +411,15 @@ function cloneMultiplier(multiplier) {
   return { ...multiplier };
 }
 
+function multiplierSize(multiplier) {
+  return MULTIPLIER_SIZES.includes(multiplier?.size) ? multiplier.size : MULTIPLIER_SIZE;
+}
+
 function multiplierCells(multiplier) {
   const cells = [];
-  for (let row = multiplier.row; row < multiplier.row + MULTIPLIER_SIZE; row += 1) {
-    for (let col = multiplier.col; col < multiplier.col + MULTIPLIER_SIZE; col += 1) {
+  const size = multiplierSize(multiplier);
+  for (let row = multiplier.row; row < multiplier.row + size; row += 1) {
+    for (let col = multiplier.col; col < multiplier.col + size; col += 1) {
       if (row >= 0 && row < ROWS && col >= 0 && col < COLS) cells.push({ row, col });
     }
   }
@@ -439,9 +445,9 @@ function multiplierCellKeys(multiplier) {
 function multiplierAt(row, col, multipliers = state.multipliers) {
   return multipliers.find((multiplier) =>
     row >= multiplier.row &&
-    row < multiplier.row + MULTIPLIER_SIZE &&
+    row < multiplier.row + multiplierSize(multiplier) &&
     col >= multiplier.col &&
-    col < multiplier.col + MULTIPLIER_SIZE
+    col < multiplier.col + multiplierSize(multiplier)
   ) || null;
 }
 
@@ -453,30 +459,45 @@ function slotIndexFromMultiplier(multiplier) {
   return Math.max(0, Math.min(SLOT_COUNT - 1, Math.floor(multiplier.col / MULTIPLIER_SIZE)));
 }
 
-function canPlaceMultiplierAt(row, col, multipliers = state.multipliers, ignore = null, board = state.board) {
-  if (row < 0 || row > ROWS - MULTIPLIER_SIZE || !MULTIPLIER_COLS.includes(col)) return false;
-  for (let r = row; r < row + MULTIPLIER_SIZE; r += 1) {
-    for (let c = col; c < col + MULTIPLIER_SIZE; c += 1) {
+function multiplierColsForSize(size) {
+  return size === 1 ? Array.from({ length: COLS }, (_, col) => col) : MULTIPLIER_COLS;
+}
+
+function randomMultiplierSize() {
+  return Math.random() < 0.5 ? 1 : 2;
+}
+
+function multiplierSpawnOptions(size) {
+  return { rowLimit: ROWS - size, cols: multiplierColsForSize(size) };
+}
+
+function canPlaceMultiplierAt(row, col, multipliers = state.multipliers, ignore = null, board = state.board, size = MULTIPLIER_SIZE) {
+  if (row < 0 || row > ROWS - size || !multiplierColsForSize(size).includes(col) || col < 0 || col > COLS - size) return false;
+  for (let r = row; r < row + size; r += 1) {
+    for (let c = col; c < col + size; c += 1) {
       const tile = board?.[r]?.[c];
       if (tile && !isOrdinaryCandy(tile)) return false;
     }
   }
   return !multipliers.some((multiplier) => {
     if (ignore && multiplier.id === ignore.id) return false;
+    const otherSize = multiplierSize(multiplier);
     return !(
-      col + MULTIPLIER_SIZE - 1 < multiplier.col ||
-      multiplier.col + MULTIPLIER_SIZE - 1 < col ||
-      row + MULTIPLIER_SIZE - 1 < multiplier.row ||
-      multiplier.row + MULTIPLIER_SIZE - 1 < row
+      col + size - 1 < multiplier.col ||
+      multiplier.col + otherSize - 1 < col ||
+      row + size - 1 < multiplier.row ||
+      multiplier.row + otherSize - 1 < row
     );
   });
 }
 
 function createMultiplier(value, row, col, flags = {}) {
+  const size = flags.size || randomMultiplierSize();
   return {
     id: `m-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
     kind: "multiplier",
     value,
+    size,
     row,
     col,
     ...flags,
@@ -507,9 +528,10 @@ function addMultipliers(board) {
   const multipliers = [];
 
   while (multipliers.length < count) {
-    const point = pickMultiplierSpawnCell(board, (cell) => canPlaceMultiplierAt(cell.row, cell.col, multipliers, null, board));
+    const size = randomMultiplierSize();
+    const point = pickMultiplierSpawnCell(board, (cell) => canPlaceMultiplierAt(cell.row, cell.col, multipliers, null, board, size), size);
     if (!point) break;
-    const multiplier = createMultiplier(weightedMultiplier().value, point.row, point.col);
+    const multiplier = createMultiplier(weightedMultiplier().value, point.row, point.col, { size });
     multipliers.push(multiplier);
     clearMultiplierFootprint(board, multiplier);
   }
@@ -517,15 +539,16 @@ function addMultipliers(board) {
   return multipliers;
 }
 
-function pickMultiplierSpawnCell(board, predicate = () => true) {
+function pickMultiplierSpawnCell(board, predicate = () => true, size = MULTIPLIER_SIZE) {
+  const options = multiplierSpawnOptions(size);
   const rowOrder = MULTIPLIER_ROW_WEIGHTS
-    .filter((item) => item.row <= ROWS - MULTIPLIER_SIZE)
+    .filter((item) => item.row <= options.rowLimit)
     .map((item) => ({ ...item }));
   while (rowOrder.length) {
     const picked = weightedPick(rowOrder);
     const row = picked.row;
     const cells = [];
-    for (const col of MULTIPLIER_COLS) {
+    for (const col of options.cols) {
       const cell = { row, col };
       if (predicate(cell, board[row][col])) cells.push(cell);
     }
@@ -695,9 +718,10 @@ function renderBoard() {
         if (tile.special) classes.push("special-candy", `special-${tile.special}`);
       } else if (tile?.kind === "multiplier") {
         classes.push("multiplier", "multiplier-anchor", `value-${tile.value}`, multiplierTierClass(tile.value));
+        classes.push(`multiplier-size-${multiplierSize(tile)}`);
         if (tile._flameResist) classes.push("flame-resisted");
-        button.style.setProperty("grid-column", `${tile.col + 1} / span ${MULTIPLIER_SIZE}`);
-        button.style.setProperty("grid-row", `${tile.row + 1} / span ${MULTIPLIER_SIZE}`);
+        button.style.setProperty("grid-column", `${tile.col + 1} / span ${multiplierSize(tile)}`);
+        button.style.setProperty("grid-row", `${tile.row + 1} / span ${multiplierSize(tile)}`);
         button.style.setProperty("z-index", tile._reward || tile._eventTransform ? "24" : "8");
       }
 
@@ -1520,17 +1544,10 @@ async function resolveMove(initialMatches, preferredSpawn = null) {
 
     const collectEnd = startPerfSpan("move.collect.mult");
     setPerfPhase("collect");
-    const collected = collectMultipliers();
+    const collected = settleBoardBeforeFill();
     state.lastClearedCells = null;
     collectEnd();
     if (collected.length > 0) {
-      state.slotFlash = Array(SLOT_COUNT).fill(null);
-      for (const item of collected) {
-        state.slotFlash[item.col] = item.value;
-        state.filledSlots.add(item.col);
-        addWin(currentBet() * item.value);
-        spawnSlotEnergy(item.col, item.value);
-      }
       setStatus(collected.map((item) => `第${item.col + 1}槽 x${item.value}`).join("  "));
       render();
       spawnParticles(collected.length * 12);
@@ -1543,7 +1560,6 @@ async function resolveMove(initialMatches, preferredSpawn = null) {
 
     const collapseEnd = startPerfSpan("move.collapse");
     setPerfPhase("drop");
-    collapseColumns();
     collapseEnd();
     const fillEnd = startPerfSpan("move.fill");
     fillEmptyCells();
@@ -1681,24 +1697,20 @@ async function ensureLegalMove() {
 
 function reshuffleBoard() {
   const multipliers = [];
-  for (let row = 0; row < ROWS; row += 1) {
-    for (let col = 0; col < COLS; col += 1) {
-      const tile = state.board[row][col];
-      if (tile?.kind === "multiplier") multipliers.push({ col, value: tile.value });
-    }
+  for (const multiplier of state.multipliers) {
+    multipliers.push({ value: multiplier.value, size: multiplierSize(multiplier) });
   }
 
   let attempts = 0;
   do {
     state.board = makeCandyBoard();
+    state.multipliers = [];
     for (const item of multipliers) {
-      let row = Math.floor(Math.random() * (ROWS - 2));
-      let guard = 0;
-      while (state.board[row][item.col]?.kind === "multiplier" && guard < 20) {
-        row = Math.floor(Math.random() * (ROWS - 2));
-        guard += 1;
+      const multiplier = multiplierSpawnPoint(item.value, { size: item.size });
+      if (multiplier) {
+        state.multipliers.push(multiplier);
+        clearMultiplierFootprint(state.board, multiplier);
       }
-      state.board[row][item.col] = { kind: "multiplier", value: item.value };
     }
     attempts += 1;
   } while ((!hasLegalMove(state.board) || findMatches(state.board).cells.size > 0) && attempts < 80);
@@ -2378,7 +2390,7 @@ function boardGravitySignature() {
     }
   }
   const multipliers = state.multipliers
-    .map((multiplier) => `${multiplier.id}:${multiplier.row}:${multiplier.col}:${multiplier.value}`)
+    .map((multiplier) => `${multiplier.id}:${multiplier.row}:${multiplier.col}:${multiplier.value}:${multiplierSize(multiplier)}`)
     .sort()
     .join("|");
   return `${cells.join(",")}::${multipliers}`;
@@ -2407,7 +2419,7 @@ function collectMultipliers() {
         changed = true;
       }
 
-      if (multiplier.row >= ROWS - MULTIPLIER_SIZE) {
+      if (multiplier.row >= ROWS - multiplierSize(multiplier)) {
         collected.push({ col: slotIndexFromMultiplier(multiplier), value: multiplier.value });
         state.multipliers = state.multipliers.filter((item) => item.id !== multiplier.id);
         clearMultiplierFootprints();
@@ -2423,10 +2435,42 @@ function collectMultipliers() {
   return collected;
 }
 
+function collectAndPayMultipliers() {
+  const collected = collectMultipliers();
+  if (collected.length > 0) {
+    state.slotFlash = Array(SLOT_COUNT).fill(null);
+    for (const item of collected) {
+      state.slotFlash[item.col] = item.value;
+      state.filledSlots.add(item.col);
+      addWin(currentBet() * item.value);
+      spawnSlotEnergy(item.col, item.value);
+    }
+  }
+  return collected;
+}
+
+function settleBoardBeforeFill() {
+  const collected = [];
+  let changed = true;
+  let guard = 0;
+
+  while (changed && guard < ROWS * 4) {
+    const before = boardGravitySignature();
+    const items = collectAndPayMultipliers();
+    collected.push(...items);
+    collapseColumns();
+    changed = items.length > 0 || before !== boardGravitySignature();
+    guard += 1;
+  }
+
+  return collected;
+}
+
 function multiplierDropDistance(multiplier) {
-  if (multiplier.row >= ROWS - MULTIPLIER_SIZE) return 0;
+  const size = multiplierSize(multiplier);
+  if (multiplier.row >= ROWS - size) return 0;
   let distance = 0;
-  for (let nextRow = multiplier.row + 1; nextRow <= ROWS - MULTIPLIER_SIZE; nextRow += 1) {
+  for (let nextRow = multiplier.row + 1; nextRow <= ROWS - size; nextRow += 1) {
     if (!canMultiplierOccupyAt(multiplier, nextRow, multiplier.col)) break;
     distance += 1;
   }
@@ -2434,18 +2478,20 @@ function multiplierDropDistance(multiplier) {
 }
 
 function isInsideMultiplier(multiplier, row, col) {
+  const size = multiplierSize(multiplier);
   return (
     row >= multiplier.row &&
-    row < multiplier.row + MULTIPLIER_SIZE &&
+    row < multiplier.row + size &&
     col >= multiplier.col &&
-    col < multiplier.col + MULTIPLIER_SIZE
+    col < multiplier.col + size
   );
 }
 
 function canMultiplierOccupyAt(multiplier, row, col) {
-  if (row < 0 || row > ROWS - MULTIPLIER_SIZE || col < 0 || col > COLS - MULTIPLIER_SIZE) return false;
-  for (let r = row; r < row + MULTIPLIER_SIZE; r += 1) {
-    for (let c = col; c < col + MULTIPLIER_SIZE; c += 1) {
+  const size = multiplierSize(multiplier);
+  if (row < 0 || row > ROWS - size || col < 0 || col > COLS - size) return false;
+  for (let r = row; r < row + size; r += 1) {
+    for (let c = col; c < col + size; c += 1) {
       if (!isInsideMultiplier(multiplier, r, c) && state.board[r][c]) return false;
       if (multiplierAtExcept(r, c, multiplier)) return false;
     }
@@ -2456,11 +2502,12 @@ function canMultiplierOccupyAt(multiplier, row, col) {
 function multiplierAtExcept(row, col, ignoredMultiplier) {
   return state.multipliers.find((multiplier) => {
     if (multiplier.id === ignoredMultiplier.id) return false;
+    const size = multiplierSize(multiplier);
     return (
       row >= multiplier.row &&
-      row < multiplier.row + MULTIPLIER_SIZE &&
+      row < multiplier.row + size &&
       col >= multiplier.col &&
-      col < multiplier.col + MULTIPLIER_SIZE
+      col < multiplier.col + size
     );
   });
 }
@@ -2628,24 +2675,16 @@ async function playFlameEvent() {
   }
   addSpecialMeter(clearedCandyCount);
   state.lastClearedCells = new Set(clearedCells);
-  const collected = collectMultipliers();
+  const collected = settleBoardBeforeFill();
   state.lastClearedCells = null;
   state.clearing = new Set();
 
-  collapseColumns();
   fillEmptyCells();
   render();
   playSound("drop");
   await wait(resolveDelay(430, 170));
 
   if (collected.length > 0) {
-    state.slotFlash = Array(SLOT_COUNT).fill(null);
-    for (const item of collected) {
-      state.slotFlash[item.col] = item.value;
-      state.filledSlots.add(item.col);
-      addWin(currentBet() * item.value);
-      spawnSlotEnergy(item.col, item.value);
-    }
     const highCollect = Math.max(...collected.map((item) => item.value));
     playMultiplierCollectSound(highCollect);
     if (highCollect >= 100) triggerScreenFx("fx-jackpot", 780);
@@ -2662,8 +2701,9 @@ async function playFlameEvent() {
 }
 
 function multiplierSpawnPoint(value = 10, flags = {}) {
-  const point = pickMultiplierSpawnCell(state.board, (cell) => canPlaceMultiplierAt(cell.row, cell.col, state.multipliers));
-  return point ? createMultiplier(value, point.row, point.col, flags) : null;
+  const size = flags.size || randomMultiplierSize();
+  const point = pickMultiplierSpawnCell(state.board, (cell) => canPlaceMultiplierAt(cell.row, cell.col, state.multipliers, null, state.board, size), size);
+  return point ? createMultiplier(value, point.row, point.col, { ...flags, size }) : null;
 }
 
 async function resolveEventCascadeIfNeeded() {
@@ -2700,24 +2740,16 @@ async function playCandyClearEvent(type) {
 
   addSpecialMeter(clearedCandyCount);
   state.lastClearedCells = new Set(clearedCells);
-  const collected = collectMultipliers();
+  const collected = settleBoardBeforeFill();
   state.lastClearedCells = null;
   state.clearing = new Set();
 
-  collapseColumns();
   fillEmptyCells();
   render();
   playSound("drop");
   await wait(resolveDelay(430, 170));
 
   if (collected.length > 0) {
-    state.slotFlash = Array(SLOT_COUNT).fill(null);
-    for (const item of collected) {
-      state.slotFlash[item.col] = item.value;
-      state.filledSlots.add(item.col);
-      addWin(currentBet() * item.value);
-      spawnSlotEnergy(item.col, item.value);
-    }
     const highCollect = Math.max(...collected.map((item) => item.value));
     playMultiplierCollectSound(highCollect);
     if (highCollect >= 100) triggerScreenFx("fx-jackpot", 780);
@@ -2798,8 +2830,9 @@ function transformSniperCandyLine(target, sourceTile) {
 
 function transformSniperMultiplierCross(multiplier) {
   const candidates = [];
-  for (const col of MULTIPLIER_COLS) candidates.push({ row: multiplier.row, col });
-  for (let row = multiplier.row % MULTIPLIER_SIZE; row <= ROWS - MULTIPLIER_SIZE; row += MULTIPLIER_SIZE) {
+  const size = multiplierSize(multiplier);
+  for (const col of multiplierColsForSize(size)) candidates.push({ row: multiplier.row, col });
+  for (let row = multiplier.row % size; row <= ROWS - size; row += size) {
     candidates.push({ row, col: multiplier.col });
   }
 
@@ -2810,8 +2843,8 @@ function transformSniperMultiplierCross(multiplier) {
     if (seen.has(key)) continue;
     seen.add(key);
     if (point.row === multiplier.row && point.col === multiplier.col) continue;
-    if (!canPlaceMultiplierAt(point.row, point.col, state.multipliers)) continue;
-    state.multipliers.push(createMultiplier(multiplier.value, point.row, point.col, { _eventTransform: true, _reward: true }));
+    if (!canPlaceMultiplierAt(point.row, point.col, state.multipliers, null, state.board, size)) continue;
+    state.multipliers.push(createMultiplier(multiplier.value, point.row, point.col, { size, _eventTransform: true, _reward: true }));
     count += 1;
   }
   return count;
@@ -2927,13 +2960,16 @@ async function processSpecialAwards() {
 }
 
 function reshuffleBoard() {
-  const values = state.multipliers.map((multiplier) => multiplier.value);
+  const values = state.multipliers.map((multiplier) => ({
+    value: multiplier.value,
+    size: multiplierSize(multiplier),
+  }));
   let attempts = 0;
   do {
     state.board = makeCandyBoard();
     state.multipliers = [];
-    for (const value of values) {
-      const multiplier = multiplierSpawnPoint(value);
+    for (const item of values) {
+      const multiplier = multiplierSpawnPoint(item.value, { size: item.size });
       if (multiplier) {
         state.multipliers.push(multiplier);
         clearMultiplierFootprint(state.board, multiplier);

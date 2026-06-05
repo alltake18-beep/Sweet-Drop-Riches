@@ -556,6 +556,16 @@ button {
     drop-shadow(0 8px 6px rgba(0, 0, 0, 0.35));
 }
 
+.tile.multiplier-size-1 .multiplier-img {
+  width: 112%;
+  height: 112%;
+}
+
+.tile.multiplier-size-2 .multiplier-img {
+  width: 132%;
+  height: 132%;
+}
+
 .special-img {
   width: 116%;
   height: 116%;
@@ -992,6 +1002,32 @@ button {
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.12),
     0 0 16px rgba(255, 200, 69, 0.28);
+}
+
+.tile.multiplier-size-1 {
+  transform: scale(1.02);
+}
+
+.tile.multiplier-size-1::before {
+  inset: -3px;
+  opacity: 0.34;
+}
+
+.tile.multiplier-size-1::after {
+  inset: 2px;
+}
+
+.tile.multiplier-size-1 .multiplier-core {
+  width: 76%;
+  height: 76%;
+}
+
+.tile.multiplier-size-1 .multiplier-gem {
+  inset: 4px;
+}
+
+.tile.multiplier-size-2 {
+  transform: scale(1.02);
 }
 
 .tile.multiplier::before,
