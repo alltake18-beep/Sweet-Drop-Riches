@@ -3,7 +3,7 @@ const COLS = 6;
 const SLOT_COUNT = 3;
 const MULTIPLIER_SIZE = 2;
 const MULTIPLIER_COLS = [0, 2, 4];
-const SYMBOL_VERSION = "symbol-rules-43";
+const SYMBOL_VERSION = "symbol-rules-44";
 const PERF_ENABLED = new URLSearchParams(window.location.search).has("perf");
 const SPECIAL_METER_TARGET = 15;
 const BET_STEPS = [20, 50, 100, 200, 500];
@@ -2408,18 +2408,28 @@ function collectMultipliers() {
 function multiplierDropDistance(multiplier) {
   if (multiplier.row >= ROWS - MULTIPLIER_SIZE) return 0;
   let distance = 0;
-  for (let row = multiplier.row + MULTIPLIER_SIZE; row < ROWS; row += 1) {
-    if (!canMultiplierOccupyDropRow(multiplier, row)) break;
+  for (let nextRow = multiplier.row + 1; nextRow <= ROWS - MULTIPLIER_SIZE; nextRow += 1) {
+    if (!canMultiplierOccupyAt(multiplier, nextRow, multiplier.col)) break;
     distance += 1;
   }
   return distance;
 }
 
-function canMultiplierOccupyDropRow(multiplier, row) {
-  const nextTop = row - MULTIPLIER_SIZE + 1;
-  for (let r = nextTop; r <= row; r += 1) {
-    for (let col = multiplier.col; col < multiplier.col + MULTIPLIER_SIZE; col += 1) {
-      if (state.board[r][col] || multiplierAtExcept(r, col, multiplier)) return false;
+function isInsideMultiplier(multiplier, row, col) {
+  return (
+    row >= multiplier.row &&
+    row < multiplier.row + MULTIPLIER_SIZE &&
+    col >= multiplier.col &&
+    col < multiplier.col + MULTIPLIER_SIZE
+  );
+}
+
+function canMultiplierOccupyAt(multiplier, row, col) {
+  if (row < 0 || row > ROWS - MULTIPLIER_SIZE || col < 0 || col > COLS - MULTIPLIER_SIZE) return false;
+  for (let r = row; r < row + MULTIPLIER_SIZE; r += 1) {
+    for (let c = col; c < col + MULTIPLIER_SIZE; c += 1) {
+      if (!isInsideMultiplier(multiplier, r, c) && state.board[r][c]) return false;
+      if (multiplierAtExcept(r, c, multiplier)) return false;
     }
   }
   return true;
