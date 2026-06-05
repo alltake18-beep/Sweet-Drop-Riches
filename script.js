@@ -3,14 +3,18 @@ const COLS = 6;
 const SLOT_COUNT = 3;
 const MULTIPLIER_SIZE = 2;
 const MULTIPLIER_COLS = [0, 2, 4];
-const SYMBOL_VERSION = "symbol-rules-41";
+const SYMBOL_VERSION = "symbol-rules-42";
 const PERF_ENABLED = new URLSearchParams(window.location.search).has("perf");
 const SPECIAL_METER_TARGET = 15;
 const BET_STEPS = [20, 50, 100, 200, 500];
 const CANDIES = ["red", "blue", "green", "orange", "purple"];
 const MULTIPLIER_VALUES = [5, 10, 20, 30, 50, 100];
 const COLLECTION_SLOT_ITEM_WEIGHTS = [
-  { kind: "chocolate", weight: 25 },
+  { kind: "candyClear", type: "red", weight: 5 },
+  { kind: "candyClear", type: "blue", weight: 5 },
+  { kind: "candyClear", type: "green", weight: 5 },
+  { kind: "candyClear", type: "orange", weight: 5 },
+  { kind: "candyClear", type: "purple", weight: 5 },
   { kind: "multiplier", value: 5, weight: 10.714 },
   { kind: "multiplier", value: 10, weight: 7.143 },
   { kind: "multiplier", value: 20, weight: 4.167 },
@@ -120,7 +124,7 @@ const state = {
   ignoreClick: false,
   specialMeter: 0,
   pendingSpecialAwards: 0,
-  miniSlotPreview: { kind: "chocolate", type: "purple" },
+  miniSlotPreview: { kind: "candyClear", type: "purple" },
   miniSlotRolling: false,
   miniSlotWin: false,
   eventPulse: false,
@@ -332,9 +336,7 @@ function allSymbolAssets() {
     ...MULTIPLIER_VALUES.map(multiplierAsset),
     "assets/symbols/multiplier-x200.svg?v=" + SYMBOL_VERSION,
     ...WIN_TIERS.map((tier) => winArtAsset(tier.art)),
-    specialAsset("chocolate"),
     flameIconAsset(),
-    `assets/ui/event-chocolate.svg?v=${SYMBOL_VERSION}`,
   ];
   return Array.from(new Set(assets));
 }
@@ -366,19 +368,21 @@ function flameIconAsset() {
 
 function randomBoardEvent() {
   const item = weightedPick(COLLECTION_SLOT_ITEM_WEIGHTS);
-  if (item.kind === "chocolate") return { kind: item.kind, type: randomItem(CANDIES) };
+  if (item.kind === "candyClear") return { kind: item.kind, type: item.type };
   if (item.kind === "multiplier") return { kind: item.kind, value: item.value };
   return { kind: item.kind };
 }
 
 function eventPreviewAsset(event) {
+  if (event.kind === "candyClear") return candyAsset(event.type || "red");
   if (event.kind === "multiplier") return multiplierAsset(event.value || 10);
   if (event.kind === "flame") return flameIconAsset();
   if (event.kind === "sniper") return sniperIconAsset();
-  return `assets/ui/event-chocolate.svg?v=${SYMBOL_VERSION}`;
+  return candyAsset(event.type || "red");
 }
 
 function eventName(event) {
+  if (event.kind === "candyClear") return `${event.type} 糖果`;
   if (event.kind === "multiplier") return `x${event.value} 倍數糖`;
   if (event.kind === "flame") return "火焰槍";
   if (event.kind === "sniper") return "狙擊槍";
@@ -1023,6 +1027,21 @@ function candyCellsByType(type, includeSpecial = true) {
     }
   }
   return cells;
+}
+
+function visibleCandyTypes() {
+  const types = new Set();
+  for (let row = 0; row < ROWS; row += 1) {
+    for (let col = 0; col < COLS; col += 1) {
+      if (isVisibleOrdinaryCandy(row, col)) types.add(state.board[row][col].type);
+    }
+  }
+  return Array.from(types);
+}
+
+function randomVisibleCandyType(fallback = randomItem(CANDIES)) {
+  const types = visibleCandyTypes();
+  return types.length ? randomItem(types) : fallback;
 }
 
 function findFishTarget() {
@@ -1983,9 +2002,9 @@ function startBackgroundMusic() {
     if (!state.sound || document.hidden) return;
     const base = notes[state.musicStep % notes.length];
     state.musicStep += 1;
-    playTone(base, 0.055, { type: "sine", volume: 0.024 });
-    if (state.musicStep % 4 === 0) playTone(98, 0.048, { type: "square", volume: 0.018 });
-    if (state.musicStep % 8 === 0) playTone(base * 2, 0.04, { type: "triangle", volume: 0.012 });
+    playTone(base, 0.055, { type: "sine", volume: 0.04 });
+    if (state.musicStep % 4 === 0) playTone(98, 0.048, { type: "square", volume: 0.03 });
+    if (state.musicStep % 8 === 0) playTone(base * 2, 0.04, { type: "triangle", volume: 0.018 });
   }, 620);
 }
 
@@ -2028,10 +2047,10 @@ function playSound(kind) {
   const soundMap = {
     button: () => playChord([420, 630], 0.045, { volume: 0.04 }),
     move: () => playTone(420, 0.065, { to: 720, volume: 0.055 }),
-    match: () => playChord([720, 920, 1120], 0.105, { volume: 0.07 }),
+    match: () => playChord([720, 920, 1120], 0.105, { volume: 0.064 }),
     cascade: () => {
-      playTone(620, 0.07, { to: 380, type: "square", volume: 0.045 });
-      playTone(880, 0.06, { delay: 0.07, volume: 0.045 });
+      playTone(620, 0.07, { to: 380, type: "square", volume: 0.041 });
+      playTone(880, 0.06, { delay: 0.07, volume: 0.041 });
     },
     drop: () => playTone(260, 0.08, { to: 170, type: "sine", volume: 0.045 }),
     specialReady: () => playChord([660, 990, 1320], 0.16, { volume: 0.105 }),
@@ -2177,7 +2196,10 @@ function specialName(special) {
 }
 
 function specialEffectCells(row, col, tile) {
-  if (tile.special === "chocolate") return candyCellsByType(tile._targetType || tile.type, false);
+  if (tile.special === "chocolate") {
+    tile._targetType = tile._targetType || randomVisibleCandyType(tile.type);
+    return candyCellsByType(tile._targetType, false);
+  }
   return new Set();
 }
 
@@ -2393,8 +2415,11 @@ function multiplierDropDistance(multiplier) {
 }
 
 function canMultiplierOccupyDropRow(multiplier, row) {
-  for (let col = multiplier.col; col < multiplier.col + MULTIPLIER_SIZE; col += 1) {
-    if (state.board[row][col] || multiplierAtExcept(row, col, multiplier)) return false;
+  const nextTop = row - MULTIPLIER_SIZE + 1;
+  for (let r = nextTop; r <= row; r += 1) {
+    for (let col = multiplier.col; col < multiplier.col + MULTIPLIER_SIZE; col += 1) {
+      if (state.board[r][col] || multiplierAtExcept(r, col, multiplier)) return false;
+    }
   }
   return true;
 }
@@ -2612,6 +2637,61 @@ function multiplierSpawnPoint(value = 10, flags = {}) {
   return point ? createMultiplier(value, point.row, point.col, flags) : null;
 }
 
+async function playCandyClearEvent(type) {
+  const clearedCells = candyCellsByType(type, false);
+  if (!clearedCells.size) return false;
+
+  state.clearing = new Set(clearedCells);
+  setEventPulse(true);
+  setStatus(`CLEAR ${type.toUpperCase()}`);
+  render();
+  spawnClearBursts(clearedCells, true);
+  spawnCollectEnergy(clearedCells);
+  spawnParticles(Math.min(42, Math.max(18, clearedCells.size * 2)));
+  playSound("specialBlast");
+  triggerScreenFx("fx-blast", 460);
+  await wait(resolveDelay(430, 160));
+
+  let clearedCandyCount = 0;
+  for (const key of clearedCells) {
+    const { row, col } = keyToPoint(key);
+    if (isVisibleOrdinaryCandy(row, col)) clearedCandyCount += 1;
+    state.board[row][col] = null;
+  }
+
+  addSpecialMeter(clearedCandyCount);
+  state.lastClearedCells = new Set(clearedCells);
+  const collected = collectMultipliers();
+  state.lastClearedCells = null;
+  state.clearing = new Set();
+
+  collapseColumns();
+  fillEmptyCells();
+  render();
+  playSound("drop");
+  await wait(resolveDelay(430, 170));
+
+  if (collected.length > 0) {
+    state.slotFlash = Array(SLOT_COUNT).fill(null);
+    for (const item of collected) {
+      state.slotFlash[item.col] = item.value;
+      state.filledSlots.add(item.col);
+      addWin(currentBet() * item.value);
+      spawnSlotEnergy(item.col, item.value);
+    }
+    const highCollect = Math.max(...collected.map((item) => item.value));
+    playMultiplierCollectSound(highCollect);
+    if (highCollect >= 100) triggerScreenFx("fx-jackpot", 780);
+    else if (highCollect >= 20) triggerScreenFx("fx-bump", 420);
+    await wait(resolveDelay(highCollect >= 100 ? 760 : highCollect >= 50 ? 640 : 540, 190));
+  }
+
+  clearFallMarks();
+  setEventPulse(false);
+  render();
+  return true;
+}
+
 function findBoardEventCell({ allowMultiplierTarget = false, useMultiplierRows = false } = {}) {
   if (useMultiplierRows) {
     const multiplier = multiplierSpawnPoint(10);
@@ -2787,10 +2867,9 @@ async function processSpecialAwards() {
         await wait(resolveDelay(520, 200));
         delete multiplier._reward;
       }
-    } else {
-      const target = findBoardEventCell();
-      if (target) {
-        state.board[target.row][target.col] = chocolateTile(event.type, true);
+    } else if (event.kind === "candyClear") {
+      await playCandyClearEvent(event.type || randomVisibleCandyType());
+      if (false) {
         setStatus(`?賭葉${eventName(event)}`);
         render();
         spawnParticles(18);
@@ -2869,19 +2948,8 @@ async function processSpecialAwards() {
         await wait(resolveDelay(520, 200));
         delete multiplier._reward;
       }
-    } else {
-      const target = findBoardEventCell();
-      if (target) {
-        state.board[target.row][target.col] = chocolateTile(event.type, true);
-        setStatus(`收集${eventName(event)}`);
-        render();
-        spawnParticles(18);
-        triggerScreenFx("fx-pop", 360);
-        playSound("specialSpawn");
-        await wait(resolveDelay(520, 200));
-        const tile = state.board[target.row][target.col];
-        if (tile) delete tile._reward;
-      }
+    } else if (event.kind === "candyClear") {
+      await playCandyClearEvent(event.type || randomVisibleCandyType());
     }
 
     state.miniSlotWin = false;
