@@ -3,7 +3,7 @@ const COLS = 6;
 const SLOT_COUNT = 3;
 const MULTIPLIER_SIZE = 2;
 const MULTIPLIER_COLS = [0, 2, 4];
-const SYMBOL_VERSION = "symbol-rules-46";
+const SYMBOL_VERSION = "symbol-rules-45";
 const PERF_ENABLED = new URLSearchParams(window.location.search).has("perf");
 const SPECIAL_METER_TARGET = 15;
 const BET_STEPS = [20, 50, 100, 200, 500];
@@ -291,13 +291,13 @@ function candyAsset(type) {
 }
 
 function multiplierAsset(value) {
-  if (value >= 200) return `assets/symbols/multiplier-x200.png?v=${SYMBOL_VERSION}`;
-  if (value >= 100) return `assets/symbols/multiplier-x100.png?v=${SYMBOL_VERSION}`;
-  if (value >= 50) return `assets/symbols/multiplier-x50.png?v=${SYMBOL_VERSION}`;
-  if (value >= 30) return `assets/symbols/multiplier-x30.png?v=${SYMBOL_VERSION}`;
-  if (value >= 20) return `assets/symbols/multiplier-x20.png?v=${SYMBOL_VERSION}`;
-  if (value >= 10) return `assets/symbols/multiplier-x10.png?v=${SYMBOL_VERSION}`;
-  return `assets/symbols/multiplier-x5.png?v=${SYMBOL_VERSION}`;
+  if (value >= 200) return `assets/symbols/multiplier-x200.svg?v=${SYMBOL_VERSION}`;
+  if (value >= 100) return `assets/symbols/multiplier-x100.svg?v=${SYMBOL_VERSION}`;
+  if (value >= 50) return `assets/symbols/multiplier-x50.svg?v=${SYMBOL_VERSION}`;
+  if (value >= 30) return `assets/symbols/multiplier-x30.svg?v=${SYMBOL_VERSION}`;
+  if (value >= 20) return `assets/symbols/multiplier-x20.svg?v=${SYMBOL_VERSION}`;
+  if (value >= 10) return `assets/symbols/multiplier-x10.svg?v=${SYMBOL_VERSION}`;
+  return `assets/symbols/multiplier-x5.svg?v=${SYMBOL_VERSION}`;
 }
 
 function isGenericSpecial(special) {
@@ -334,7 +334,7 @@ function allSymbolAssets() {
   const assets = [
     ...CANDIES.map(candyAsset),
     ...MULTIPLIER_VALUES.map(multiplierAsset),
-    "assets/symbols/multiplier-x200.png?v=" + SYMBOL_VERSION,
+    "assets/symbols/multiplier-x200.svg?v=" + SYMBOL_VERSION,
     ...WIN_TIERS.map((tier) => winArtAsset(tier.art)),
     flameIconAsset(),
   ];
