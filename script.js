@@ -4,9 +4,12 @@ const SLOT_COUNT = 3;
 const MULTIPLIER_SIZE = 2;
 const MULTIPLIER_SIZES = [1, 2];
 const MULTIPLIER_COLS = [0, 2, 4];
-const SYMBOL_VERSION = "symbol-rules-58-reel-collapse";
+const SYMBOL_VERSION = "symbol-rules-59-three-stage-meter";
 const PERF_ENABLED = new URLSearchParams(window.location.search).has("perf");
 const SPECIAL_METER_TARGET = 15;
+const SPECIAL_METER_THRESHOLDS = [15, 30, 50];
+const SPECIAL_METER_MAX = SPECIAL_METER_THRESHOLDS[SPECIAL_METER_THRESHOLDS.length - 1];
+const SOUND_GAIN_BOOST = 1.5;
 const BET_STEPS = [20, 50, 100, 200, 500];
 const CANDIES = ["red", "blue", "green", "orange", "purple"];
 const MULTIPLIER_VALUES = [5, 10, 20, 30, 50, 100, 200];
@@ -24,6 +27,26 @@ const COLLECTION_SLOT_ITEM_WEIGHTS = [
   { kind: "multiplier", value: 100, weight: 0.197 },
   { kind: "multiplier", value: 200, weight: 0.197 },
   { kind: "flame", weight: 33 },
+];
+const STAGE_TWO_EVENT_WEIGHTS = [
+  { kind: "candyClear", type: "red", weight: 10 },
+  { kind: "candyClear", type: "blue", weight: 10 },
+  { kind: "candyClear", type: "green", weight: 10 },
+  { kind: "candyClear", type: "orange", weight: 10 },
+  { kind: "candyClear", type: "purple", weight: 10 },
+  { kind: "multiplier", value: 5, weight: 14 },
+  { kind: "multiplier", value: 10, weight: 12 },
+  { kind: "multiplier", value: 20, weight: 11 },
+  { kind: "multiplier", value: 30, weight: 7 },
+  { kind: "multiplier", value: 50, weight: 4 },
+  { kind: "multiplier", value: 100, weight: 1 },
+  { kind: "multiplier", value: 200, weight: 1 },
+];
+const STAGE_THREE_EVENT_WEIGHTS = [
+  { kind: "multiplier", value: 30, size: 2, weight: 40 },
+  { kind: "multiplier", value: 50, size: 2, weight: 30 },
+  { kind: "multiplier", value: 100, size: 2, weight: 20 },
+  { kind: "multiplier", value: 200, size: 2, weight: 10 },
 ];
 const FLAME_PATTERN_WEIGHTS = [
   { kind: "col1", weight: 25 },
@@ -83,6 +106,7 @@ const specialMeterTextEl = document.getElementById("specialMeterText");
 const specialMeterFillEl = document.getElementById("specialMeterFill");
 const specialMiniSlotEl = document.getElementById("specialMiniSlot");
 const miniSlotIconEl = document.getElementById("miniSlotIcon");
+const stageSlotEls = Array.from(document.querySelectorAll(".stage-slot"));
 const balanceEl = document.getElementById("balance");
 const betEl = document.getElementById("bet");
 const statusTextEl = document.getElementById("statusText");
@@ -103,6 +127,7 @@ const state = {
   clearing: new Set(),
   invalid: null,
   slotFlash: Array(SLOT_COUNT).fill(null),
+  slotValues: Array(SLOT_COUNT).fill(null),
   filledSlots: new Set(),
   multipliers: [],
   balance: 2732,
@@ -142,9 +167,11 @@ const state = {
   pointer: null,
   ignoreClick: false,
   specialMeter: 0,
-  pendingSpecialAwards: 0,
+  pendingSpecialAwards: [],
   miniSlotPreview: { kind: "candyClear", type: "purple" },
+  stagePreviews: [],
   miniSlotRolling: false,
+  rollingStage: null,
   miniSlotWin: false,
   eventPulse: false,
   sniperTarget: null,
@@ -384,10 +411,26 @@ function flameIconAsset() {
   return `assets/ui/event-flame.svg?v=${SYMBOL_VERSION}`;
 }
 
-function randomBoardEvent() {
-  const item = weightedPick(COLLECTION_SLOT_ITEM_WEIGHTS);
+function stageEventWeights(stageIndex) {
+  if (stageIndex === 2) return STAGE_TWO_EVENT_WEIGHTS;
+  if (stageIndex === 3) return STAGE_THREE_EVENT_WEIGHTS;
+  return COLLECTION_SLOT_ITEM_WEIGHTS;
+}
+
+function currentSpecialStageIndex() {
+  if (state.specialMeter >= SPECIAL_METER_THRESHOLDS[1]) return 3;
+  if (state.specialMeter >= SPECIAL_METER_THRESHOLDS[0]) return 2;
+  return 1;
+}
+
+function initialStagePreviews() {
+  return SPECIAL_METER_THRESHOLDS.map((_, index) => randomBoardEvent(index + 1));
+}
+
+function randomBoardEvent(stageIndex = currentSpecialStageIndex()) {
+  const item = weightedPick(stageEventWeights(stageIndex));
   if (item.kind === "candyClear") return { kind: item.kind, type: item.type };
-  if (item.kind === "multiplier") return { kind: item.kind, value: item.value };
+  if (item.kind === "multiplier") return { kind: item.kind, value: item.value, size: item.size };
   return { kind: item.kind };
 }
 
@@ -626,10 +669,13 @@ function startNewBoard(keepScore = false) {
   state.clearing = new Set();
   state.invalid = null;
   state.slotFlash = Array(SLOT_COUNT).fill(null);
+  state.slotValues = Array(SLOT_COUNT).fill(null);
   state.filledSlots = new Set();
   state.specialMeter = 0;
-  state.pendingSpecialAwards = 0;
+  state.pendingSpecialAwards = [];
+  state.stagePreviews = initialStagePreviews();
   state.miniSlotRolling = false;
+  state.rollingStage = null;
   state.miniSlotWin = false;
   state.resolving = false;
   if (!keepScore) {
@@ -776,17 +822,23 @@ function renderBoard() {
 
 function renderSlots() {
   slotsEl.innerHTML = "";
+  let hasFlash = false;
 
   for (let col = 0; col < SLOT_COUNT; col += 1) {
     const slot = document.createElement("div");
-    const value = state.slotFlash[col];
+    const value = state.slotValues[col] || state.slotFlash[col];
     slot.className = "slot";
-    if (value) slot.classList.add("flash");
+    if (state.slotFlash[col]) {
+      hasFlash = true;
+      slot.classList.add("flash");
+    }
     if (state.filledSlots.has(col)) slot.classList.add("filled");
     if (value >= 50) slot.classList.add("jackpot-slot");
     slot.innerHTML = value ? `<strong>x${value}</strong>` : "<strong></strong>";
     slotsEl.appendChild(slot);
   }
+
+  if (hasFlash) state.slotFlash = Array(SLOT_COUNT).fill(null);
 }
 
 function renderHud() {
@@ -1192,10 +1244,13 @@ function canTriggerGenericSpecial(a, b) {
 
 function addSpecialMeter(count) {
   if (count <= 0) return;
-  state.specialMeter += count;
-  while (state.specialMeter >= SPECIAL_METER_TARGET) {
-    state.specialMeter -= SPECIAL_METER_TARGET;
-    state.pendingSpecialAwards += 1;
+  const before = state.specialMeter;
+  state.specialMeter = Math.min(SPECIAL_METER_MAX, state.specialMeter + count);
+  for (let index = 0; index < SPECIAL_METER_THRESHOLDS.length; index += 1) {
+    const threshold = SPECIAL_METER_THRESHOLDS[index];
+    if (before < threshold && state.specialMeter >= threshold) {
+      state.pendingSpecialAwards.push(index + 1);
+    }
   }
 }
 
@@ -1754,6 +1809,8 @@ async function maybeFullDropBonus() {
   state.board = next.board;
   state.multipliers = next.multipliers;
   state.filledSlots = new Set();
+  state.slotValues = Array(SLOT_COUNT).fill(null);
+  state.slotFlash = Array(SLOT_COUNT).fill(null);
 }
 
 async function ensureLegalMove() {
@@ -2046,7 +2103,7 @@ function ensureAudio() {
   if (!state.audioContext) state.audioContext = new AudioContext();
   if (!state.masterGain) {
     state.masterGain = state.audioContext.createGain();
-    state.masterGain.gain.value = 0.58;
+    state.masterGain.gain.value = Math.min(0.95, 0.58 * SOUND_GAIN_BOOST);
     state.masterGain.connect(state.audioContext.destination);
   }
   if (state.audioContext.state === "suspended") state.audioContext.resume();
@@ -2358,6 +2415,32 @@ function renderHud() {
   soundMenuButton.textContent = state.sound ? "音效開啟" : "音效關閉";
 }
 
+function renderHud() {
+  document.querySelector(".special-meter-copy span").textContent = "事件收集";
+  specialMeterTextEl.textContent = `${Math.min(state.specialMeter, SPECIAL_METER_MAX)}/${SPECIAL_METER_MAX}`;
+  specialMeterFillEl.style.width = `${Math.min(100, (state.specialMeter / SPECIAL_METER_MAX) * 100)}%`;
+  if (!state.stagePreviews.length) state.stagePreviews = initialStagePreviews();
+  const currentStage = currentSpecialStageIndex();
+  stageSlotEls.forEach((slot, index) => {
+    const stage = index + 1;
+    const preview = state.stagePreviews[index] || randomBoardEvent(stage);
+    const img = slot.querySelector("img");
+    if (img) img.src = eventPreviewAsset(preview);
+    slot.classList.toggle("active", stage === currentStage && state.specialMeter < SPECIAL_METER_MAX);
+    slot.classList.toggle("complete", state.specialMeter >= SPECIAL_METER_THRESHOLDS[index]);
+    slot.classList.toggle("rolling", state.miniSlotRolling && (!state.rollingStage || state.rollingStage === stage));
+    slot.classList.toggle("win", state.miniSlotWin && state.rollingStage === stage);
+    slot.classList.toggle("multiplier-preview", preview.kind === "multiplier");
+    slot.dataset.value = preview.kind === "multiplier" ? `x${preview.value || 10}` : "";
+  });
+  state.miniSlotPreview = state.stagePreviews[0] || state.miniSlotPreview;
+  miniSlotIconEl.src = eventPreviewAsset(state.miniSlotPreview);
+  balanceEl.textContent = formatMoney(state.balance);
+  betEl.textContent = currentBet().toLocaleString("en-US");
+  fastButton.setAttribute("aria-pressed", String(state.fast));
+  soundMenuButton.textContent = state.sound ? "音效開啟" : "音效關閉";
+}
+
 function findBoardEventCell({ allowMultiplierTarget = false, useMultiplierRows = false } = {}) {
   if (useMultiplierRows) {
     return pickMultiplierSpawnCell(state.board, (cell, tile) => isOrdinaryCandy(tile));
@@ -2579,6 +2662,7 @@ function collectAndPayMultipliers() {
     state.slotFlash = Array(SLOT_COUNT).fill(null);
     for (const item of collected) {
       state.slotFlash[item.col] = item.value;
+      state.slotValues[item.col] = item.value;
       state.filledSlots.add(item.col);
       addWin(currentBet() * item.value);
       spawnSlotEnergy(item.col, item.value);
@@ -3176,12 +3260,68 @@ async function processSpecialAwards() {
   return false;
 }
 
+async function processSpecialAwards() {
+  while (state.pendingSpecialAwards.length > 0) {
+    const stage = state.pendingSpecialAwards.shift();
+    const event = randomBoardEvent(stage);
+    state.miniSlotRolling = true;
+    state.rollingStage = stage;
+    state.miniSlotWin = false;
+
+    const steps = state.fast ? 5 : 9;
+    for (let i = 0; i < steps; i += 1) {
+      state.stagePreviews = state.stagePreviews.map((_, index) => randomBoardEvent(index + 1));
+      state.stagePreviews[stage - 1] = randomBoardEvent(stage);
+      render();
+      await wait(resolveDelay(120, 55));
+    }
+
+    state.stagePreviews[stage - 1] = event;
+    state.miniSlotPreview = event;
+    state.miniSlotRolling = false;
+    state.miniSlotWin = true;
+    setEventPulse(true);
+    render();
+    playSound("specialReady");
+    await wait(resolveDelay(stage === 3 ? 620 : 460, 180));
+
+    if (event.kind === "flame") {
+      setStatus("火焰");
+      await playFlameEvent();
+    } else if (event.kind === "multiplier") {
+      const multiplier = multiplierSpawnPoint(event.value, { _reward: true, size: event.size });
+      if (multiplier) {
+        state.multipliers.push(multiplier);
+        clearMultiplierFootprint(state.board, multiplier);
+        setStatus(`收集${eventName(event)}`);
+        render();
+        spawnParticles(stage === 3 || event.value >= 50 ? 34 : 18);
+        triggerScreenFx(stage === 3 || event.value >= 50 ? "fx-bump" : "fx-pop", 420);
+        playSound(event.value >= 50 ? "multiplierHigh" : "specialSpawn");
+        await wait(resolveDelay(stage === 3 ? 640 : 520, 200));
+        delete multiplier._reward;
+      }
+    } else if (event.kind === "candyClear") {
+      await playCandyClearEvent(event.type || randomVisibleCandyType());
+    }
+
+    if (await resolveEventCascadeIfNeeded()) return true;
+
+    state.miniSlotWin = false;
+    state.rollingStage = null;
+    setEventPulse(false);
+    render();
+  }
+  return false;
+}
+
 window.addEventListener("resize", () => scheduleBoardSizeSync(true));
 window.visualViewport?.addEventListener("resize", () => scheduleBoardSizeSync(true));
 
 window.setInterval(() => {
   if (state.resolving || state.miniSlotRolling || state.miniSlotWin) return;
-  state.miniSlotPreview = randomSpecialReward();
+  state.stagePreviews = state.stagePreviews.map((_, index) => randomBoardEvent(index + 1));
+  state.miniSlotPreview = state.stagePreviews[0] || randomSpecialReward();
   renderHud();
 }, 1300);
 

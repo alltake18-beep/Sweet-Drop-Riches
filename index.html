@@ -25,13 +25,21 @@
               <div class="special-meter" aria-label="15 消除事件進度">
                 <div class="special-meter-copy">
                   <span>事件收集</span>
-                  <strong id="specialMeterText">0/15</strong>
+                  <strong id="specialMeterText">0/50</strong>
                 </div>
                 <div class="special-meter-track">
                   <i id="specialMeterFill"></i>
                 </div>
-                <div class="mini-slot" id="specialMiniSlot" aria-label="特殊糖小拉霸">
-                  <img id="miniSlotIcon" src="assets/symbols/candy-purple.png?v=symbol-rules-45" alt="" />
+                <div class="stage-slots" id="stageSlots" aria-label="三階段事件預覽">
+                  <div class="mini-slot stage-slot active" id="specialMiniSlot" data-stage="1" aria-label="第一階段事件預覽">
+                    <img id="miniSlotIcon" src="assets/symbols/candy-purple.png?v=symbol-rules-59-three-stage-meter" alt="" />
+                  </div>
+                  <div class="mini-slot stage-slot" data-stage="2" aria-label="第二階段事件預覽">
+                    <img src="assets/symbols/candy-blue.png?v=symbol-rules-59-three-stage-meter" alt="" />
+                  </div>
+                  <div class="mini-slot stage-slot jackpot-stage" data-stage="3" aria-label="第三階段事件預覽">
+                    <img src="assets/symbols/multiplier-relic-x50.png?v=symbol-rules-59-three-stage-meter" alt="" />
+                  </div>
                 </div>
               </div>
             </div>
