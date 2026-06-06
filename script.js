@@ -4,7 +4,7 @@ const SLOT_COUNT = 3;
 const MULTIPLIER_SIZE = 2;
 const MULTIPLIER_SIZES = [1, 2];
 const MULTIPLIER_COLS = [0, 2, 4];
-const SYMBOL_VERSION = "symbol-rules-57-multiplier-art-200";
+const SYMBOL_VERSION = "symbol-rules-58-reel-collapse";
 const PERF_ENABLED = new URLSearchParams(window.location.search).has("perf");
 const SPECIAL_METER_TARGET = 15;
 const BET_STEPS = [20, 50, 100, 200, 500];
@@ -1324,34 +1324,31 @@ function collapseColumns() {
   clearMultiplierFootprints();
 
   for (let col = 0; col < COLS; col += 1) {
-    let row = ROWS - 1;
+    const fallingTiles = [];
 
-    while (row >= 0) {
+    for (let row = ROWS - 1; row >= 0; row -= 1) {
       if (multiplierAt(row, col)) {
         state.board[row][col] = null;
-        row -= 1;
         continue;
       }
 
-      const segmentEnd = row;
-      while (row >= 0 && !multiplierAt(row, col)) {
-        row -= 1;
-      }
-      const segmentStart = row + 1;
-      let write = segmentEnd;
+      const tile = state.board[row][col];
+      if (tile) fallingTiles.push({ tile, fromRow: row });
+      state.board[row][col] = null;
+    }
 
-      for (let scan = segmentEnd; scan >= segmentStart; scan -= 1) {
-        const tile = state.board[scan][col];
-        if (!tile) continue;
-        if (write !== scan) tile._fall = write - scan;
-        state.board[write][col] = tile;
-        if (write !== scan) state.board[scan][col] = null;
-        write -= 1;
+    let nextTile = 0;
+    for (let row = ROWS - 1; row >= 0; row -= 1) {
+      if (multiplierAt(row, col)) {
+        state.board[row][col] = null;
+        continue;
       }
 
-      for (let scan = write; scan >= segmentStart; scan -= 1) {
-        state.board[scan][col] = null;
-      }
+      const entry = fallingTiles[nextTile];
+      if (!entry) continue;
+      if (row !== entry.fromRow) entry.tile._fall = row - entry.fromRow;
+      state.board[row][col] = entry.tile;
+      nextTile += 1;
     }
   }
 
