@@ -4,7 +4,7 @@ const SLOT_COUNT = 3;
 const MULTIPLIER_SIZE = 2;
 const MULTIPLIER_SIZES = [1, 2];
 const MULTIPLIER_COLS = [0, 2, 4];
-const SYMBOL_VERSION = "symbol-rules-51-bgm-loop";
+const SYMBOL_VERSION = "symbol-rules-52-casino-groove";
 const PERF_ENABLED = new URLSearchParams(window.location.search).has("perf");
 const SPECIAL_METER_TARGET = 15;
 const BET_STEPS = [20, 50, 100, 200, 500];
@@ -114,6 +114,7 @@ const state = {
   masterGain: null,
   musicTimer: null,
   musicStep: 0,
+  musicDuckingUntil: 0,
   activeTones: 0,
   lastSoundAt: {},
   fx: {
@@ -2050,8 +2051,11 @@ function playTone(freq, duration = 0.08, options = {}) {
   osc.type = options.type || "triangle";
   osc.frequency.setValueAtTime(freq, now);
   if (options.to) osc.frequency.exponentialRampToValueAtTime(Math.max(40, options.to), now + duration);
+  const volume = options.music && performance.now() < state.musicDuckingUntil
+    ? (options.volume || 0.08) * 0.42
+    : (options.volume || 0.08);
   gain.gain.setValueAtTime(0.0001, now);
-  gain.gain.exponentialRampToValueAtTime(options.volume || 0.08, now + 0.012);
+  gain.gain.exponentialRampToValueAtTime(volume, now + 0.012);
   gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
   osc.connect(gain);
   gain.connect(state.masterGain);
@@ -2070,19 +2074,20 @@ function startBackgroundMusic() {
   if (!state.sound || state.musicTimer) return;
   const context = ensureAudio();
   if (!context) return;
-  const notes = [392, 523, 587, 523, 659, 587, 523, 440, 392, 523, 587, 784, 659, 587, 523, 440];
-  const bass = [98, 98, 147, 98, 110, 110, 147, 110];
-  const chime = [784, 880, 988, 1046];
+  const groove = [196, 196, 247, 196, 220, 220, 247, 165, 196, 196, 294, 247, 220, 196, 165, 147];
+  const pulse = [98, 98, 147, 98, 110, 110, 147, 110];
+  const hook = [392, 494, 523, 494, 392, 330, 392, 440];
+  const chime = [784, 659, 880, 784];
   state.musicTimer = window.setInterval(() => {
     if (!state.sound || document.hidden) return;
-    const base = notes[state.musicStep % notes.length];
     const beat = state.musicStep;
+    const base = groove[beat % groove.length];
     state.musicStep += 1;
-    playTone(base, 0.11, { type: "triangle", volume: 0.062 });
-    if (beat % 2 === 0) playTone(bass[(beat / 2) % bass.length], 0.095, { type: "square", volume: 0.042 });
-    if (beat % 4 === 1) playTone(chime[(beat / 4) % chime.length], 0.07, { type: "sine", volume: 0.032 });
-    if (beat % 8 === 7) playChord([base * 1.5, base * 2], 0.075, { type: "triangle", volume: 0.026 });
-  }, 320);
+    playTone(base, 0.085, { type: "triangle", volume: 0.044, music: true });
+    if (beat % 2 === 0) playTone(pulse[(beat / 2) % pulse.length], 0.075, { type: "square", volume: 0.04, music: true });
+    if (beat % 8 === 3) playTone(hook[(beat / 8) % hook.length], 0.06, { type: "sine", volume: 0.024, music: true });
+    if (beat % 16 === 15) playChord([chime[(beat / 16) % chime.length], chime[(beat / 16 + 1) % chime.length]], 0.055, { type: "triangle", volume: 0.018, music: true });
+  }, 330);
 }
 
 function stopBackgroundMusic() {
@@ -2131,6 +2136,7 @@ function playSound(kind) {
   state.lastSoundAt[kind] = now;
   ensureAudio();
   startBackgroundMusic();
+  if (kind !== "button" && kind !== "move") state.musicDuckingUntil = now + 520;
 
   const soundMap = {
     button: () => playChord([420, 630], 0.045, { volume: 0.04 }),
