@@ -4,12 +4,12 @@ const SLOT_COUNT = 3;
 const MULTIPLIER_SIZE = 2;
 const MULTIPLIER_SIZES = [1, 2];
 const MULTIPLIER_COLS = [0, 2, 4];
-const SYMBOL_VERSION = "symbol-rules-56-multiplier-bounds";
+const SYMBOL_VERSION = "symbol-rules-57-multiplier-art-200";
 const PERF_ENABLED = new URLSearchParams(window.location.search).has("perf");
 const SPECIAL_METER_TARGET = 15;
 const BET_STEPS = [20, 50, 100, 200, 500];
 const CANDIES = ["red", "blue", "green", "orange", "purple"];
-const MULTIPLIER_VALUES = [5, 10, 20, 30, 50, 100];
+const MULTIPLIER_VALUES = [5, 10, 20, 30, 50, 100, 200];
 const COLLECTION_SLOT_ITEM_WEIGHTS = [
   { kind: "candyClear", type: "red", weight: 5 },
   { kind: "candyClear", type: "blue", weight: 5 },
@@ -21,7 +21,8 @@ const COLLECTION_SLOT_ITEM_WEIGHTS = [
   { kind: "multiplier", value: 20, weight: 4.167 },
   { kind: "multiplier", value: 30, weight: 1.786 },
   { kind: "multiplier", value: 50, weight: 0.893 },
-  { kind: "multiplier", value: 100, weight: 0.298 },
+  { kind: "multiplier", value: 100, weight: 0.149 },
+  { kind: "multiplier", value: 200, weight: 0.149 },
   { kind: "flame", weight: 50 },
 ];
 const FLAME_PATTERN_WEIGHTS = [
@@ -38,7 +39,8 @@ const MULTIPLIER_VALUE_WEIGHTS = [
   { value: 20, weight: 22 },
   { value: 30, weight: 14 },
   { value: 50, weight: 8 },
-  { value: 100, weight: 4 },
+  { value: 100, weight: 2 },
+  { value: 200, weight: 2 },
 ];
 const MULTIPLIER_SIZE_WEIGHTS = [
   { size: 1, weight: 50 },
@@ -308,6 +310,7 @@ function candyAsset(type) {
 }
 
 function multiplierAsset(value) {
+  if (value >= 200) return `assets/symbols/multiplier-relic-x200.png?v=${SYMBOL_VERSION}`;
   if (value >= 100) return `assets/symbols/multiplier-relic-x100.png?v=${SYMBOL_VERSION}`;
   if (value >= 50) return `assets/symbols/multiplier-relic-x50.png?v=${SYMBOL_VERSION}`;
   if (value >= 30) return `assets/symbols/multiplier-relic-x30.png?v=${SYMBOL_VERSION}`;
@@ -481,6 +484,11 @@ function randomMultiplierSize() {
   return weightedPick(MULTIPLIER_SIZE_WEIGHTS).size;
 }
 
+function multiplierSizeForValue(value, flags = {}) {
+  if (value >= 100) return 2;
+  return flags.size || randomMultiplierSize();
+}
+
 function multiplierAnchorRowWeights(size) {
   return size === 1 ? MULTIPLIER_ANCHOR_ROW_WEIGHTS_1X1 : MULTIPLIER_ANCHOR_ROW_WEIGHTS_2X2;
 }
@@ -510,7 +518,7 @@ function canPlaceMultiplierAt(row, col, multipliers = state.multipliers, ignore 
 }
 
 function createMultiplier(value, row, col, flags = {}) {
-  const size = flags.size || randomMultiplierSize();
+  const size = multiplierSizeForValue(value, flags);
   return {
     id: `m-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
     kind: "multiplier",
@@ -546,10 +554,11 @@ function addMultipliers(board) {
   const multipliers = [];
 
   while (multipliers.length < count) {
-    const size = randomMultiplierSize();
+    const value = weightedMultiplier().value;
+    const size = multiplierSizeForValue(value);
     const point = pickMultiplierSpawnCell(board, (cell) => canPlaceMultiplierAt(cell.row, cell.col, multipliers, null, board, size), size);
     if (!point) break;
-    const multiplier = createMultiplier(weightedMultiplier().value, point.row, point.col, { size });
+    const multiplier = createMultiplier(value, point.row, point.col, { size });
     multipliers.push(multiplier);
     clearMultiplierFootprint(board, multiplier);
   }
@@ -2835,7 +2844,7 @@ async function playFlameEvent() {
 }
 
 function multiplierSpawnPoint(value = 10, flags = {}) {
-  const size = flags.size || randomMultiplierSize();
+  const size = multiplierSizeForValue(value, flags);
   const point = pickMultiplierSpawnCell(state.board, (cell) => canPlaceMultiplierAt(cell.row, cell.col, state.multipliers, null, state.board, size), size);
   return point ? createMultiplier(value, point.row, point.col, { ...flags, size }) : null;
 }
