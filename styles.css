@@ -547,25 +547,6 @@ button {
   filter: drop-shadow(0 7px 5px rgba(0, 0, 0, 0.36));
 }
 
-.multiplier-img {
-  width: 132%;
-  height: 132%;
-  z-index: 4;
-  filter:
-    drop-shadow(0 0 10px rgba(255, 221, 89, 0.7))
-    drop-shadow(0 8px 6px rgba(0, 0, 0, 0.35));
-}
-
-.tile.multiplier-size-1 .multiplier-img {
-  width: 112%;
-  height: 112%;
-}
-
-.tile.multiplier-size-2 .multiplier-img {
-  width: 132%;
-  height: 132%;
-}
-
 .special-img {
   width: 116%;
   height: 116%;
@@ -595,10 +576,6 @@ button {
 
 .phone.board-busy .special-img {
   filter: drop-shadow(0 6px 4px rgba(0, 0, 0, 0.32));
-}
-
-.phone.board-busy .multiplier-img {
-  filter: drop-shadow(0 0 8px rgba(255, 221, 89, 0.62));
 }
 
 .tile.special-candy {
@@ -1343,6 +1320,251 @@ button {
     conic-gradient(from 0deg, transparent 0 12deg, rgba(255, 238, 120, 0.68) 12deg 18deg, transparent 18deg 42deg);
   filter: drop-shadow(0 0 16px rgba(255, 235, 98, 0.86));
   animation: ray-spin 4s linear infinite;
+}
+
+.tile.multiplier {
+  overflow: visible;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 229, 104, 0.13), transparent 54%),
+    rgba(10, 18, 55, 0.54);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 0 14px rgba(255, 205, 72, 0.24);
+}
+
+.tile.multiplier::before,
+.tile.multiplier::after {
+  display: none;
+}
+
+.tile.multiplier-size-1,
+.tile.multiplier-size-2,
+.tile.multiplier.value-5,
+.tile.multiplier.value-10,
+.tile.multiplier.value-20,
+.tile.multiplier.value-30,
+.tile.multiplier.value-50,
+.tile.multiplier.value-100,
+.tile.multiplier.tier-low,
+.tile.multiplier.tier-blue,
+.tile.multiplier.tier-plus,
+.tile.multiplier.tier-hot,
+.tile.multiplier.tier-mega,
+.tile.multiplier.tier-legend,
+.tile.multiplier.tier-ultimate {
+  transform: none;
+  animation: none;
+}
+
+.multiplier-symbol {
+  --relic-main: #1b87ff;
+  --relic-deep: #1626a8;
+  --relic-glow: rgba(79, 209, 255, 0.75);
+  --relic-scale: 1.18;
+  position: absolute;
+  inset: 50%;
+  z-index: 6;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  transform: translate(-50%, -50%) scale(var(--relic-scale));
+  filter:
+    drop-shadow(0 0 9px rgba(255, 219, 88, 0.72))
+    drop-shadow(0 7px 5px rgba(0, 0, 0, 0.28));
+}
+
+.tile.multiplier-size-1 .multiplier-symbol {
+  --relic-scale: 1.12;
+}
+
+.tile.multiplier-size-2 .multiplier-symbol {
+  --relic-scale: 1.16;
+}
+
+.multiplier-halo,
+.multiplier-frame,
+.multiplier-body,
+.multiplier-glint {
+  position: absolute;
+  pointer-events: none;
+}
+
+.multiplier-halo {
+  inset: 3%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 232, 94, 0.52), transparent 63%);
+  opacity: 0.82;
+  animation: multiplier-soft-halo 2.4s ease-in-out infinite;
+}
+
+.multiplier-frame {
+  inset: 10%;
+  background:
+    radial-gradient(circle at 32% 16%, rgba(255, 255, 255, 0.95), transparent 10%),
+    linear-gradient(150deg, #fff2a4 0%, #ffb321 36%, #a85608 72%, #fff0a2 100%);
+  clip-path: circle(48% at 50% 50%);
+}
+
+.multiplier-body {
+  inset: 19%;
+  background:
+    radial-gradient(circle at 32% 20%, rgba(255, 255, 255, 0.94), transparent 15%),
+    radial-gradient(circle at 66% 78%, rgba(24, 0, 72, 0.42), transparent 36%),
+    linear-gradient(150deg, var(--relic-main) 0%, var(--relic-deep) 100%);
+  box-shadow:
+    inset 0 4px 5px rgba(255, 255, 255, 0.32),
+    inset 0 -9px 12px rgba(0, 0, 0, 0.22),
+    0 0 12px var(--relic-glow);
+  clip-path: circle(45% at 50% 50%);
+}
+
+.multiplier-mark {
+  position: absolute;
+  left: 50%;
+  top: 53%;
+  z-index: 7;
+  color: #fff8da;
+  font-weight: 1000;
+  font-size: 34px;
+  line-height: 1;
+  letter-spacing: 0;
+  transform: translate(-50%, -50%);
+  text-transform: uppercase;
+  -webkit-text-stroke: 2px #213277;
+  text-shadow:
+    0 2px 0 rgba(50, 21, 88, 0.9),
+    0 0 7px rgba(255, 255, 255, 0.86),
+    0 0 12px rgba(255, 221, 91, 0.72);
+  animation: multiplier-mark-pulse 2.1s ease-in-out infinite;
+}
+
+.tile.multiplier-size-1 .multiplier-mark {
+  font-size: 22px;
+  -webkit-text-stroke-width: 1.5px;
+}
+
+.tile.multiplier.value-30 .multiplier-mark,
+.tile.multiplier.value-50 .multiplier-mark,
+.tile.multiplier.value-100 .multiplier-mark {
+  font-size: 38px;
+}
+
+.tile.multiplier-size-1.value-30 .multiplier-mark,
+.tile.multiplier-size-1.value-50 .multiplier-mark,
+.tile.multiplier-size-1.value-100 .multiplier-mark {
+  font-size: 24px;
+}
+
+.multiplier-glint {
+  inset: 18% 24% auto 24%;
+  height: 18%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.82), transparent);
+  opacity: 0.58;
+  transform: rotate(-18deg);
+  animation: multiplier-glint-sweep 2.8s ease-in-out infinite;
+}
+
+.tile.multiplier.value-10 .multiplier-symbol {
+  --relic-main: #46ee55;
+  --relic-deep: #08722a;
+  --relic-glow: rgba(90, 255, 106, 0.72);
+}
+
+.tile.multiplier.value-10 .multiplier-frame,
+.tile.multiplier.value-10 .multiplier-body {
+  clip-path: polygon(50% 3%, 86% 18%, 78% 75%, 50% 96%, 22% 75%, 14% 18%);
+}
+
+.tile.multiplier.value-20 .multiplier-symbol {
+  --relic-main: #e66cff;
+  --relic-deep: #5b14bf;
+  --relic-glow: rgba(224, 96, 255, 0.76);
+}
+
+.tile.multiplier.value-20 .multiplier-frame,
+.tile.multiplier.value-20 .multiplier-body {
+  clip-path: polygon(50% 2%, 88% 24%, 88% 72%, 50% 98%, 12% 72%, 12% 24%);
+}
+
+.tile.multiplier.value-30 .multiplier-symbol {
+  --relic-main: #ff553e;
+  --relic-deep: #941324;
+  --relic-glow: rgba(255, 88, 58, 0.82);
+}
+
+.tile.multiplier.value-30 .multiplier-frame,
+.tile.multiplier.value-30 .multiplier-body {
+  clip-path: polygon(50% 0%, 63% 18%, 84% 15%, 78% 39%, 94% 54%, 73% 64%, 70% 90%, 50% 78%, 30% 90%, 27% 64%, 6% 54%, 22% 39%, 16% 15%, 37% 18%);
+}
+
+.tile.multiplier.value-50 .multiplier-symbol {
+  --relic-main: #40e6ff;
+  --relic-deep: #1261c9;
+  --relic-glow: rgba(72, 229, 255, 0.86);
+  --relic-scale: 1.2;
+}
+
+.tile.multiplier.value-50 .multiplier-frame,
+.tile.multiplier.value-50 .multiplier-body {
+  clip-path: polygon(50% 0%, 62% 32%, 96% 20%, 74% 50%, 96% 80%, 62% 68%, 50% 100%, 38% 68%, 4% 80%, 26% 50%, 4% 20%, 38% 32%);
+}
+
+.tile.multiplier.value-100 .multiplier-symbol,
+.tile.multiplier.tier-legend .multiplier-symbol,
+.tile.multiplier.tier-ultimate .multiplier-symbol {
+  --relic-main: #ff67ed;
+  --relic-deep: #5d15ce;
+  --relic-glow: rgba(255, 96, 238, 0.92);
+  --relic-scale: 1.22;
+}
+
+.tile.multiplier.value-100 .multiplier-frame,
+.tile.multiplier.value-100 .multiplier-body,
+.tile.multiplier.tier-legend .multiplier-frame,
+.tile.multiplier.tier-legend .multiplier-body,
+.tile.multiplier.tier-ultimate .multiplier-frame,
+.tile.multiplier.tier-ultimate .multiplier-body {
+  clip-path: polygon(9% 40%, 24% 31%, 29% 6%, 42% 26%, 50% 2%, 58% 26%, 71% 6%, 76% 31%, 91% 40%, 82% 92%, 18% 92%);
+}
+
+.tile.multiplier.value-100 .multiplier-mark,
+.tile.multiplier.tier-legend .multiplier-mark,
+.tile.multiplier.tier-ultimate .multiplier-mark {
+  font-size: 33px;
+}
+
+.tile.multiplier-size-1.value-100 .multiplier-mark,
+.tile.multiplier-size-1.tier-legend .multiplier-mark,
+.tile.multiplier-size-1.tier-ultimate .multiplier-mark {
+  font-size: 21px;
+}
+
+.mini-slot.multiplier-preview img {
+  opacity: 0;
+}
+
+.mini-slot.multiplier-preview::after {
+  content: attr(data-value);
+  position: absolute;
+  inset: 7px;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff8d9;
+  font-size: 12px;
+  font-weight: 1000;
+  letter-spacing: 0;
+  -webkit-text-stroke: 1px #263577;
+  text-shadow: 0 1px 0 #21114b, 0 0 8px rgba(255, 225, 88, 0.78);
+  background:
+    radial-gradient(circle at 32% 20%, rgba(255, 255, 255, 0.92), transparent 15%),
+    linear-gradient(150deg, #ffed86 0%, #ff4ee5 38%, #5b18d7 100%);
+  border: 2px solid #ffd75f;
+  box-shadow:
+    0 0 12px rgba(255, 221, 88, 0.72),
+    inset 0 3px 4px rgba(255, 255, 255, 0.3);
 }
 
 .tile.dragging {
@@ -2495,6 +2717,43 @@ button {
   50% {
     opacity: 1;
     transform: scale(1.08) rotate(10deg);
+  }
+}
+
+@keyframes multiplier-soft-halo {
+  0%,
+  100% {
+    opacity: 0.58;
+    transform: scale(0.96);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.04);
+  }
+}
+
+@keyframes multiplier-mark-pulse {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.045);
+  }
+}
+
+@keyframes multiplier-glint-sweep {
+  0%,
+  60% {
+    opacity: 0;
+    transform: translateX(-18%) rotate(-18deg);
+  }
+  78% {
+    opacity: 0.68;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(18%) rotate(-18deg);
   }
 }
 
