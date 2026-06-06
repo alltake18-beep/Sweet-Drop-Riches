@@ -4,7 +4,7 @@ const SLOT_COUNT = 3;
 const MULTIPLIER_SIZE = 2;
 const MULTIPLIER_SIZES = [1, 2];
 const MULTIPLIER_COLS = [0, 2, 4];
-const SYMBOL_VERSION = "symbol-rules-54-multiplier-polish";
+const SYMBOL_VERSION = "symbol-rules-55-multiplier-art-drop";
 const PERF_ENABLED = new URLSearchParams(window.location.search).has("perf");
 const SPECIAL_METER_TARGET = 15;
 const BET_STEPS = [20, 50, 100, 200, 500];
@@ -307,6 +307,15 @@ function candyAsset(type) {
   return `assets/symbols/candy-${type}.png?v=${SYMBOL_VERSION}`;
 }
 
+function multiplierAsset(value) {
+  if (value >= 100) return `assets/symbols/multiplier-relic-x100.png?v=${SYMBOL_VERSION}`;
+  if (value >= 50) return `assets/symbols/multiplier-relic-x50.png?v=${SYMBOL_VERSION}`;
+  if (value >= 30) return `assets/symbols/multiplier-relic-x30.png?v=${SYMBOL_VERSION}`;
+  if (value >= 20) return `assets/symbols/multiplier-relic-x20.png?v=${SYMBOL_VERSION}`;
+  if (value >= 10) return `assets/symbols/multiplier-relic-x10.png?v=${SYMBOL_VERSION}`;
+  return `assets/symbols/multiplier-relic-x5.png?v=${SYMBOL_VERSION}`;
+}
+
 function isGenericSpecial(special) {
   return special === "chocolate";
 }
@@ -340,6 +349,7 @@ function winArtAsset(name) {
 function allSymbolAssets() {
   const assets = [
     ...CANDIES.map(candyAsset),
+    ...MULTIPLIER_VALUES.map(multiplierAsset),
     ...WIN_TIERS.map((tier) => winArtAsset(tier.art)),
     flameIconAsset(),
   ];
@@ -380,7 +390,7 @@ function randomBoardEvent() {
 
 function eventPreviewAsset(event) {
   if (event.kind === "candyClear") return candyAsset(event.type || "red");
-  if (event.kind === "multiplier") return "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
+  if (event.kind === "multiplier") return multiplierAsset(event.value || 10);
   if (event.kind === "flame") return flameIconAsset();
   if (event.kind === "sniper") return sniperIconAsset();
   return candyAsset(event.type || "red");
@@ -649,8 +659,7 @@ function tileMarkup(tile) {
     return `
       <div class="multiplier-symbol" aria-hidden="true">
         <span class="multiplier-halo"></span>
-        <span class="multiplier-frame"></span>
-        <span class="multiplier-body"></span>
+        <img class="multiplier-art" src="${multiplierAsset(tile.value)}" alt="">
         <span class="multiplier-mark">x${tile.value}</span>
         <span class="multiplier-glint"></span>
       </div>
@@ -2331,9 +2340,7 @@ function renderHud() {
   specialMeterFillEl.style.width = `${Math.min(100, (state.specialMeter / SPECIAL_METER_TARGET) * 100)}%`;
   specialMiniSlotEl.classList.toggle("multiplier-preview", state.miniSlotPreview.kind === "multiplier");
   specialMiniSlotEl.dataset.value = state.miniSlotPreview.kind === "multiplier" ? `x${state.miniSlotPreview.value || 10}` : "";
-  miniSlotIconEl.src = state.miniSlotPreview.kind === "multiplier"
-    ? "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="
-    : eventPreviewAsset(state.miniSlotPreview);
+  miniSlotIconEl.src = eventPreviewAsset(state.miniSlotPreview);
   specialMiniSlotEl.classList.toggle("rolling", state.miniSlotRolling);
   specialMiniSlotEl.classList.toggle("win", state.miniSlotWin);
   balanceEl.textContent = formatMoney(state.balance);
