@@ -4,7 +4,7 @@ const SLOT_COUNT = 3;
 const MULTIPLIER_SIZE = 2;
 const MULTIPLIER_SIZES = [1, 2];
 const MULTIPLIER_COLS = [0, 2, 4];
-const SYMBOL_VERSION = "symbol-rules-59-three-stage-meter";
+const SYMBOL_VERSION = "symbol-rules-60-multiplier-event-drop";
 const PERF_ENABLED = new URLSearchParams(window.location.search).has("perf");
 const SPECIAL_METER_TARGET = 15;
 const SPECIAL_METER_THRESHOLDS = [15, 30, 50];
@@ -1254,6 +1254,15 @@ function addSpecialMeter(count) {
   }
 }
 
+function resetSpecialMeterForAction() {
+  state.specialMeter = 0;
+  state.pendingSpecialAwards = [];
+  state.stagePreviews = initialStagePreviews();
+  state.miniSlotRolling = false;
+  state.rollingStage = null;
+  state.miniSlotWin = false;
+}
+
 function wouldCreateMatchAt(row, col, tile) {
   if (!isMatchableCandy(tile)) return false;
   const test = cloneBoard(state.board);
@@ -1379,35 +1388,47 @@ function collapseColumns() {
   clearMultiplierFootprints();
 
   for (let col = 0; col < COLS; col += 1) {
-    const fallingTiles = [];
+    const blockers = state.multipliers
+      .filter((multiplier) =>
+        multiplier.col <= col &&
+        col < multiplier.col + multiplierSize(multiplier) &&
+        shouldMultiplierBlockColumn(multiplier, col)
+      )
+      .map((multiplier) => ({ top: multiplier.row, bottom: multiplier.row + multiplierSize(multiplier) - 1 }))
+      .sort((a, b) => b.bottom - a.bottom);
+    let segmentEnd = ROWS - 1;
 
-    for (let row = ROWS - 1; row >= 0; row -= 1) {
-      if (multiplierAt(row, col)) {
-        state.board[row][col] = null;
-        continue;
-      }
-
-      const tile = state.board[row][col];
-      if (tile) fallingTiles.push({ tile, fromRow: row });
-      state.board[row][col] = null;
+    for (const blocker of blockers) {
+      collapseColumnSegment(col, blocker.bottom + 1, segmentEnd);
+      for (let row = blocker.top; row <= blocker.bottom; row += 1) state.board[row][col] = null;
+      segmentEnd = blocker.top - 1;
     }
-
-    let nextTile = 0;
-    for (let row = ROWS - 1; row >= 0; row -= 1) {
-      if (multiplierAt(row, col)) {
-        state.board[row][col] = null;
-        continue;
-      }
-
-      const entry = fallingTiles[nextTile];
-      if (!entry) continue;
-      if (row !== entry.fromRow) entry.tile._fall = row - entry.fromRow;
-      state.board[row][col] = entry.tile;
-      nextTile += 1;
-    }
+    collapseColumnSegment(col, 0, segmentEnd);
   }
 
   clearMultiplierFootprints();
+}
+
+function collapseColumnSegment(col, startRow, endRow) {
+  if (startRow > endRow) return;
+  let write = endRow;
+  for (let scan = endRow; scan >= startRow; scan -= 1) {
+    const tile = state.board[scan][col];
+    if (!tile) continue;
+    if (write !== scan) tile._fall = write - scan;
+    state.board[write][col] = tile;
+    if (write !== scan) state.board[scan][col] = null;
+    write -= 1;
+  }
+  for (let row = write; row >= startRow; row -= 1) state.board[row][col] = null;
+}
+
+function shouldMultiplierBlockColumn(multiplier, col) {
+  const size = multiplierSize(multiplier);
+  if (multiplierDropDistance(multiplier) > 0) return true;
+  const belowRow = multiplier.row + size;
+  if (belowRow >= ROWS) return true;
+  return Boolean(state.board[belowRow][col] || multiplierAtExcept(belowRow, col, multiplier));
 }
 
 function fillEmptyCells() {
@@ -1556,6 +1577,7 @@ async function attemptSwap(from, to) {
   state.balance -= currentBet();
   state.currentWin = 0;
   state.slotFlash = Array(SLOT_COUNT).fill(null);
+  resetSpecialMeterForAction();
   playSound("move");
   await resolveMove(matches, specialPoint || (multiplierSwap ? multiplierSwap.multiplierPoint : to));
 }
@@ -2680,7 +2702,7 @@ function settleBoardBeforeFill() {
     const before = boardGravitySignature();
     const items = collectAndPayMultipliers();
     collected.push(...items);
-    collapseColumns();
+    if (items.length === 0) collapseColumns();
     changed = items.length > 0 || before !== boardGravitySignature();
     guard += 1;
   }
