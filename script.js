@@ -4,7 +4,7 @@ const SLOT_COUNT = 3;
 const MULTIPLIER_SIZE = 2;
 const MULTIPLIER_SIZES = [1, 2];
 const MULTIPLIER_COLS = [0, 2, 4];
-const SYMBOL_VERSION = "symbol-rules-49-flame-icon";
+const SYMBOL_VERSION = "symbol-rules-50-music-flame";
 const PERF_ENABLED = new URLSearchParams(window.location.search).has("perf");
 const SPECIAL_METER_TARGET = 15;
 const BET_STEPS = [20, 50, 100, 200, 500];
@@ -2068,15 +2068,20 @@ function playChord(freqs, duration, options = {}) {
 
 function startBackgroundMusic() {
   if (!state.sound || state.musicTimer) return;
-  const notes = [196, 247, 294, 330, 392, 330, 294, 247, 220, 262, 330, 392, 330, 262, 247, 220];
+  const context = ensureAudio();
+  if (!context) return;
+  const notes = [262, 330, 392, 330, 440, 392, 330, 294, 262, 330, 392, 523, 494, 392, 330, 294];
+  const bass = [98, 98, 147, 98, 110, 110, 147, 110];
   state.musicTimer = window.setInterval(() => {
     if (!state.sound || document.hidden) return;
     const base = notes[state.musicStep % notes.length];
+    const beat = state.musicStep;
     state.musicStep += 1;
-    playTone(base, 0.055, { type: "sine", volume: 0.04 });
-    if (state.musicStep % 4 === 0) playTone(98, 0.048, { type: "square", volume: 0.03 });
-    if (state.musicStep % 8 === 0) playTone(base * 2, 0.04, { type: "triangle", volume: 0.018 });
-  }, 620);
+    playTone(base, 0.075, { type: "triangle", volume: 0.034 });
+    if (beat % 2 === 0) playTone(bass[(beat / 2) % bass.length], 0.075, { type: "square", volume: 0.026 });
+    if (beat % 4 === 1) playTone(base * 2, 0.045, { type: "sine", volume: 0.018 });
+    if (beat % 8 === 7) playChord([base * 2, base * 2.5], 0.05, { type: "triangle", volume: 0.016 });
+  }, 340);
 }
 
 function stopBackgroundMusic() {
@@ -2085,15 +2090,20 @@ function stopBackgroundMusic() {
   state.musicTimer = null;
 }
 
+function armBackgroundMusic() {
+  if (!state.sound) return;
+  startBackgroundMusic();
+}
+
 function playMultiplierCollectSound(value) {
   if (value >= 100) {
-    playSound("jackpot");
+    playSound("multiplierJackpotCollect");
   } else if (value >= 50) {
-    playSound("superWin");
+    playSound("multiplierEpicCollect");
   } else if (value >= 20) {
-    playSound("multiplierHigh");
+    playSound("multiplierCollectHigh");
   } else {
-    playSound("slotProgress");
+    playSound("multiplierCollect");
   }
 }
 
@@ -2107,6 +2117,12 @@ function playSound(kind) {
     cascade: 120,
     drop: 150,
     slotProgress: 95,
+    flameBurn: 120,
+    flameResist: 150,
+    multiplierCollect: 90,
+    multiplierCollectHigh: 110,
+    multiplierEpicCollect: 130,
+    multiplierJackpotCollect: 160,
   };
   const now = performance.now();
   const minGap = throttle[kind] || 28;
@@ -2133,9 +2149,34 @@ function playSound(kind) {
       playTone(140, 0.18, { to: 70, type: "sawtooth", volume: 0.13 });
       playChord([720, 960, 1280], 0.13, { delay: 0.05, volume: 0.105 });
     },
+    flameBurn: () => {
+      playTone(180, 0.28, { to: 64, type: "sawtooth", volume: 0.095 });
+      playTone(92, 0.22, { delay: 0.035, to: 48, type: "square", volume: 0.05 });
+      [540, 620, 710].forEach((freq, i) => playTone(freq, 0.055, { delay: 0.05 + i * 0.052, type: "triangle", volume: 0.045 }));
+    },
+    flameResist: () => {
+      playTone(190, 0.11, { to: 92, type: "sawtooth", volume: 0.07 });
+      playChord([520, 740], 0.075, { delay: 0.035, volume: 0.045 });
+    },
     multiplierMerge: () => playChord([520, 780, 1040], 0.14, { volume: 0.1 }),
     multiplierHigh: () => {
       [620, 780, 980, 1240].forEach((freq, i) => playTone(freq, 0.09, { delay: i * 0.055, volume: 0.1 }));
+    },
+    multiplierCollect: () => {
+      playTone(420, 0.07, { to: 760, volume: 0.08 });
+      playChord([760, 1040], 0.08, { delay: 0.07, volume: 0.07 });
+    },
+    multiplierCollectHigh: () => {
+      [520, 760, 1040, 1360].forEach((freq, i) => playTone(freq, 0.09, { delay: i * 0.055, volume: 0.095 }));
+      playTone(180, 0.12, { delay: 0.04, to: 120, type: "square", volume: 0.04 });
+    },
+    multiplierEpicCollect: () => {
+      [440, 660, 880, 1320, 1760].forEach((freq, i) => playTone(freq, 0.105, { delay: i * 0.055, type: i > 2 ? "square" : "triangle", volume: 0.105 }));
+      playChord([220, 330], 0.16, { delay: 0.06, type: "square", volume: 0.04 });
+    },
+    multiplierJackpotCollect: () => {
+      [392, 523, 659, 784, 1047, 1568, 2093].forEach((freq, i) => playTone(freq, 0.13, { delay: i * 0.055, type: i > 3 ? "square" : "triangle", volume: 0.115 }));
+      playChord([196, 262, 392], 0.24, { delay: 0.32, type: "sawtooth", volume: 0.06 });
     },
     slotProgress: () => playChord([520, 690], 0.075, { volume: 0.085 }),
     win: () => [660, 880, 1100, 1320].forEach((freq, i) => playTone(freq, 0.11, { delay: i * 0.075, volume: 0.105 })),
@@ -2153,6 +2194,7 @@ function playSound(kind) {
 }
 
 boardEl.addEventListener("pointerdown", (event) => {
+  armBackgroundMusic();
   const tile = event.target.closest(".tile");
   if (!tile || state.resolving) return;
 
@@ -2240,12 +2282,17 @@ closeMenu.addEventListener("click", () => {
 soundMenuButton.addEventListener("click", () => {
   state.sound = !state.sound;
   if (state.sound) {
+    armBackgroundMusic();
     playSound("button");
   } else {
     stopBackgroundMusic();
   }
   render();
 });
+
+window.setTimeout(() => armBackgroundMusic(), 420);
+window.addEventListener("pointerdown", armBackgroundMusic, { once: true });
+window.addEventListener("keydown", armBackgroundMusic, { once: true });
 
 function randomSpecialReward() {
   return randomBoardEvent();
@@ -2689,11 +2736,10 @@ async function playFlameEvent() {
   setEventPulse(true);
   render();
   triggerScreenFx("fx-bump", 420);
-  playSound("specialBlast");
+  playSound("flameBurn");
   await wait(resolveDelay(260, 120));
 
   const clearedCells = new Set();
-  let clearedCandyCount = 0;
   const resisted = [];
   const destroyedIds = new Set();
   const coveredMultiplierCells = new Set();
@@ -2709,7 +2755,6 @@ async function playFlameEvent() {
         clearedCells.add(pointKey(cell));
       }
     } else {
-      multiplier._flameResist = true;
       resisted.push(multiplier);
     }
   }
@@ -2721,7 +2766,6 @@ async function playFlameEvent() {
     if (coveredMultiplierCells.has(key)) continue;
     if (multiplierAt(row, col)) continue;
     if (state.board[row][col]?.kind === "candy") {
-      if (isVisibleOrdinaryCandy(row, col)) clearedCandyCount += 1;
       clearedCells.add(key);
     }
   }
@@ -2732,6 +2776,13 @@ async function playFlameEvent() {
   if (destroyedIds.size) triggerScreenFx("fx-blast", 520);
   await wait(resolveDelay(420, 160));
 
+  if (resisted.length) {
+    for (const multiplier of resisted) multiplier._flameResist = true;
+    render();
+    playSound("flameResist");
+    await wait(resolveDelay(360, 150));
+  }
+
   state.flameCells = new Set();
   state.flameFinal = false;
   render();
@@ -2741,7 +2792,6 @@ async function playFlameEvent() {
     const { row, col } = keyToPoint(key);
     state.board[row][col] = null;
   }
-  addSpecialMeter(clearedCandyCount);
   state.lastClearedCells = new Set(clearedCells);
   const collected = settleBoardBeforeFill();
   state.lastClearedCells = null;
@@ -2760,7 +2810,6 @@ async function playFlameEvent() {
     await wait(resolveDelay(highCollect >= 100 ? 760 : highCollect >= 50 ? 640 : 540, 190));
   }
 
-  if (resisted.length) await wait(resolveDelay(260, 120));
   clearFlameMarks();
   clearFallMarks();
   setEventPulse(false);
