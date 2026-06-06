@@ -1358,9 +1358,11 @@ button {
 
 .multiplier-symbol {
   --relic-main: #1b87ff;
+  --relic-mid: #35d8ff;
   --relic-deep: #1626a8;
   --relic-glow: rgba(79, 209, 255, 0.75);
-  --relic-scale: 1.18;
+  --relic-scale: 1.22;
+  --mark-scale: 1;
   position: absolute;
   inset: 50%;
   z-index: 6;
@@ -1369,16 +1371,16 @@ button {
   pointer-events: none;
   transform: translate(-50%, -50%) scale(var(--relic-scale));
   filter:
-    drop-shadow(0 0 9px rgba(255, 219, 88, 0.72))
-    drop-shadow(0 7px 5px rgba(0, 0, 0, 0.28));
+    drop-shadow(0 0 13px rgba(255, 219, 88, 0.82))
+    drop-shadow(0 7px 5px rgba(0, 0, 0, 0.2));
 }
 
 .tile.multiplier-size-1 .multiplier-symbol {
-  --relic-scale: 1.12;
+  --relic-scale: 1.16;
 }
 
 .tile.multiplier-size-2 .multiplier-symbol {
-  --relic-scale: 1.16;
+  --relic-scale: 1.22;
 }
 
 .multiplier-halo,
@@ -1398,19 +1400,28 @@ button {
 }
 
 .multiplier-frame {
-  inset: 10%;
+  inset: 5%;
   background:
-    radial-gradient(circle at 32% 16%, rgba(255, 255, 255, 0.95), transparent 10%),
-    linear-gradient(150deg, #fff2a4 0%, #ffb321 36%, #a85608 72%, #fff0a2 100%);
-  clip-path: circle(48% at 50% 50%);
+    radial-gradient(circle at 50% 1%, #fff7c6 0 5%, transparent 6%),
+    radial-gradient(circle at 50% 99%, #fff0a2 0 5%, transparent 6%),
+    radial-gradient(circle at 7% 50%, #ffe17a 0 4%, transparent 5%),
+    radial-gradient(circle at 93% 50%, #ffe17a 0 4%, transparent 5%),
+    radial-gradient(circle at 32% 16%, rgba(255, 255, 255, 0.98), transparent 9%),
+    linear-gradient(150deg, #fff5b7 0%, #ffd45d 20%, #f49a16 45%, #8f4706 70%, #fff0a2 100%);
+  clip-path: circle(49% at 50% 50%);
+  box-shadow:
+    inset 0 3px 2px rgba(255, 255, 255, 0.45),
+    inset 0 -5px 5px rgba(93, 42, 0, 0.35),
+    0 0 16px rgba(255, 211, 74, 0.62);
 }
 
 .multiplier-body {
-  inset: 19%;
+  inset: 20%;
   background:
-    radial-gradient(circle at 32% 20%, rgba(255, 255, 255, 0.94), transparent 15%),
+    radial-gradient(circle at 31% 18%, rgba(255, 255, 255, 0.98), transparent 13%),
+    radial-gradient(ellipse at 46% 13%, rgba(255, 255, 255, 0.5), transparent 21%),
     radial-gradient(circle at 66% 78%, rgba(24, 0, 72, 0.42), transparent 36%),
-    linear-gradient(150deg, var(--relic-main) 0%, var(--relic-deep) 100%);
+    linear-gradient(150deg, var(--relic-mid) 0%, var(--relic-main) 42%, var(--relic-deep) 100%);
   box-shadow:
     inset 0 4px 5px rgba(255, 255, 255, 0.32),
     inset 0 -9px 12px rgba(0, 0, 0, 0.22),
@@ -1425,34 +1436,34 @@ button {
   z-index: 7;
   color: #fff8da;
   font-weight: 1000;
-  font-size: 34px;
+  font-size: 39px;
   line-height: 1;
   letter-spacing: 0;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) scale(var(--mark-scale));
   text-transform: uppercase;
-  -webkit-text-stroke: 2px #213277;
+  -webkit-text-stroke: 2.5px #213277;
   text-shadow:
-    0 2px 0 rgba(50, 21, 88, 0.9),
+    0 3px 0 rgba(50, 21, 88, 0.9),
     0 0 7px rgba(255, 255, 255, 0.86),
-    0 0 12px rgba(255, 221, 91, 0.72);
+    0 0 14px rgba(255, 221, 91, 0.86);
   animation: multiplier-mark-pulse 2.1s ease-in-out infinite;
 }
 
 .tile.multiplier-size-1 .multiplier-mark {
-  font-size: 22px;
+  font-size: 27px;
   -webkit-text-stroke-width: 1.5px;
 }
 
 .tile.multiplier.value-30 .multiplier-mark,
 .tile.multiplier.value-50 .multiplier-mark,
 .tile.multiplier.value-100 .multiplier-mark {
-  font-size: 38px;
+  font-size: 46px;
 }
 
 .tile.multiplier-size-1.value-30 .multiplier-mark,
 .tile.multiplier-size-1.value-50 .multiplier-mark,
 .tile.multiplier-size-1.value-100 .multiplier-mark {
-  font-size: 24px;
+  font-size: 30px;
 }
 
 .multiplier-glint {
@@ -1467,56 +1478,64 @@ button {
 
 .tile.multiplier.value-10 .multiplier-symbol {
   --relic-main: #46ee55;
+  --relic-mid: #a7ff5b;
   --relic-deep: #08722a;
   --relic-glow: rgba(90, 255, 106, 0.72);
 }
 
 .tile.multiplier.value-10 .multiplier-frame,
 .tile.multiplier.value-10 .multiplier-body {
-  clip-path: polygon(50% 3%, 86% 18%, 78% 75%, 50% 96%, 22% 75%, 14% 18%);
+  clip-path: polygon(50% 0%, 89% 16%, 79% 75%, 50% 100%, 21% 75%, 11% 16%);
 }
 
 .tile.multiplier.value-20 .multiplier-symbol {
   --relic-main: #e66cff;
+  --relic-mid: #ff93ff;
   --relic-deep: #5b14bf;
   --relic-glow: rgba(224, 96, 255, 0.76);
 }
 
 .tile.multiplier.value-20 .multiplier-frame,
 .tile.multiplier.value-20 .multiplier-body {
-  clip-path: polygon(50% 2%, 88% 24%, 88% 72%, 50% 98%, 12% 72%, 12% 24%);
+  clip-path: polygon(50% 0%, 91% 23%, 91% 73%, 50% 100%, 9% 73%, 9% 23%);
 }
 
 .tile.multiplier.value-30 .multiplier-symbol {
   --relic-main: #ff553e;
+  --relic-mid: #ffaf47;
   --relic-deep: #941324;
   --relic-glow: rgba(255, 88, 58, 0.82);
+  --relic-scale: 1.24;
 }
 
 .tile.multiplier.value-30 .multiplier-frame,
 .tile.multiplier.value-30 .multiplier-body {
-  clip-path: polygon(50% 0%, 63% 18%, 84% 15%, 78% 39%, 94% 54%, 73% 64%, 70% 90%, 50% 78%, 30% 90%, 27% 64%, 6% 54%, 22% 39%, 16% 15%, 37% 18%);
+  clip-path: polygon(50% 0%, 63% 17%, 87% 11%, 78% 38%, 98% 53%, 74% 64%, 72% 94%, 50% 80%, 28% 94%, 26% 64%, 2% 53%, 22% 38%, 13% 11%, 37% 17%);
 }
 
 .tile.multiplier.value-50 .multiplier-symbol {
   --relic-main: #40e6ff;
+  --relic-mid: #9df9ff;
   --relic-deep: #1261c9;
   --relic-glow: rgba(72, 229, 255, 0.86);
-  --relic-scale: 1.2;
+  --relic-scale: 1.28;
+  --mark-scale: 1.08;
 }
 
 .tile.multiplier.value-50 .multiplier-frame,
 .tile.multiplier.value-50 .multiplier-body {
-  clip-path: polygon(50% 0%, 62% 32%, 96% 20%, 74% 50%, 96% 80%, 62% 68%, 50% 100%, 38% 68%, 4% 80%, 26% 50%, 4% 20%, 38% 32%);
+  clip-path: polygon(50% 0%, 63% 31%, 100% 17%, 76% 50%, 100% 83%, 63% 69%, 50% 100%, 37% 69%, 0% 83%, 24% 50%, 0% 17%, 37% 31%);
 }
 
 .tile.multiplier.value-100 .multiplier-symbol,
 .tile.multiplier.tier-legend .multiplier-symbol,
 .tile.multiplier.tier-ultimate .multiplier-symbol {
   --relic-main: #ff67ed;
+  --relic-mid: #ffb3ff;
   --relic-deep: #5d15ce;
   --relic-glow: rgba(255, 96, 238, 0.92);
-  --relic-scale: 1.22;
+  --relic-scale: 1.3;
+  --mark-scale: 1.1;
 }
 
 .tile.multiplier.value-100 .multiplier-frame,
@@ -1531,13 +1550,13 @@ button {
 .tile.multiplier.value-100 .multiplier-mark,
 .tile.multiplier.tier-legend .multiplier-mark,
 .tile.multiplier.tier-ultimate .multiplier-mark {
-  font-size: 33px;
+  font-size: 40px;
 }
 
 .tile.multiplier-size-1.value-100 .multiplier-mark,
 .tile.multiplier-size-1.tier-legend .multiplier-mark,
 .tile.multiplier-size-1.tier-ultimate .multiplier-mark {
-  font-size: 21px;
+  font-size: 27px;
 }
 
 .mini-slot.multiplier-preview img {
@@ -2735,10 +2754,10 @@ button {
 @keyframes multiplier-mark-pulse {
   0%,
   100% {
-    transform: translate(-50%, -50%) scale(1);
+    transform: translate(-50%, -50%) scale(var(--mark-scale));
   }
   50% {
-    transform: translate(-50%, -50%) scale(1.045);
+    transform: translate(-50%, -50%) scale(calc(var(--mark-scale) * 1.045));
   }
 }
 
