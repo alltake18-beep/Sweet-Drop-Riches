@@ -11,19 +11,19 @@ const BET_STEPS = [20, 50, 100, 200, 500];
 const CANDIES = ["red", "blue", "green", "orange", "purple"];
 const MULTIPLIER_VALUES = [5, 10, 20, 30, 50, 100, 200];
 const COLLECTION_SLOT_ITEM_WEIGHTS = [
-  { kind: "candyClear", type: "red", weight: 5 },
-  { kind: "candyClear", type: "blue", weight: 5 },
-  { kind: "candyClear", type: "green", weight: 5 },
-  { kind: "candyClear", type: "orange", weight: 5 },
-  { kind: "candyClear", type: "purple", weight: 5 },
-  { kind: "multiplier", value: 5, weight: 10.714 },
-  { kind: "multiplier", value: 10, weight: 7.143 },
-  { kind: "multiplier", value: 20, weight: 4.167 },
-  { kind: "multiplier", value: 30, weight: 1.786 },
-  { kind: "multiplier", value: 50, weight: 0.893 },
-  { kind: "multiplier", value: 100, weight: 0.149 },
-  { kind: "multiplier", value: 200, weight: 0.149 },
-  { kind: "flame", weight: 50 },
+  { kind: "candyClear", type: "red", weight: 6.8 },
+  { kind: "candyClear", type: "blue", weight: 6.8 },
+  { kind: "candyClear", type: "green", weight: 6.8 },
+  { kind: "candyClear", type: "orange", weight: 6.8 },
+  { kind: "candyClear", type: "purple", weight: 6.8 },
+  { kind: "multiplier", value: 5, weight: 14.142 },
+  { kind: "multiplier", value: 10, weight: 9.428 },
+  { kind: "multiplier", value: 20, weight: 5.5 },
+  { kind: "multiplier", value: 30, weight: 2.357 },
+  { kind: "multiplier", value: 50, weight: 1.179 },
+  { kind: "multiplier", value: 100, weight: 0.197 },
+  { kind: "multiplier", value: 200, weight: 0.197 },
+  { kind: "flame", weight: 33 },
 ];
 const FLAME_PATTERN_WEIGHTS = [
   { kind: "col1", weight: 25 },
