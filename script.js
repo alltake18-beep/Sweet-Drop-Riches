@@ -4,7 +4,7 @@ const SLOT_COUNT = 3;
 const MULTIPLIER_SIZE = 2;
 const MULTIPLIER_SIZES = [1, 2];
 const MULTIPLIER_COLS = [0, 2, 4];
-const SYMBOL_VERSION = "symbol-rules-48-1x1-swap";
+const SYMBOL_VERSION = "symbol-rules-49-flame-icon";
 const PERF_ENABLED = new URLSearchParams(window.location.search).has("perf");
 const SPECIAL_METER_TARGET = 15;
 const BET_STEPS = [20, 50, 100, 200, 500];
@@ -2326,6 +2326,16 @@ function sniperStepDelays(steps) {
   return weights.map((weight) => (weight / weightTotal) * total);
 }
 
+function flameStepDelays(steps) {
+  const total = state.fast ? 520 : 1900;
+  const weights = Array.from({ length: steps }, (_, index) => {
+    const progress = index / Math.max(1, steps - 1);
+    return 0.16 + progress ** 3.2 * 2.9;
+  });
+  const weightTotal = weights.reduce((sum, value) => sum + value, 0);
+  return weights.map((weight) => (weight / weightTotal) * total);
+}
+
 function cloneSniperResultTile(tile) {
   if (tile?.kind === "multiplier") {
     return { kind: "multiplier", value: tile.value, _reward: true };
@@ -2661,8 +2671,8 @@ function clearFlameMarks() {
 }
 
 async function playFlameEvent() {
-  const steps = state.fast ? 7 : 13;
-  const stepDelays = sniperStepDelays(steps);
+  const steps = state.fast ? 8 : 14;
+  const stepDelays = flameStepDelays(steps);
   let finalCells = new Set();
   playSound("specialReady");
 

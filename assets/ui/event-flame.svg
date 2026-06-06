@@ -1,20 +1,29 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Flame gun">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Flame">
   <defs>
-    <linearGradient id="body" x1="18" y1="72" x2="114" y2="72" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#2b2f58"/>
-      <stop offset=".5" stop-color="#5862a8"/>
-      <stop offset="1" stop-color="#171b3c"/>
+    <radialGradient id="glow" cx="50%" cy="58%" r="52%">
+      <stop offset="0" stop-color="#fff8a8" stop-opacity=".9"/>
+      <stop offset=".38" stop-color="#ff9b22" stop-opacity=".6"/>
+      <stop offset="1" stop-color="#ff255d" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="outer" x1="35" y1="112" x2="86" y2="12" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ff245c"/>
+      <stop offset=".42" stop-color="#ff7a18"/>
+      <stop offset=".78" stop-color="#ffd84f"/>
+      <stop offset="1" stop-color="#fff7a6"/>
     </linearGradient>
-    <linearGradient id="fire" x1="95" y1="33" x2="122" y2="66" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#fff48a"/>
-      <stop offset=".42" stop-color="#ff8b2b"/>
-      <stop offset="1" stop-color="#ff255d"/>
+    <linearGradient id="inner" x1="54" y1="104" x2="76" y2="38" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fff35f"/>
+      <stop offset=".56" stop-color="#fff9b5"/>
+      <stop offset="1" stop-color="#ffffff"/>
     </linearGradient>
+    <filter id="shine" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="5" stdDeviation="4" flood-color="#5b1206" flood-opacity=".5"/>
+      <feDropShadow dx="0" dy="0" stdDeviation="5" flood-color="#ffd54b" flood-opacity=".8"/>
+    </filter>
   </defs>
-  <path d="M18 66c0-10 8-18 18-18h44c10 0 18 8 18 18v14c0 7-5 12-12 12H31c-7 0-13-6-13-13V66Z" fill="url(#body)" stroke="#ffe37a" stroke-width="5"/>
-  <path d="M41 91h25l-8 25H36l5-25Z" fill="#202447" stroke="#ffe37a" stroke-width="5" stroke-linejoin="round"/>
-  <path d="M87 54h23c8 0 14 6 14 14s-6 14-14 14H87V54Z" fill="#121633" stroke="#ffe37a" stroke-width="5"/>
-  <path d="M105 57c8-17 4-26 16-43 0 17 9 21 5 35 8-6 10-14 10-14 7 16 1 32-12 38-10 5-20 0-19-16Z" fill="url(#fire)" transform="translate(-8 5)"/>
-  <circle cx="43" cy="70" r="9" fill="#53dcff"/>
-  <path d="M55 67h26" stroke="#fff6a5" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="64" cy="70" r="52" fill="url(#glow)"/>
+  <path d="M64 119c-24 0-43-16-43-40 0-15 8-28 21-39 10-8 15-17 14-30 17 10 26 23 26 38 8-5 12-13 12-22 14 14 22 31 22 47 0 30-22 46-52 46Z" fill="url(#outer)" filter="url(#shine)"/>
+  <path d="M65 111c-15 0-27-10-27-27 0-12 7-21 16-29 7-7 11-14 10-24 12 8 19 19 19 32 6-4 8-9 8-15 9 10 14 21 14 33 0 20-15 30-40 30Z" fill="#d52837" opacity=".48"/>
+  <path d="M65 110c-14 0-24-9-24-24 0-10 6-17 14-24 6-6 9-12 8-20 11 7 17 17 17 29 5-3 8-8 8-13 8 9 12 19 12 29 0 17-13 23-35 23Z" fill="url(#inner)"/>
+  <path d="M49 84c7-9 15-15 13-31 11 9 16 19 14 31 4-2 8-6 10-11 5 15-5 28-21 28-12 0-20-6-16-17Z" fill="#fff8ca" opacity=".72"/>
 </svg>
