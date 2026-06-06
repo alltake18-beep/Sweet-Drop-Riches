@@ -4,7 +4,7 @@ const SLOT_COUNT = 3;
 const MULTIPLIER_SIZE = 2;
 const MULTIPLIER_SIZES = [1, 2];
 const MULTIPLIER_COLS = [0, 2, 4];
-const SYMBOL_VERSION = "symbol-rules-55-multiplier-art-drop";
+const SYMBOL_VERSION = "symbol-rules-56-multiplier-bounds";
 const PERF_ENABLED = new URLSearchParams(window.location.search).has("perf");
 const SPECIAL_METER_TARGET = 15;
 const BET_STEPS = [20, 50, 100, 200, 500];
@@ -744,6 +744,9 @@ function renderBoard() {
       } else if (tile?.kind === "multiplier") {
         classes.push("multiplier", "multiplier-anchor", `value-${tile.value}`, multiplierTierClass(tile.value));
         classes.push(`multiplier-size-${multiplierSize(tile)}`);
+        if (tile.col === 0) classes.push("edge-left");
+        if (tile.col + multiplierSize(tile) >= COLS) classes.push("edge-right");
+        if (tile.row + multiplierSize(tile) >= ROWS) classes.push("edge-bottom");
         if (tile._flameResist) classes.push("flame-resisted");
         button.style.setProperty("grid-column", `${tile.col + 1} / span ${multiplierSize(tile)}`);
         button.style.setProperty("grid-row", `${tile.row + 1} / span ${multiplierSize(tile)}`);

@@ -1361,7 +1361,7 @@ button {
   --relic-mid: #35d8ff;
   --relic-deep: #1626a8;
   --relic-glow: rgba(79, 209, 255, 0.75);
-  --relic-scale: 1.22;
+  --relic-scale: 1.04;
   --mark-scale: 1;
   position: absolute;
   inset: 50%;
@@ -1371,16 +1371,28 @@ button {
   pointer-events: none;
   transform: translate(-50%, -50%) scale(var(--relic-scale));
   filter:
-    drop-shadow(0 0 13px rgba(255, 219, 88, 0.82))
+    drop-shadow(0 0 8px rgba(255, 219, 88, 0.72))
     drop-shadow(0 7px 5px rgba(0, 0, 0, 0.2));
 }
 
 .tile.multiplier-size-1 .multiplier-symbol {
-  --relic-scale: 1.16;
+  --relic-scale: 0.94;
 }
 
 .tile.multiplier-size-2 .multiplier-symbol {
-  --relic-scale: 1.22;
+  --relic-scale: 1.04;
+}
+
+.tile.multiplier.edge-left .multiplier-symbol,
+.tile.multiplier.edge-right .multiplier-symbol,
+.tile.multiplier.edge-bottom .multiplier-symbol {
+  --relic-scale: 0.98;
+}
+
+.tile.multiplier-size-1.edge-left .multiplier-symbol,
+.tile.multiplier-size-1.edge-right .multiplier-symbol,
+.tile.multiplier-size-1.edge-bottom .multiplier-symbol {
+  --relic-scale: 0.9;
 }
 
 .multiplier-halo,
@@ -1392,11 +1404,11 @@ button {
 }
 
 .multiplier-halo {
-  inset: -1%;
+  inset: 4%;
   border-radius: 50%;
   background: radial-gradient(circle, rgba(255, 232, 94, 0.52), transparent 63%);
-  opacity: 0.82;
-  animation: multiplier-soft-halo 2.4s ease-in-out infinite;
+  opacity: 0.5;
+  animation: none;
 }
 
 .multiplier-art {
@@ -1413,13 +1425,13 @@ button {
 }
 
 .tile.multiplier-size-1 .multiplier-art {
-  width: 118%;
-  height: 118%;
+  width: 106%;
+  height: 106%;
 }
 
 .tile.multiplier-size-2 .multiplier-art {
-  width: 120%;
-  height: 120%;
+  width: 108%;
+  height: 108%;
 }
 
 .multiplier-frame {
@@ -1459,34 +1471,46 @@ button {
   z-index: 8;
   color: #fff8da;
   font-weight: 1000;
-  font-size: 39px;
+  font-size: 31px;
   line-height: 1;
   letter-spacing: 0;
   transform: translate(-50%, -50%) scale(var(--mark-scale));
   text-transform: uppercase;
-  -webkit-text-stroke: 2.5px #213277;
+  -webkit-text-stroke: 2px #213277;
   text-shadow:
     0 3px 0 rgba(50, 21, 88, 0.9),
     0 0 7px rgba(255, 255, 255, 0.86),
     0 0 14px rgba(255, 221, 91, 0.86);
-  animation: multiplier-mark-pulse 2.1s ease-in-out infinite;
+  animation: none;
 }
 
 .tile.multiplier-size-1 .multiplier-mark {
-  font-size: 27px;
-  -webkit-text-stroke-width: 1.5px;
+  font-size: 20px;
+  -webkit-text-stroke-width: 1.25px;
 }
 
 .tile.multiplier.value-30 .multiplier-mark,
 .tile.multiplier.value-50 .multiplier-mark,
 .tile.multiplier.value-100 .multiplier-mark {
-  font-size: 46px;
+  font-size: 34px;
 }
 
 .tile.multiplier-size-1.value-30 .multiplier-mark,
 .tile.multiplier-size-1.value-50 .multiplier-mark,
 .tile.multiplier-size-1.value-100 .multiplier-mark {
-  font-size: 30px;
+  font-size: 22px;
+}
+
+.tile.multiplier.edge-left .multiplier-mark,
+.tile.multiplier.edge-right .multiplier-mark,
+.tile.multiplier.edge-bottom .multiplier-mark {
+  font-size: 29px;
+}
+
+.tile.multiplier-size-1.edge-left .multiplier-mark,
+.tile.multiplier-size-1.edge-right .multiplier-mark,
+.tile.multiplier-size-1.edge-bottom .multiplier-mark {
+  font-size: 19px;
 }
 
 .multiplier-glint {
@@ -1495,7 +1519,7 @@ button {
   height: 18%;
   border-radius: 999px;
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.82), transparent);
-  opacity: 0.58;
+  opacity: 0.42;
   transform: rotate(-18deg);
   animation: multiplier-glint-sweep 2.8s ease-in-out infinite;
 }
@@ -1529,7 +1553,7 @@ button {
   --relic-mid: #ffaf47;
   --relic-deep: #941324;
   --relic-glow: rgba(255, 88, 58, 0.82);
-  --relic-scale: 1.24;
+  --relic-scale: 1.06;
 }
 
 .tile.multiplier.value-30 .multiplier-frame,
@@ -1542,8 +1566,8 @@ button {
   --relic-mid: #9df9ff;
   --relic-deep: #1261c9;
   --relic-glow: rgba(72, 229, 255, 0.86);
-  --relic-scale: 1.28;
-  --mark-scale: 1.08;
+  --relic-scale: 1.08;
+  --mark-scale: 1.02;
 }
 
 .tile.multiplier.value-50 .multiplier-frame,
@@ -1558,8 +1582,8 @@ button {
   --relic-mid: #ffb3ff;
   --relic-deep: #5d15ce;
   --relic-glow: rgba(255, 96, 238, 0.92);
-  --relic-scale: 1.3;
-  --mark-scale: 1.1;
+  --relic-scale: 1.1;
+  --mark-scale: 1.04;
 }
 
 .tile.multiplier.value-100 .multiplier-frame,
@@ -1574,19 +1598,19 @@ button {
 .tile.multiplier.value-100 .multiplier-mark,
 .tile.multiplier.tier-legend .multiplier-mark,
 .tile.multiplier.tier-ultimate .multiplier-mark {
-  font-size: 40px;
+  font-size: 32px;
 }
 
 .tile.multiplier-size-1.value-100 .multiplier-mark,
 .tile.multiplier-size-1.tier-legend .multiplier-mark,
 .tile.multiplier-size-1.tier-ultimate .multiplier-mark {
-  font-size: 27px;
+  font-size: 20px;
 }
 
 .mini-slot.multiplier-preview img {
   opacity: 1;
-  width: 125%;
-  height: 125%;
+  width: 108%;
+  height: 108%;
   object-fit: contain;
   filter:
     drop-shadow(0 0 7px rgba(255, 221, 88, 0.72))
@@ -1602,7 +1626,7 @@ button {
   place-items: center;
   border-radius: 0;
   color: #fff8d9;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 1000;
   letter-spacing: 0;
   -webkit-text-stroke: 1px #263577;
@@ -1714,27 +1738,17 @@ button {
 }
 
 .slot.flash {
-  overflow: visible;
-  animation: slot-flash 980ms cubic-bezier(0.16, 1.2, 0.28, 1), slot-charge 980ms ease;
+  overflow: hidden;
+  animation: slot-flash 520ms cubic-bezier(0.16, 1.08, 0.28, 1), slot-charge 560ms ease;
 }
 
 .slot.flash::before {
-  content: "";
-  position: absolute;
-  z-index: 0;
-  inset: -18px;
-  border-radius: 16px;
-  background:
-    radial-gradient(circle at 50% 42%, rgba(255, 255, 255, 0.95), transparent 12%),
-    radial-gradient(circle at 50% 50%, rgba(255, 231, 82, 0.78), transparent 42%),
-    conic-gradient(from 0deg, transparent 0 16deg, rgba(255, 235, 99, 0.9) 16deg 28deg, transparent 28deg 62deg);
-  filter: drop-shadow(0 0 16px rgba(255, 221, 88, 0.9));
-  animation: slot-burst 900ms ease-out both;
+  display: none;
 }
 
 .slot.flash strong {
   z-index: 2;
-  animation: slot-value-pop 780ms cubic-bezier(0.16, 1.28, 0.24, 1) both;
+  animation: slot-value-pop 520ms cubic-bezier(0.16, 1.16, 0.24, 1) both;
 }
 
 .slot.filled {
@@ -1745,16 +1759,11 @@ button {
 }
 
 .slot.jackpot-slot {
-  animation: slot-flash 980ms ease, jackpot-slot 1080ms ease;
+  animation: slot-flash 560ms ease, jackpot-slot 680ms ease;
 }
 
 .slot.jackpot-slot::before {
-  inset: -26px;
-  background:
-    radial-gradient(circle at 50% 42%, rgba(255, 255, 255, 1), transparent 10%),
-    radial-gradient(circle at 50% 50%, rgba(255, 231, 82, 0.95), transparent 40%),
-    conic-gradient(from 0deg, transparent 0 10deg, rgba(255, 239, 116, 0.98) 10deg 22deg, transparent 22deg 48deg);
-  animation-duration: 1040ms;
+  display: none;
 }
 
 .status-text {
@@ -2756,9 +2765,8 @@ button {
     box-shadow:
       inset 0 2px 0 rgba(255, 255, 255, 0.36),
       inset 0 -11px 16px rgba(0, 0, 0, 0.52),
-      0 0 0 2px rgba(255, 246, 166, 0.72),
-      0 0 28px rgba(255, 225, 88, 0.92),
-      0 0 18px rgba(255, 75, 220, 0.58);
+      0 0 0 2px rgba(255, 246, 166, 0.86),
+      0 0 20px rgba(255, 225, 88, 0.82);
   }
   100% {
     box-shadow:
@@ -2791,11 +2799,11 @@ button {
 @keyframes slot-value-pop {
   0% {
     opacity: 0;
-    transform: translateY(-12px) scale(0.58);
+    transform: translateY(-4px) scale(0.78);
   }
   36% {
     opacity: 1;
-    transform: translateY(0) scale(1.28);
+    transform: translateY(0) scale(1.12);
   }
   68% {
     transform: scale(0.96);
