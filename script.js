@@ -4,10 +4,10 @@ const SLOT_COUNT = 3;
 const MULTIPLIER_SIZE = 2;
 const MULTIPLIER_SIZES = [1, 2];
 const MULTIPLIER_COLS = [0, 2, 4];
-const SYMBOL_VERSION = "symbol-rules-60-multiplier-event-drop";
+const SYMBOL_VERSION = "symbol-rules-61-meter-10-20-30";
 const PERF_ENABLED = new URLSearchParams(window.location.search).has("perf");
 const SPECIAL_METER_TARGET = 15;
-const SPECIAL_METER_THRESHOLDS = [15, 30, 50];
+const SPECIAL_METER_THRESHOLDS = [10, 20, 30];
 const SPECIAL_METER_MAX = SPECIAL_METER_THRESHOLDS[SPECIAL_METER_THRESHOLDS.length - 1];
 const SOUND_GAIN_BOOST = 1.5;
 const BET_STEPS = [20, 50, 100, 200, 500];
@@ -943,6 +943,18 @@ function canInteractWithPoint(point) {
   return !multiplier || multiplierSize(multiplier) === 1;
 }
 
+function hasEnoughBalanceForMove() {
+  return state.balance >= currentBet();
+}
+
+function showInsufficientBalance() {
+  state.selected = null;
+  setStatus("餘額不足");
+  triggerScreenFx("fx-pop", 260);
+  playSound("error");
+  render();
+}
+
 function multiplierSwapContext(from, to) {
   const fromMultiplier = multiplierAt(from.row, from.col);
   const toMultiplier = multiplierAt(to.row, to.col);
@@ -1541,9 +1553,8 @@ async function attemptSwap(from, to) {
     await ensureLegalMove();
     return;
   }
-  if (state.balance < currentBet()) {
-    setStatus("餘額不足");
-    playSound("error");
+  if (!hasEnoughBalanceForMove()) {
+    showInsufficientBalance();
     return;
   }
 
@@ -1604,6 +1615,10 @@ function specialSwapPoint(from, to) {
 
 async function handleTileClick(row, col) {
   if (state.resolving) return;
+  if (!hasEnoughBalanceForMove()) {
+    showInsufficientBalance();
+    return;
+  }
   if (!hasLegalMove(state.board)) {
     await ensureLegalMove();
     return;
@@ -2297,6 +2312,11 @@ boardEl.addEventListener("pointerdown", (event) => {
   armBackgroundMusic();
   const tile = event.target.closest(".tile");
   if (!tile || state.resolving) return;
+  if (!hasEnoughBalanceForMove()) {
+    showInsufficientBalance();
+    event.preventDefault();
+    return;
+  }
 
   state.pointer = {
     ...pointFromTile(tile),
@@ -2441,6 +2461,7 @@ function renderHud() {
   document.querySelector(".special-meter-copy span").textContent = "事件收集";
   specialMeterTextEl.textContent = `${Math.min(state.specialMeter, SPECIAL_METER_MAX)}/${SPECIAL_METER_MAX}`;
   specialMeterFillEl.style.width = `${Math.min(100, (state.specialMeter / SPECIAL_METER_MAX) * 100)}%`;
+  document.querySelector(".phone")?.classList.toggle("low-balance", !hasEnoughBalanceForMove());
   if (!state.stagePreviews.length) state.stagePreviews = initialStagePreviews();
   const currentStage = currentSpecialStageIndex();
   stageSlotEls.forEach((slot, index) => {
