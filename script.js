@@ -4,7 +4,7 @@ const SLOT_COUNT = 3;
 const MULTIPLIER_SIZE = 2;
 const MULTIPLIER_SIZES = [1, 2];
 const MULTIPLIER_COLS = [0, 2, 4];
-const SYMBOL_VERSION = "symbol-rules-47-size-rate";
+const SYMBOL_VERSION = "symbol-rules-48-1x1-swap";
 const PERF_ENABLED = new URLSearchParams(window.location.search).has("perf");
 const SPECIAL_METER_TARGET = 15;
 const BET_STEPS = [20, 50, 100, 200, 500];
@@ -750,7 +750,7 @@ function renderBoard() {
         button.dataset.signature = signature;
       }
       button.className = classes.join(" ");
-      button.disabled = state.resolving || Boolean(coveredMultiplier);
+      button.disabled = state.resolving || Boolean(coveredMultiplier && multiplierSize(coveredMultiplier) !== 1);
       button.setAttribute("aria-label", tileLabel(coveredMultiplier || tile));
     }
   }
@@ -866,6 +866,42 @@ function swap(board, a, b) {
   const next = board[a.row][a.col];
   board[a.row][a.col] = board[b.row][b.col];
   board[b.row][b.col] = next;
+}
+
+function canInteractWithPoint(point) {
+  const multiplier = multiplierAt(point.row, point.col);
+  return !multiplier || multiplierSize(multiplier) === 1;
+}
+
+function multiplierSwapContext(from, to) {
+  const fromMultiplier = multiplierAt(from.row, from.col);
+  const toMultiplier = multiplierAt(to.row, to.col);
+  if (!fromMultiplier && !toMultiplier) return null;
+  if (fromMultiplier && toMultiplier) return null;
+
+  const multiplier = fromMultiplier || toMultiplier;
+  if (multiplierSize(multiplier) !== 1) return null;
+
+  const multiplierPoint = fromMultiplier ? from : to;
+  const candyPoint = fromMultiplier ? to : from;
+  if (!isOrdinaryCandy(state.board[candyPoint.row][candyPoint.col])) return null;
+  return { multiplier, multiplierPoint, candyPoint };
+}
+
+function moveMultiplierForSwap(context) {
+  const candy = state.board[context.candyPoint.row][context.candyPoint.col];
+  context.multiplier.row = context.candyPoint.row;
+  context.multiplier.col = context.candyPoint.col;
+  state.board[context.candyPoint.row][context.candyPoint.col] = null;
+  state.board[context.multiplierPoint.row][context.multiplierPoint.col] = candy;
+}
+
+function revertMultiplierSwap(context) {
+  const candy = state.board[context.multiplierPoint.row][context.multiplierPoint.col];
+  context.multiplier.row = context.multiplierPoint.row;
+  context.multiplier.col = context.multiplierPoint.col;
+  state.board[context.multiplierPoint.row][context.multiplierPoint.col] = null;
+  state.board[context.candyPoint.row][context.candyPoint.col] = candy;
 }
 
 function findMatches(board, multipliers = board === state.board ? state.multipliers : []) {
@@ -1421,10 +1457,12 @@ async function attemptSwap(from, to) {
   }
 
   if (!isAdjacent(from, to)) return;
-  if (multiplierAt(from.row, from.col) || multiplierAt(to.row, to.col)) return;
+  const multiplierSwap = multiplierSwapContext(from, to);
+  if ((multiplierAt(from.row, from.col) || multiplierAt(to.row, to.col)) && !multiplierSwap) return;
 
   state.selected = null;
-  swap(state.board, from, to);
+  if (multiplierSwap) moveMultiplierForSwap(multiplierSwap);
+  else swap(state.board, from, to);
   let matches = findMatches(state.board);
   const specialPoint = specialSwapPoint(from, to);
 
@@ -1433,7 +1471,8 @@ async function attemptSwap(from, to) {
   }
 
   if (matches.cells.size === 0) {
-    swap(state.board, from, to);
+    if (multiplierSwap) revertMultiplierSwap(multiplierSwap);
+    else swap(state.board, from, to);
     state.invalid = `${to.row},${to.col}`;
     render();
     setStatus("沒有消除");
@@ -1448,7 +1487,7 @@ async function attemptSwap(from, to) {
   state.currentWin = 0;
   state.slotFlash = Array(SLOT_COUNT).fill(null);
   playSound("move");
-  await resolveMove(matches, specialPoint || to);
+  await resolveMove(matches, specialPoint || (multiplierSwap ? multiplierSwap.multiplierPoint : to));
 }
 
 function specialSwapPoint(from, to) {
@@ -1479,7 +1518,7 @@ async function handleTileClick(row, col) {
   }
 
   const point = { row, col };
-  if (multiplierAt(row, col)) return;
+  if (!canInteractWithPoint(point)) return;
   if (!state.selected) {
     state.selected = point;
     render();
