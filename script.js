@@ -4,7 +4,7 @@ const SLOT_COUNT = 3;
 const MULTIPLIER_SIZE = 2;
 const MULTIPLIER_SIZES = [1, 2];
 const MULTIPLIER_COLS = [0, 2, 4];
-const SYMBOL_VERSION = "symbol-rules-50-music-flame";
+const SYMBOL_VERSION = "symbol-rules-51-bgm-loop";
 const PERF_ENABLED = new URLSearchParams(window.location.search).has("perf");
 const SPECIAL_METER_TARGET = 15;
 const BET_STEPS = [20, 50, 100, 200, 500];
@@ -2070,18 +2070,19 @@ function startBackgroundMusic() {
   if (!state.sound || state.musicTimer) return;
   const context = ensureAudio();
   if (!context) return;
-  const notes = [262, 330, 392, 330, 440, 392, 330, 294, 262, 330, 392, 523, 494, 392, 330, 294];
+  const notes = [392, 523, 587, 523, 659, 587, 523, 440, 392, 523, 587, 784, 659, 587, 523, 440];
   const bass = [98, 98, 147, 98, 110, 110, 147, 110];
+  const chime = [784, 880, 988, 1046];
   state.musicTimer = window.setInterval(() => {
     if (!state.sound || document.hidden) return;
     const base = notes[state.musicStep % notes.length];
     const beat = state.musicStep;
     state.musicStep += 1;
-    playTone(base, 0.075, { type: "triangle", volume: 0.034 });
-    if (beat % 2 === 0) playTone(bass[(beat / 2) % bass.length], 0.075, { type: "square", volume: 0.026 });
-    if (beat % 4 === 1) playTone(base * 2, 0.045, { type: "sine", volume: 0.018 });
-    if (beat % 8 === 7) playChord([base * 2, base * 2.5], 0.05, { type: "triangle", volume: 0.016 });
-  }, 340);
+    playTone(base, 0.11, { type: "triangle", volume: 0.062 });
+    if (beat % 2 === 0) playTone(bass[(beat / 2) % bass.length], 0.095, { type: "square", volume: 0.042 });
+    if (beat % 4 === 1) playTone(chime[(beat / 4) % chime.length], 0.07, { type: "sine", volume: 0.032 });
+    if (beat % 8 === 7) playChord([base * 1.5, base * 2], 0.075, { type: "triangle", volume: 0.026 });
+  }, 320);
 }
 
 function stopBackgroundMusic() {
