@@ -4,7 +4,8 @@ const SLOT_COUNT = 3;
 const MULTIPLIER_SIZE = 2;
 const MULTIPLIER_SIZES = [1, 2];
 const MULTIPLIER_COLS = [0, 2, 4];
-const SYMBOL_VERSION = "symbol-rules-63-single-multiplier-roll";
+const SYMBOL_VERSION = "symbol-rules-64-slot-countdown";
+const SLOT_TURN_MAX = 10;
 const PERF_ENABLED = new URLSearchParams(window.location.search).has("perf");
 const SPECIAL_METER_TARGET = 15;
 const SPECIAL_METER_THRESHOLDS = [10, 20, 30];
@@ -129,6 +130,7 @@ const state = {
   invalid: null,
   slotFlash: Array(SLOT_COUNT).fill(null),
   slotValues: Array(SLOT_COUNT).fill(null),
+  slotTurns: Array(SLOT_COUNT).fill(0),
   filledSlots: new Set(),
   multipliers: [],
   balance: 2732,
@@ -671,6 +673,7 @@ function startNewBoard(keepScore = false) {
   state.invalid = null;
   state.slotFlash = Array(SLOT_COUNT).fill(null);
   state.slotValues = Array(SLOT_COUNT).fill(null);
+  state.slotTurns = Array(SLOT_COUNT).fill(0);
   state.filledSlots = new Set();
   state.specialMeter = 0;
   state.pendingSpecialAwards = [];
@@ -828,6 +831,7 @@ function renderSlots() {
   for (let col = 0; col < SLOT_COUNT; col += 1) {
     const slot = document.createElement("div");
     const value = state.slotValues[col] || state.slotFlash[col];
+    const turns = Math.max(0, Math.min(SLOT_TURN_MAX, state.slotTurns[col] || 0));
     slot.className = "slot";
     if (state.slotFlash[col]) {
       hasFlash = true;
@@ -835,7 +839,20 @@ function renderSlots() {
     }
     if (state.filledSlots.has(col)) slot.classList.add("filled");
     if (value >= 50) slot.classList.add("jackpot-slot");
-    slot.innerHTML = value ? `<strong>x${value}</strong>` : "<strong></strong>";
+    slot.style.setProperty("--slot-turns", String(turns));
+    slot.innerHTML = `
+      <div class="slot-countdown" aria-hidden="true">
+        ${Array.from({ length: SLOT_TURN_MAX }, (_, index) => `<i class="${index < turns ? "on" : ""}"></i>`).join("")}
+      </div>
+      ${
+        value
+          ? `<div class="slot-symbol">
+              <img src="${multiplierAsset(value)}" alt="">
+              <strong>x${value}</strong>
+            </div>`
+          : ""
+      }
+    `;
     slotsEl.appendChild(slot);
   }
 
@@ -954,6 +971,30 @@ function showInsufficientBalance() {
   triggerScreenFx("fx-pop", 260);
   playSound("error");
   render();
+}
+
+function tickCollectedSlotTurns() {
+  for (let col = 0; col < SLOT_COUNT; col += 1) {
+    if (!state.filledSlots.has(col)) continue;
+    state.slotTurns[col] = Math.max(0, (state.slotTurns[col] || SLOT_TURN_MAX) - 1);
+    if (state.slotTurns[col] === 0) clearCollectedSlot(col);
+  }
+}
+
+function clearCollectedSlot(col) {
+  state.filledSlots.delete(col);
+  state.slotValues[col] = null;
+  state.slotFlash[col] = null;
+  state.slotTurns[col] = 0;
+}
+
+function collectSlotMultiplier(col, value) {
+  const currentValue = state.slotValues[col] || 0;
+  const nextValue = Math.max(currentValue, value);
+  state.slotValues[col] = nextValue;
+  state.slotFlash[col] = nextValue;
+  state.slotTurns[col] = SLOT_TURN_MAX;
+  state.filledSlots.add(col);
 }
 
 function multiplierSwapContext(from, to) {
@@ -1613,6 +1654,7 @@ async function attemptSwap(from, to) {
   state.balance -= currentBet();
   state.currentWin = 0;
   state.slotFlash = Array(SLOT_COUNT).fill(null);
+  tickCollectedSlotTurns();
   resetSpecialMeterForAction();
   playSound("move");
   await resolveMove(matches, specialPoint || (multiplierSwap ? multiplierSwap.multiplierPoint : to));
@@ -1873,6 +1915,7 @@ async function maybeFullDropBonus() {
   state.filledSlots = new Set();
   state.slotValues = Array(SLOT_COUNT).fill(null);
   state.slotFlash = Array(SLOT_COUNT).fill(null);
+  state.slotTurns = Array(SLOT_COUNT).fill(0);
 }
 
 async function ensureLegalMove() {
@@ -2734,9 +2777,7 @@ function collectAndPayMultipliers() {
   if (collected.length > 0) {
     state.slotFlash = Array(SLOT_COUNT).fill(null);
     for (const item of collected) {
-      state.slotFlash[item.col] = item.value;
-      state.slotValues[item.col] = item.value;
-      state.filledSlots.add(item.col);
+      collectSlotMultiplier(item.col, item.value);
       addWin(currentBet() * item.value);
       spawnSlotEnergy(item.col, item.value);
     }

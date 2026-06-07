@@ -1783,51 +1783,122 @@ button {
   position: relative;
   display: grid;
   place-items: center;
-  overflow: hidden;
+  overflow: visible;
   border-radius: 9px;
-  border: 2px solid rgba(255, 217, 96, 0.96);
+  border: 2px solid rgba(255, 217, 96, 0.74);
   background:
-    radial-gradient(ellipse at 50% 8%, rgba(120, 231, 255, 0.36), transparent 34%),
-    linear-gradient(180deg, rgba(36, 86, 154, 0.52), transparent 38%),
+    radial-gradient(ellipse at 50% 8%, rgba(120, 231, 255, 0.24), transparent 34%),
+    linear-gradient(180deg, rgba(36, 86, 154, 0.38), transparent 38%),
     linear-gradient(180deg, #0d2a62 0%, #050713 82%);
   box-shadow:
     inset 0 2px 0 rgba(255, 255, 255, 0.24),
     inset 0 -11px 16px rgba(0, 0, 0, 0.66),
-    0 0 0 1px rgba(122, 58, 10, 0.8),
-    0 0 15px rgba(255, 174, 42, 0.42);
+    0 0 0 1px rgba(122, 58, 10, 0.8);
 }
 
-.slot::after {
-  content: "";
+.slot-countdown {
   position: absolute;
-  inset: auto 9px 8px;
-  height: 9px;
+  inset: -5px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.slot:not(.filled) .slot-countdown {
+  display: none;
+}
+
+.slot-countdown i {
+  position: absolute;
+  opacity: 0.16;
+  background: rgba(255, 226, 103, 0.7);
+  box-shadow: none;
+}
+
+.slot-countdown i.on {
+  opacity: 1;
+  background: linear-gradient(90deg, #fff8b6, #ffbc3e);
+  box-shadow:
+    0 0 9px rgba(255, 207, 63, 0.92),
+    0 0 17px rgba(255, 93, 211, 0.36);
+}
+
+.slot-countdown i:nth-child(1),
+.slot-countdown i:nth-child(2),
+.slot-countdown i:nth-child(3),
+.slot-countdown i:nth-child(6),
+.slot-countdown i:nth-child(7),
+.slot-countdown i:nth-child(8) {
+  height: 4px;
   border-radius: 999px;
-  background: linear-gradient(180deg, rgba(5, 7, 17, 0.2), rgba(0, 0, 0, 0.62));
-  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.06);
+}
+
+.slot-countdown i:nth-child(4),
+.slot-countdown i:nth-child(5),
+.slot-countdown i:nth-child(9),
+.slot-countdown i:nth-child(10) {
+  width: 4px;
+  border-radius: 999px;
+}
+
+.slot-countdown i:nth-child(1) { left: 6px; top: 0; width: 24%; }
+.slot-countdown i:nth-child(2) { left: 38%; top: 0; width: 24%; }
+.slot-countdown i:nth-child(3) { right: 6px; top: 0; width: 24%; }
+.slot-countdown i:nth-child(4) { right: 0; top: 8px; height: 30%; }
+.slot-countdown i:nth-child(5) { right: 0; bottom: 8px; height: 30%; }
+.slot-countdown i:nth-child(6) { right: 6px; bottom: 0; width: 24%; }
+.slot-countdown i:nth-child(7) { left: 38%; bottom: 0; width: 24%; }
+.slot-countdown i:nth-child(8) { left: 6px; bottom: 0; width: 24%; }
+.slot-countdown i:nth-child(9) { left: 0; bottom: 8px; height: 30%; }
+.slot-countdown i:nth-child(10) { left: 0; top: 8px; height: 30%; }
+
+.slot.flash .slot-countdown i.on {
+  animation: slot-segment-charge 780ms ease-out both;
+}
+
+.slot.flash .slot-countdown i:nth-child(1) { animation-delay: 0ms; }
+.slot.flash .slot-countdown i:nth-child(2) { animation-delay: 55ms; }
+.slot.flash .slot-countdown i:nth-child(3) { animation-delay: 110ms; }
+.slot.flash .slot-countdown i:nth-child(4) { animation-delay: 165ms; }
+.slot.flash .slot-countdown i:nth-child(5) { animation-delay: 220ms; }
+.slot.flash .slot-countdown i:nth-child(6) { animation-delay: 275ms; }
+.slot.flash .slot-countdown i:nth-child(7) { animation-delay: 330ms; }
+.slot.flash .slot-countdown i:nth-child(8) { animation-delay: 385ms; }
+.slot.flash .slot-countdown i:nth-child(9) { animation-delay: 440ms; }
+.slot.flash .slot-countdown i:nth-child(10) { animation-delay: 495ms; }
+ 
+.slot-symbol {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 62px;
+  height: 62px;
+}
+
+.slot-symbol img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter:
+    drop-shadow(0 0 7px rgba(255, 219, 88, 0.72))
+    drop-shadow(0 5px 4px rgba(0, 0, 0, 0.32));
 }
 
 .slot strong {
-  position: relative;
-  z-index: 1;
-  display: inline-grid;
-  place-items: center;
-  min-width: 58px;
-  padding: 3px 10px 4px;
-  border: 1px solid rgba(255, 239, 151, 0.86);
-  border-radius: 999px;
-  background:
-    radial-gradient(circle at 50% 20%, rgba(255, 255, 255, 0.32), transparent 32%),
-    linear-gradient(180deg, rgba(52, 135, 207, 0.76), rgba(9, 19, 58, 0.92));
+  position: absolute;
+  z-index: 2;
   color: #fff7d8;
-  font-size: 20px;
+  font-size: 19px;
+  line-height: 1;
+  -webkit-text-stroke: 1.25px #1f2e75;
   text-shadow:
     0 2px 0 #112d74,
-    0 0 10px rgba(73, 219, 255, 0.7);
+    0 0 8px rgba(255, 255, 255, 0.8),
+    0 0 10px rgba(255, 221, 90, 0.72);
 }
 
 .slot.flash {
-  overflow: hidden;
+  overflow: visible;
   animation: slot-flash 520ms cubic-bezier(0.16, 1.08, 0.28, 1), slot-charge 560ms ease;
 }
 
@@ -1844,18 +1915,11 @@ button {
   border-color: #fff5a6;
   box-shadow:
     inset 0 -9px 14px rgba(0, 0, 0, 0.56),
-    0 0 18px rgba(255, 229, 87, 0.62);
+    0 0 0 1px rgba(122, 58, 10, 0.8);
 }
 
 .slot.filled strong {
   color: #fffbe8;
-  border-color: rgba(255, 244, 170, 0.96);
-  background:
-    radial-gradient(circle at 50% 15%, rgba(255, 255, 255, 0.4), transparent 30%),
-    linear-gradient(180deg, rgba(255, 220, 98, 0.38), rgba(15, 30, 76, 0.94));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.44),
-    0 0 11px rgba(255, 220, 80, 0.42);
 }
 
 .slot.jackpot-slot {
@@ -2890,6 +2954,29 @@ button {
   }
 }
 
+@keyframes slot-segment-charge {
+  0% {
+    opacity: 0.2;
+    filter: brightness(0.8);
+    box-shadow: none;
+  }
+  35% {
+    opacity: 1;
+    filter: brightness(1.45);
+    box-shadow:
+      0 0 12px rgba(255, 230, 103, 1),
+      0 0 24px rgba(255, 89, 209, 0.7),
+      0 0 34px rgba(255, 175, 48, 0.44);
+  }
+  100% {
+    opacity: 1;
+    filter: brightness(1);
+    box-shadow:
+      0 0 9px rgba(255, 207, 63, 0.92),
+      0 0 17px rgba(255, 93, 211, 0.36);
+  }
+}
+
 .phone.low-balance .hud-panel:first-child,
 .phone.low-balance .bet-panel {
   border-color: rgba(255, 96, 82, 0.92);
@@ -3367,6 +3454,11 @@ button {
 
   .slots {
     height: 50px;
+  }
+
+  .slot-symbol {
+    width: 56px;
+    height: 56px;
   }
 
   .status-text {
