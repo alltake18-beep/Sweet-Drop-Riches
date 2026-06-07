@@ -433,6 +433,19 @@ button {
   border-color: rgba(126, 255, 147, 0.72);
 }
 
+.stage-slot.dimmed {
+  opacity: 0.34;
+  filter: grayscale(0.78) brightness(0.52);
+  transform: translateX(-50%) scale(0.96);
+}
+
+.stage-slot.rolling {
+  z-index: 3;
+  opacity: 1;
+  filter: none;
+  animation: stage-slot-focus 620ms ease-in-out infinite alternate;
+}
+
 .stage-slot.jackpot-stage {
   border-color: rgba(255, 216, 91, 0.9);
   background:
@@ -461,14 +474,14 @@ button {
 }
 
 .mini-slot.rolling img {
-  animation: mini-slot-roll 240ms steps(2, end) infinite;
+  animation: mini-slot-roll 150ms steps(2, end) infinite;
 }
 
 .mini-slot.win {
   animation: mini-slot-win 680ms cubic-bezier(0.18, 1.22, 0.28, 1) both;
 }
 
-.phone.event-pulse .mini-slot,
+.phone.event-pulse .mini-slot.win,
 .mini-slot.win {
   box-shadow:
     inset 0 0 14px rgba(255, 245, 172, 0.42),
@@ -2741,6 +2754,15 @@ button {
   100% {
     transform: translateY(6px) scale(1.02);
     opacity: 1;
+  }
+}
+
+@keyframes stage-slot-focus {
+  0% {
+    transform: translateX(-50%) scale(1.08);
+  }
+  100% {
+    transform: translateX(-50%) scale(1.16);
   }
 }
 

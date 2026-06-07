@@ -4,7 +4,7 @@ const SLOT_COUNT = 3;
 const MULTIPLIER_SIZE = 2;
 const MULTIPLIER_SIZES = [1, 2];
 const MULTIPLIER_COLS = [0, 2, 4];
-const SYMBOL_VERSION = "symbol-rules-62-drop-font-fix";
+const SYMBOL_VERSION = "symbol-rules-63-single-multiplier-roll";
 const PERF_ENABLED = new URLSearchParams(window.location.search).has("perf");
 const SPECIAL_METER_TARGET = 15;
 const SPECIAL_METER_THRESHOLDS = [10, 20, 30];
@@ -106,6 +106,7 @@ const specialMeterTextEl = document.getElementById("specialMeterText");
 const specialMeterFillEl = document.getElementById("specialMeterFill");
 const specialMiniSlotEl = document.getElementById("specialMiniSlot");
 const miniSlotIconEl = document.getElementById("miniSlotIcon");
+const stageSlotsEl = document.getElementById("stageSlots");
 const stageSlotEls = Array.from(document.querySelectorAll(".stage-slot"));
 const balanceEl = document.getElementById("balance");
 const betEl = document.getElementById("bet");
@@ -1402,6 +1403,7 @@ function collapseColumns() {
   for (let col = 0; col < COLS; col += 1) {
     const blockers = state.multipliers
       .filter((multiplier) =>
+        multiplierSize(multiplier) > 1 &&
         multiplier.col <= col &&
         col < multiplier.col + multiplierSize(multiplier) &&
         shouldMultiplierBlockColumn(multiplier, col)
@@ -1425,14 +1427,28 @@ function collapseColumnSegment(col, startRow, endRow) {
   if (startRow > endRow) return;
   let write = endRow;
   for (let scan = endRow; scan >= startRow; scan -= 1) {
-    const tile = state.board[scan][col];
-    if (!tile) continue;
-    if (write !== scan) tile._fall = write - scan;
-    state.board[write][col] = tile;
-    if (write !== scan) state.board[scan][col] = null;
+    const singleMultiplier = singleCellMultiplierAt(scan, col);
+    const tile = singleMultiplier ? null : state.board[scan][col];
+    if (!singleMultiplier && !tile) continue;
+
+    if (singleMultiplier) {
+      if (write !== scan) {
+        singleMultiplier._fall = Math.max(singleMultiplier._fall || 0, write - scan);
+        singleMultiplier.row = write;
+      }
+      state.board[scan][col] = null;
+    } else {
+      if (write !== scan) tile._fall = write - scan;
+      state.board[write][col] = tile;
+      if (write !== scan) state.board[scan][col] = null;
+    }
     write -= 1;
   }
   for (let row = write; row >= startRow; row -= 1) state.board[row][col] = null;
+}
+
+function singleCellMultiplierAt(row, col) {
+  return state.multipliers.find((multiplier) => multiplierSize(multiplier) === 1 && multiplier.row === row && multiplier.col === col) || null;
 }
 
 function shouldMultiplierBlockColumn(multiplier, col) {
@@ -2473,6 +2489,8 @@ function renderHud() {
   document.querySelector(".phone")?.classList.toggle("low-balance", !hasEnoughBalanceForMove());
   if (!state.stagePreviews.length) state.stagePreviews = initialStagePreviews();
   const currentStage = currentSpecialStageIndex();
+  const focusedStage = state.rollingStage && (state.miniSlotRolling || state.miniSlotWin);
+  stageSlotsEl?.classList.toggle("is-rolling", Boolean(focusedStage));
   stageSlotEls.forEach((slot, index) => {
     const stage = index + 1;
     const preview = state.stagePreviews[index] || randomBoardEvent(stage);
@@ -2482,6 +2500,7 @@ function renderHud() {
     slot.classList.toggle("complete", state.specialMeter >= SPECIAL_METER_THRESHOLDS[index]);
     slot.classList.toggle("rolling", state.miniSlotRolling && (!state.rollingStage || state.rollingStage === stage));
     slot.classList.toggle("win", state.miniSlotWin && state.rollingStage === stage);
+    slot.classList.toggle("dimmed", Boolean(focusedStage && state.rollingStage !== stage));
     slot.classList.toggle("multiplier-preview", preview.kind === "multiplier");
     slot.dataset.value = preview.kind === "multiplier" ? `x${preview.value || 10}` : "";
   });
@@ -2685,11 +2704,13 @@ function collectMultipliers() {
     for (const multiplier of activeMultipliers) {
       if (!state.multipliers.some((item) => item.id === multiplier.id)) continue;
 
-      const distance = multiplierDropDistance(multiplier);
-      if (distance > 0) {
-        multiplier.row += distance;
-        multiplier._fall = Math.max(multiplier._fall || 0, distance);
-        changed = true;
+      if (multiplierSize(multiplier) > 1) {
+        const distance = multiplierDropDistance(multiplier);
+        if (distance > 0) {
+          multiplier.row += distance;
+          multiplier._fall = Math.max(multiplier._fall || 0, distance);
+          changed = true;
+        }
       }
 
       if (multiplier.row >= ROWS - multiplierSize(multiplier)) {
@@ -3314,18 +3335,20 @@ async function processSpecialAwards() {
 
 async function processSpecialAwards() {
   while (state.pendingSpecialAwards.length > 0) {
+    if (!state.stagePreviews.length) state.stagePreviews = initialStagePreviews();
     const stage = state.pendingSpecialAwards.shift();
     const event = randomBoardEvent(stage);
     state.miniSlotRolling = true;
     state.rollingStage = stage;
     state.miniSlotWin = false;
 
-    const steps = state.fast ? 5 : 9;
+    const steps = state.fast ? 7 : 12;
     for (let i = 0; i < steps; i += 1) {
-      state.stagePreviews = state.stagePreviews.map((_, index) => randomBoardEvent(index + 1));
       state.stagePreviews[stage - 1] = randomBoardEvent(stage);
       render();
-      await wait(resolveDelay(120, 55));
+      const progress = steps <= 1 ? 1 : i / (steps - 1);
+      const delay = 58 + Math.round(progress * progress * 168);
+      await wait(resolveDelay(delay, Math.max(38, Math.round(delay * 0.58))));
     }
 
     state.stagePreviews[stage - 1] = event;
