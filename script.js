@@ -4,7 +4,7 @@ const SLOT_COUNT = 3;
 const MULTIPLIER_SIZE = 2;
 const MULTIPLIER_SIZES = [1, 2];
 const MULTIPLIER_COLS = [0, 2, 4];
-const SYMBOL_VERSION = "symbol-rules-61-meter-10-20-30";
+const SYMBOL_VERSION = "symbol-rules-62-drop-font-fix";
 const PERF_ENABLED = new URLSearchParams(window.location.search).has("perf");
 const SPECIAL_METER_TARGET = 15;
 const SPECIAL_METER_THRESHOLDS = [10, 20, 30];
@@ -1436,11 +1436,20 @@ function collapseColumnSegment(col, startRow, endRow) {
 }
 
 function shouldMultiplierBlockColumn(multiplier, col) {
+  return multiplierBlocksColumn(multiplier, col);
+}
+
+function multiplierBlocksColumn(multiplier, col, seen = new Set()) {
+  if (!multiplier || seen.has(multiplier.id)) return true;
+  seen.add(multiplier.id);
   const size = multiplierSize(multiplier);
   if (multiplierDropDistance(multiplier) > 0) return true;
   const belowRow = multiplier.row + size;
   if (belowRow >= ROWS) return true;
-  return Boolean(state.board[belowRow][col] || multiplierAtExcept(belowRow, col, multiplier));
+  if (state.board[belowRow][col]) return true;
+  const belowMultiplier = multiplierAtExcept(belowRow, col, multiplier);
+  if (!belowMultiplier) return false;
+  return multiplierBlocksColumn(belowMultiplier, col, seen);
 }
 
 function fillEmptyCells() {
