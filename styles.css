@@ -3585,6 +3585,1641 @@ button {
   }
 }
 
+/* Candy match UI v2: mechanism-first skin, no gameplay logic changes. */
+.phone {
+  width: min(454px, 100%);
+  border: 1px solid rgba(255, 220, 125, 0.64);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255, 99, 135, 0.28), transparent 9rem),
+    radial-gradient(circle at 50% 100%, rgba(255, 189, 70, 0.16), transparent 8rem),
+    linear-gradient(90deg, rgba(255, 210, 102, 0.1), transparent 4%, transparent 96%, rgba(255, 210, 102, 0.1)),
+    linear-gradient(180deg, #4b0731 0%, #210727 43%, #10051c 100%);
+  box-shadow:
+    0 22px 72px rgba(0, 0, 0, 0.58),
+    0 0 0 1px rgba(255, 100, 150, 0.18),
+    inset 0 0 0 1px rgba(255, 245, 190, 0.11);
+}
+
+.phone::before {
+  inset: 5px;
+  border-radius: 18px;
+  border-color: rgba(255, 226, 132, 0.18);
+}
+
+.phone::after,
+.ambient {
+  display: none;
+}
+
+.topbar {
+  padding: 5px 14px 0;
+}
+
+.brand {
+  width: min(318px, 82%);
+}
+
+.play-area {
+  padding: 0 6px 2px;
+}
+
+.board-shell {
+  width: 100%;
+  padding: 4px 4px 5px;
+  border-radius: 15px;
+  background:
+    linear-gradient(180deg, rgba(255, 231, 143, 0.14), transparent 9%, transparent 82%, rgba(255, 70, 109, 0.13)),
+    radial-gradient(ellipse at 50% 0%, rgba(255, 86, 139, 0.22), transparent 35%),
+    linear-gradient(90deg, rgba(255, 216, 112, 0.12), transparent 4%, transparent 96%, rgba(255, 216, 112, 0.12)),
+    rgba(45, 5, 34, 0.72);
+  border: 1px solid rgba(255, 212, 104, 0.35);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 250, 222, 0.16),
+    inset 0 -12px 26px rgba(40, 2, 20, 0.42),
+    0 9px 22px rgba(18, 1, 12, 0.34);
+}
+
+.board-shell::before,
+.board-shell::after {
+  top: 58px;
+  bottom: 54px;
+  width: 3px;
+  background:
+    linear-gradient(180deg, transparent, rgba(255, 235, 139, 0.46) 14%, rgba(255, 71, 117, 0.16) 50%, rgba(255, 214, 116, 0.3) 86%, transparent);
+}
+
+.board-shell::before {
+  left: 4px;
+}
+
+.board-shell::after {
+  right: 4px;
+}
+
+.board-bar {
+  position: relative;
+  z-index: 2;
+  width: var(--board-width, 100%);
+  min-height: 48px;
+  padding: 0 2px 4px;
+}
+
+.special-meter {
+  position: relative;
+  grid-template-rows: 36px 9px auto;
+  padding: 5px 8px 6px;
+  overflow: visible;
+  border: 0;
+  border-radius: 14px 14px 9px 9px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.16), transparent 35%, rgba(82, 5, 38, 0.26)),
+    url("assets/ui/candy-match-hud-panel-73.png") center / 125% 185% no-repeat,
+    linear-gradient(180deg, #c92558, #5d0b3b 68%, #2a061d);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 248, 210, 0.32),
+    inset 0 -7px 14px rgba(45, 2, 19, 0.48),
+    0 3px 0 rgba(107, 44, 11, 0.54),
+    0 0 13px rgba(255, 76, 126, 0.2);
+}
+
+.special-meter::before {
+  content: "";
+  position: absolute;
+  left: 9px;
+  right: 9px;
+  bottom: -6px;
+  height: 8px;
+  pointer-events: none;
+  border-radius: 0 0 999px 999px;
+  background: linear-gradient(90deg, transparent, rgba(255, 219, 113, 0.6), transparent);
+  filter: blur(0.2px);
+}
+
+.special-meter-track {
+  height: 9px;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 205, 230, 0.06) 40%, rgba(40, 3, 28, 0.92)),
+    rgba(41, 4, 33, 0.88);
+  box-shadow:
+    inset 0 1px 4px rgba(0, 0, 0, 0.62),
+    0 0 0 1px rgba(255, 229, 133, 0.18);
+}
+
+.special-meter-track i {
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.34), transparent 18%),
+    linear-gradient(90deg, #ff4778, #ff9d4e 46%, #ffe66d);
+  box-shadow: 0 0 12px rgba(255, 219, 97, 0.7);
+}
+
+.meter-mark {
+  top: -16px;
+  color: #fff1b7;
+  font-size: 9px;
+  -webkit-text-stroke: 0.55px rgba(91, 20, 21, 0.95);
+}
+
+.stage-slots {
+  height: 36px;
+}
+
+.stage-slot[data-stage="1"] {
+  left: 10%;
+}
+
+.stage-slot[data-stage="2"] {
+  left: 50%;
+}
+
+.stage-slot[data-stage="3"] {
+  left: 90%;
+}
+
+.mini-slot {
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  background:
+    radial-gradient(circle at 50% 20%, rgba(255, 255, 255, 0.32), transparent 25%),
+    linear-gradient(180deg, #d22b5a, #66123f 70%, #1b0719);
+  border: 1px solid rgba(255, 223, 114, 0.8);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    inset 0 -7px 11px rgba(46, 2, 20, 0.52),
+    0 0 0 1px rgba(97, 24, 17, 0.34),
+    0 0 10px rgba(255, 188, 70, 0.28);
+}
+
+.stage-slot.active,
+.stage-slot.rolling {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.34),
+    inset 0 -7px 11px rgba(46, 2, 20, 0.5),
+    0 0 0 1px rgba(255, 234, 143, 0.4),
+    0 0 16px rgba(255, 213, 91, 0.58);
+}
+
+.board {
+  position: relative;
+  z-index: 1;
+  border-radius: 12px;
+  padding: 4px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255, 83, 134, 0.1), transparent 38%),
+    linear-gradient(180deg, rgba(53, 7, 49, 0.97), rgba(18, 4, 29, 0.99));
+  border: 1px solid rgba(255, 218, 116, 0.46);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 246, 207, 0.16),
+    inset 0 0 17px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(125, 18, 57, 0.45),
+    0 8px 14px rgba(18, 1, 14, 0.28);
+}
+
+.tile {
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 50% 18%, rgba(255, 255, 255, 0.065), transparent 42%),
+    linear-gradient(180deg, rgba(82, 14, 60, 0.35), rgba(22, 5, 30, 0.72));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.32);
+}
+
+.candy-img {
+  width: 89%;
+  height: 89%;
+  filter:
+    drop-shadow(0 4px 3px rgba(0, 0, 0, 0.28))
+    saturate(0.92);
+}
+
+.tile.multiplier .multiplier-symbol {
+  filter:
+    drop-shadow(0 0 8px rgba(255, 242, 145, 0.72))
+    drop-shadow(0 6px 5px rgba(0, 0, 0, 0.36));
+}
+
+.drop-arrows {
+  position: relative;
+  height: 20px;
+  padding: 0 6px;
+  opacity: 1;
+}
+
+.drop-arrows::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  top: 8px;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, rgba(255, 220, 112, 0.58), transparent);
+}
+
+.drop-arrows span::before {
+  width: 7px;
+  height: 12px;
+  background: linear-gradient(180deg, #fff7c5, #ffba40 60%, #dd5627);
+}
+
+.drop-arrows span::after {
+  border-left-width: 8px;
+  border-right-width: 8px;
+  border-top-width: 9px;
+  border-top-color: #ffd260;
+}
+
+.slots {
+  position: relative;
+  height: 52px;
+  gap: 8px;
+  padding: 0 1px 2px;
+}
+
+.slots::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  top: 2px;
+  height: 18px;
+  pointer-events: none;
+  border-radius: 999px;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(255, 227, 126, 0.3), transparent 62%),
+    linear-gradient(90deg, transparent, rgba(255, 76, 113, 0.18), transparent);
+}
+
+.slot {
+  position: relative;
+  overflow: visible;
+  border: 0;
+  border-radius: 15px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.11), transparent 42%),
+    url("assets/ui/candy-match-hud-panel-73.png") center / 150% 205% no-repeat,
+    linear-gradient(180deg, #a51a44, #3b082b);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 246, 203, 0.28),
+    inset 0 -9px 14px rgba(52, 3, 22, 0.52),
+    0 2px 0 rgba(107, 45, 12, 0.5),
+    0 0 0 1px rgba(255, 209, 101, 0.32);
+}
+
+.slot::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -9px;
+  z-index: 0;
+  width: 18px;
+  height: 12px;
+  transform: translateX(-50%);
+  pointer-events: none;
+  border-radius: 0 0 999px 999px;
+  background: linear-gradient(180deg, rgba(255, 219, 112, 0.84), rgba(255, 79, 111, 0.42));
+  box-shadow: 0 0 9px rgba(255, 193, 67, 0.45);
+}
+
+.slot::after {
+  content: "";
+  position: absolute;
+  inset: 6px 8px;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: 12px;
+  background:
+    radial-gradient(ellipse at 50% 16%, rgba(255, 225, 128, 0.18), transparent 45%),
+    linear-gradient(180deg, rgba(37, 4, 32, 0.72), rgba(13, 3, 18, 0.86));
+  box-shadow: inset 0 1px 7px rgba(0, 0, 0, 0.5);
+}
+
+.slot.filled {
+  background:
+    linear-gradient(180deg, rgba(255, 236, 188, 0.16), transparent 42%),
+    url("assets/ui/candy-match-slot-reward-73.png") center / 112% 174% no-repeat,
+    linear-gradient(180deg, #c0183b, #4a081c);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 245, 213, 0.34),
+    inset 0 -10px 15px rgba(54, 2, 15, 0.5),
+    0 0 15px rgba(255, 48, 72, 0.44),
+    0 0 0 1px rgba(255, 220, 120, 0.52);
+}
+
+.slot-symbol,
+.slot strong,
+.slot-countdown {
+  z-index: 2;
+}
+
+.slot-countdown {
+  inset: -3px;
+}
+
+.slot-countdown i.on {
+  background: linear-gradient(90deg, #fff0b7, #ff453f 52%, #ba001e);
+  box-shadow:
+    0 0 7px rgba(255, 70, 57, 0.86),
+    0 0 13px rgba(255, 180, 73, 0.4);
+}
+
+.status-text {
+  display: none;
+}
+
+.hud {
+  padding: 5px 10px 11px;
+  background: linear-gradient(180deg, transparent, rgba(35, 2, 17, 0.28));
+}
+
+.hud-panel,
+.bet-panel,
+.icon-button {
+  min-height: 51px;
+  border: 0;
+  border-radius: 13px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.1), transparent 44%),
+    url("assets/ui/candy-match-hud-panel-73.png") center / 160% 210% no-repeat,
+    linear-gradient(180deg, #9e174a, #3f0a35);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 246, 203, 0.25),
+    inset 0 -7px 11px rgba(54, 2, 24, 0.43),
+    0 2px 0 rgba(104, 43, 12, 0.52),
+    0 0 0 1px rgba(255, 207, 103, 0.28);
+}
+
+.hud-panel span,
+.bet-panel span,
+.board-bar span {
+  color: #ffe9a8;
+  text-shadow:
+    0 1px 0 rgba(89, 22, 18, 0.95),
+    0 0 7px rgba(255, 202, 78, 0.34);
+}
+
+.hud-panel strong,
+.bet-panel strong {
+  color: #fff8e4;
+  font-size: 20px;
+  text-shadow:
+    0 2px 0 rgba(85, 19, 28, 0.86),
+    0 0 10px rgba(255, 217, 103, 0.38);
+}
+
+.bet-panel button,
+.icon-button {
+  background:
+    radial-gradient(circle at 35% 20%, rgba(255, 255, 255, 0.24), transparent 28%),
+    linear-gradient(180deg, #d22a55, #68113f);
+  border: 1px solid rgba(255, 222, 122, 0.35);
+}
+
+@media (max-width: 520px) {
+  .phone {
+    width: 100vw;
+    border-left: 0;
+    border-right: 0;
+  }
+
+  .topbar {
+    padding: 5px 9px 0;
+  }
+
+  .brand {
+    width: min(332px, 84%);
+  }
+
+  .play-area {
+    padding: 0 4px 2px;
+  }
+
+  .board-shell {
+    padding: 4px 3px 4px;
+  }
+
+  .board-bar {
+    min-height: 45px;
+  }
+
+  .special-meter {
+    grid-template-rows: 34px 8px auto;
+    padding: 4px 7px 5px;
+  }
+
+  .stage-slots {
+    height: 34px;
+  }
+
+  .mini-slot {
+    width: 34px;
+    height: 34px;
+  }
+
+  .drop-arrows {
+    height: 18px;
+  }
+
+  .slots {
+    height: 49px;
+    gap: 7px;
+  }
+
+  .slot-symbol {
+    width: 45px;
+    height: 45px;
+  }
+
+  .hud {
+    padding: 4px 8px 8px;
+  }
+}
+
+@media (max-width: 430px) {
+  .hud {
+    grid-template-columns: 0.98fr 1.08fr 42px 42px;
+    gap: 5px;
+  }
+
+  .hud-panel,
+  .bet-panel,
+  .icon-button {
+    min-height: 48px;
+  }
+}
+
+/* Candy machine v3: one-piece cabinet preview. */
+.phone {
+  width: min(436px, 100%);
+  border: 0;
+  border-radius: 18px;
+  background:
+    url("assets/ui/candy-machine-integrated-v3.png") center / 100% 100% no-repeat,
+    linear-gradient(180deg, #4b0731, #10051c);
+  box-shadow:
+    0 22px 74px rgba(0, 0, 0, 0.62),
+    0 0 0 1px rgba(255, 217, 120, 0.18);
+}
+
+.phone::before,
+.phone::after,
+.ambient {
+  display: none;
+}
+
+.topbar {
+  padding: 10px 18px 0;
+}
+
+.brand {
+  width: min(300px, 78%);
+  filter:
+    drop-shadow(0 4px 0 rgba(72, 10, 34, 0.62))
+    drop-shadow(0 6px 8px rgba(0, 0, 0, 0.34));
+}
+
+.brand::before {
+  display: none;
+}
+
+.play-area {
+  padding: 2px 16px 0;
+}
+
+.board-shell {
+  width: 100%;
+  padding: 4px 0 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.board-shell::before,
+.board-shell::after {
+  display: none;
+}
+
+.board-bar {
+  width: var(--board-width, 100%);
+  min-height: 54px;
+  padding: 0 2px 6px;
+}
+
+.special-meter {
+  grid-template-rows: 34px 9px auto;
+  padding: 3px 20px 4px;
+  border-radius: 999px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.22), transparent 34%, rgba(74, 8, 24, 0.2)),
+    linear-gradient(90deg, rgba(255, 173, 64, 0.5), rgba(255, 70, 105, 0.58) 48%, rgba(67, 194, 255, 0.38)),
+    rgba(58, 5, 33, 0.42);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 250, 216, 0.28),
+    inset 0 -5px 10px rgba(35, 2, 18, 0.38),
+    0 0 0 1px rgba(255, 220, 120, 0.28),
+    0 0 14px rgba(255, 89, 120, 0.25);
+}
+
+.special-meter::before {
+  display: none;
+}
+
+.special-meter-track {
+  height: 9px;
+  border-radius: 999px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.22), transparent 42%),
+    rgba(31, 3, 20, 0.78);
+}
+
+.special-meter-track i {
+  background: linear-gradient(90deg, #ff8a37, #ff417d 53%, #55cfff);
+  box-shadow:
+    0 0 10px rgba(255, 219, 96, 0.66),
+    0 0 14px rgba(255, 73, 116, 0.36);
+}
+
+.meter-mark {
+  top: -16px;
+  color: #fff3bc;
+  font-size: 9px;
+  -webkit-text-stroke: 0.6px rgba(89, 25, 13, 0.95);
+}
+
+.stage-slots {
+  height: 34px;
+}
+
+.stage-slot[data-stage="1"] {
+  left: 16%;
+}
+
+.stage-slot[data-stage="2"] {
+  left: 50%;
+}
+
+.stage-slot[data-stage="3"] {
+  left: 84%;
+}
+
+.mini-slot {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 36% 24%, rgba(255, 255, 255, 0.38), transparent 22%),
+    linear-gradient(180deg, #c82346, #4c061d);
+  border: 1px solid rgba(255, 223, 115, 0.86);
+}
+
+.mini-slot img {
+  width: 94%;
+  height: 94%;
+}
+
+.board {
+  width: var(--board-width, 100%);
+  border-radius: 10px;
+  padding: 3px;
+  gap: 3px;
+  background:
+    linear-gradient(180deg, rgba(30, 4, 24, 0.74), rgba(10, 2, 16, 0.84));
+  border: 1px solid rgba(255, 215, 112, 0.26);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 247, 205, 0.08),
+    inset 0 0 20px rgba(0, 0, 0, 0.58),
+    0 0 0 1px rgba(89, 12, 42, 0.5);
+}
+
+.tile {
+  border-radius: 7px;
+  background:
+    radial-gradient(circle at 50% 18%, rgba(255, 255, 255, 0.055), transparent 42%),
+    linear-gradient(180deg, rgba(75, 12, 51, 0.44), rgba(17, 3, 23, 0.76));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.34);
+}
+
+.candy-img {
+  width: 88%;
+  height: 88%;
+  filter:
+    drop-shadow(0 4px 3px rgba(0, 0, 0, 0.26))
+    saturate(0.92);
+}
+
+.tile.multiplier .multiplier-symbol {
+  filter:
+    drop-shadow(0 0 10px rgba(255, 242, 145, 0.78))
+    drop-shadow(0 6px 5px rgba(0, 0, 0, 0.38));
+}
+
+.drop-arrows {
+  height: 16px;
+  padding: 0 16px;
+}
+
+.drop-arrows::before {
+  display: none;
+}
+
+.drop-arrows span::before {
+  width: 7px;
+  height: 10px;
+  background: linear-gradient(180deg, #fff7c4, #ffc345 62%, #db5b24);
+}
+
+.drop-arrows span::after {
+  border-left-width: 8px;
+  border-right-width: 8px;
+  border-top-width: 9px;
+  border-top-color: #ffd66a;
+}
+
+.slots {
+  height: 50px;
+  gap: 10px;
+  padding: 0 5px;
+}
+
+.slots::before {
+  display: none;
+}
+
+.slot {
+  border-radius: 999px 999px 16px 16px;
+  background:
+    radial-gradient(ellipse at 50% 72%, rgba(0, 0, 0, 0.72), transparent 54%),
+    linear-gradient(180deg, rgba(255, 190, 74, 0.12), rgba(45, 4, 23, 0.58));
+  box-shadow:
+    inset 0 2px 0 rgba(255, 238, 174, 0.24),
+    inset 0 -9px 14px rgba(15, 1, 8, 0.62),
+    0 0 0 1px rgba(255, 214, 107, 0.28);
+}
+
+.slot::before {
+  top: -7px;
+  width: 18px;
+  height: 11px;
+  border-radius: 0 0 999px 999px;
+  background: linear-gradient(180deg, rgba(255, 223, 112, 0.9), rgba(255, 112, 50, 0.44));
+}
+
+.slot::after {
+  inset: 9px 10px 5px;
+  border-radius: 999px 999px 14px 14px;
+  background:
+    radial-gradient(ellipse at 50% 72%, rgba(0, 0, 0, 0.84), rgba(22, 2, 17, 0.88) 58%, rgba(255, 201, 85, 0.09) 100%);
+}
+
+.slot.filled {
+  background:
+    linear-gradient(180deg, rgba(255, 237, 183, 0.2), transparent 38%),
+    url("assets/ui/candy-match-slot-reward-73.png") center / 112% 170% no-repeat,
+    linear-gradient(180deg, #c0183b, #4a081c);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 245, 213, 0.34),
+    inset 0 -10px 15px rgba(54, 2, 15, 0.5),
+    0 0 15px rgba(255, 48, 72, 0.44),
+    0 0 0 1px rgba(255, 220, 120, 0.52);
+}
+
+.slot-symbol {
+  width: 47px;
+  height: 47px;
+}
+
+.slot strong {
+  font-size: 18px;
+  -webkit-text-stroke: 1.2px #4a1038;
+  text-shadow:
+    0 2px 0 #2c061c,
+    0 0 8px rgba(255, 255, 255, 0.82),
+    0 0 10px rgba(255, 221, 90, 0.72);
+}
+
+.status-text {
+  display: none;
+}
+
+.hud {
+  padding: 7px 20px 14px;
+  background: transparent;
+}
+
+.hud-panel,
+.bet-panel,
+.icon-button {
+  min-height: 48px;
+  border-radius: 13px;
+  background:
+    linear-gradient(180deg, rgba(255, 240, 192, 0.18), transparent 42%),
+    linear-gradient(180deg, rgba(207, 35, 73, 0.94), rgba(88, 10, 41, 0.94));
+  border: 1px solid rgba(255, 219, 114, 0.36);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 246, 203, 0.25),
+    inset 0 -7px 11px rgba(54, 2, 24, 0.43),
+    0 2px 0 rgba(104, 43, 12, 0.42);
+}
+
+.hud-panel strong,
+.bet-panel strong {
+  font-size: 19px;
+}
+
+@media (max-width: 520px) {
+  .phone {
+    width: 100vw;
+    border-radius: 0;
+  }
+
+  .topbar {
+    padding: 9px 10px 0;
+  }
+
+  .brand {
+    width: min(292px, 76%);
+  }
+
+  .play-area {
+    padding: 2px 14px 0;
+  }
+
+  .board-shell {
+    padding-top: 3px;
+  }
+
+  .board-bar {
+    min-height: 51px;
+  }
+
+  .special-meter {
+    grid-template-rows: 32px 8px auto;
+    padding: 3px 18px 4px;
+  }
+
+  .stage-slots {
+    height: 32px;
+  }
+
+  .mini-slot {
+    width: 32px;
+    height: 32px;
+  }
+
+  .drop-arrows {
+    height: 15px;
+    padding: 0 14px;
+  }
+
+  .slots {
+    height: 48px;
+    gap: 9px;
+  }
+
+  .slot-symbol {
+    width: 44px;
+    height: 44px;
+  }
+
+  .hud {
+    padding: 6px 15px 9px;
+  }
+}
+
+@media (max-width: 430px) {
+  .play-area {
+    padding-inline: 13px;
+  }
+
+  .hud {
+    grid-template-columns: 0.98fr 1.08fr 42px 42px;
+    gap: 5px;
+    padding-inline: 14px;
+  }
+
+  .hud-panel,
+  .bet-panel,
+  .icon-button {
+    min-height: 47px;
+  }
+}
+
+/* Candy machine v3 tuned: align mechanics inside the cabinet. */
+.topbar {
+  padding-top: 8px;
+}
+
+.brand {
+  width: min(288px, 74%);
+}
+
+.play-area {
+  padding: 0 18px;
+}
+
+.board-shell {
+  padding-top: 2px;
+}
+
+.board-bar {
+  min-height: 58px;
+  padding: 0 5px 8px;
+}
+
+.special-meter {
+  grid-template-rows: 32px 10px auto;
+  padding: 4px 23px 5px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.2), transparent 32%, rgba(45, 3, 24, 0.36)),
+    linear-gradient(90deg, rgba(255, 164, 55, 0.58), rgba(255, 63, 114, 0.64) 50%, rgba(52, 190, 255, 0.46)),
+    rgba(48, 4, 29, 0.5);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 250, 216, 0.3),
+    inset 0 -5px 11px rgba(27, 2, 16, 0.46),
+    0 0 0 1px rgba(255, 226, 128, 0.34),
+    0 0 12px rgba(255, 90, 125, 0.22);
+}
+
+.special-meter-track {
+  height: 10px;
+  box-shadow:
+    inset 0 1px 4px rgba(0, 0, 0, 0.66),
+    0 0 0 1px rgba(255, 229, 133, 0.24),
+    0 0 8px rgba(255, 214, 96, 0.16);
+}
+
+.special-meter-track::after {
+  background:
+    linear-gradient(90deg, transparent calc(27.273% - 1px), rgba(255, 247, 205, 0.95) calc(27.273% - 1px) calc(27.273% + 1px), transparent calc(27.273% + 1px)),
+    linear-gradient(90deg, transparent calc(63.636% - 1px), rgba(255, 247, 205, 0.95) calc(63.636% - 1px) calc(63.636% + 1px), transparent calc(63.636% + 1px));
+}
+
+.meter-mark {
+  top: -15px;
+  font-size: 10px;
+  text-shadow:
+    0 1px 0 rgba(82, 20, 12, 0.95),
+    0 0 7px rgba(255, 226, 95, 0.75);
+}
+
+.stage-slot[data-stage="1"] {
+  left: 15%;
+}
+
+.stage-slot[data-stage="3"] {
+  left: 85%;
+}
+
+.mini-slot {
+  width: 33px;
+  height: 33px;
+}
+
+.board {
+  padding: 3px;
+  gap: 3px;
+  background:
+    linear-gradient(180deg, rgba(20, 3, 20, 0.92), rgba(8, 2, 13, 0.95));
+  border-color: rgba(255, 218, 116, 0.34);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 247, 205, 0.1),
+    inset 0 0 22px rgba(0, 0, 0, 0.7),
+    0 0 0 1px rgba(89, 12, 42, 0.62);
+}
+
+.tile {
+  background:
+    radial-gradient(circle at 50% 18%, rgba(255, 255, 255, 0.045), transparent 42%),
+    linear-gradient(180deg, rgba(64, 10, 47, 0.48), rgba(12, 3, 18, 0.82));
+}
+
+.candy-img {
+  width: 86%;
+  height: 86%;
+  filter:
+    drop-shadow(0 4px 3px rgba(0, 0, 0, 0.28))
+    saturate(0.88)
+    brightness(0.98);
+}
+
+.special-img {
+  filter:
+    drop-shadow(0 0 7px rgba(255, 255, 255, 0.5))
+    drop-shadow(0 6px 5px rgba(0, 0, 0, 0.36));
+}
+
+.tile.multiplier .multiplier-symbol,
+.multiplier-art {
+  filter:
+    drop-shadow(0 0 12px rgba(255, 242, 145, 0.82))
+    drop-shadow(0 7px 5px rgba(0, 0, 0, 0.42));
+}
+
+.drop-arrows {
+  height: 18px;
+  padding: 1px 18px 0;
+}
+
+.drop-arrows span::before {
+  height: 11px;
+}
+
+.slots {
+  height: 56px;
+  gap: 12px;
+  padding: 0 8px;
+}
+
+.slot {
+  transform: translateY(2px);
+  background:
+    radial-gradient(ellipse at 50% 72%, rgba(0, 0, 0, 0.84), transparent 56%),
+    linear-gradient(180deg, rgba(255, 201, 83, 0.16), rgba(38, 3, 20, 0.64));
+  box-shadow:
+    inset 0 2px 0 rgba(255, 238, 174, 0.26),
+    inset 0 -10px 15px rgba(10, 1, 7, 0.72),
+    0 0 0 1px rgba(255, 219, 112, 0.32),
+    0 0 9px rgba(255, 195, 64, 0.12);
+}
+
+.slot::after {
+  inset: 10px 11px 5px;
+  background:
+    radial-gradient(ellipse at 50% 72%, rgba(0, 0, 0, 0.92), rgba(14, 2, 13, 0.92) 58%, rgba(255, 201, 85, 0.1) 100%);
+}
+
+.slot.filled {
+  transform: translateY(0);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 245, 213, 0.38),
+    inset 0 -10px 15px rgba(54, 2, 15, 0.54),
+    0 0 17px rgba(255, 48, 72, 0.5),
+    0 0 0 1px rgba(255, 225, 126, 0.56);
+}
+
+.slot-countdown {
+  inset: -4px;
+}
+
+.slot strong {
+  font-size: 19px;
+  -webkit-text-stroke: 1.35px #4a1038;
+}
+
+.hud {
+  padding: 6px 20px 14px;
+}
+
+.hud-panel,
+.bet-panel,
+.icon-button {
+  min-height: 47px;
+  background:
+    linear-gradient(180deg, rgba(255, 240, 192, 0.2), transparent 42%),
+    linear-gradient(180deg, rgba(199, 31, 70, 0.94), rgba(82, 8, 39, 0.96));
+}
+
+@media (max-width: 520px) {
+  .topbar {
+    padding-top: 8px;
+  }
+
+  .brand {
+    width: min(284px, 74%);
+  }
+
+  .play-area {
+    padding: 0 16px;
+  }
+
+  .board-bar {
+    min-height: 56px;
+    padding-bottom: 7px;
+  }
+
+  .special-meter {
+    grid-template-rows: 31px 9px auto;
+    padding: 3px 21px 5px;
+  }
+
+  .stage-slots {
+    height: 31px;
+  }
+
+  .mini-slot {
+    width: 31px;
+    height: 31px;
+  }
+
+  .slots {
+    height: 54px;
+    gap: 11px;
+    padding-inline: 7px;
+  }
+
+  .slot-symbol {
+    width: 43px;
+    height: 43px;
+  }
+}
+
+@media (max-width: 430px) {
+  .play-area {
+    padding-inline: 15px;
+  }
+
+  .hud {
+    padding-inline: 15px;
+  }
+}
+
+/* Candy machine v4 glass: premium low-noise cabinet. */
+.phone {
+  width: min(438px, 100%);
+  border-radius: 18px;
+  background:
+    url("assets/ui/candy-machine-glass-v4.png") center / 100% 100% no-repeat,
+    linear-gradient(180deg, #190417, #09030d);
+  box-shadow:
+    0 24px 78px rgba(0, 0, 0, 0.66),
+    0 0 0 1px rgba(255, 221, 132, 0.16);
+}
+
+.topbar {
+  padding: 9px 18px 0;
+}
+
+.brand {
+  width: min(292px, 74%);
+  opacity: 0.96;
+}
+
+.play-area {
+  padding: 0 20px;
+}
+
+.board-shell {
+  padding-top: 1px;
+}
+
+.board-bar {
+  min-height: 62px;
+  padding: 3px 8px 10px;
+}
+
+.special-meter {
+  grid-template-rows: 31px 10px auto;
+  padding: 4px 30px 5px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0.04) 38%, rgba(8, 3, 8, 0.34)),
+    linear-gradient(90deg, rgba(251, 134, 45, 0.48), rgba(229, 39, 103, 0.48) 52%, rgba(64, 178, 226, 0.36)),
+    rgba(18, 5, 18, 0.48);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 235, 0.34),
+    inset 0 -6px 12px rgba(5, 1, 6, 0.52),
+    0 0 0 1px rgba(255, 226, 136, 0.28),
+    0 0 15px rgba(255, 100, 142, 0.16);
+  backdrop-filter: blur(3px) saturate(1.15);
+}
+
+.special-meter-track {
+  height: 10px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.26), transparent 43%),
+    rgba(8, 4, 10, 0.82);
+  box-shadow:
+    inset 0 1px 4px rgba(0, 0, 0, 0.7),
+    0 0 0 1px rgba(255, 229, 133, 0.26);
+}
+
+.special-meter-track i {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.34), transparent 48%),
+    linear-gradient(90deg, #ff8a36, #e82970 54%, #49c3f1);
+}
+
+.meter-mark {
+  top: -16px;
+  color: #fff2b5;
+  font-size: 10px;
+}
+
+.stage-slot[data-stage="1"] {
+  left: 14%;
+}
+
+.stage-slot[data-stage="3"] {
+  left: 86%;
+}
+
+.mini-slot {
+  width: 31px;
+  height: 31px;
+  background:
+    radial-gradient(circle at 36% 24%, rgba(255, 255, 255, 0.42), transparent 22%),
+    linear-gradient(180deg, rgba(191, 33, 80, 0.88), rgba(35, 4, 22, 0.9));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    inset 0 -6px 10px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 225, 126, 0.42),
+    0 0 11px rgba(255, 202, 84, 0.28);
+}
+
+.board {
+  padding: 3px;
+  gap: 3px;
+  border-radius: 12px;
+  background:
+    linear-gradient(180deg, rgba(8, 8, 13, 0.88), rgba(5, 3, 9, 0.94));
+  border-color: rgba(255, 221, 133, 0.22);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 247, 205, 0.08),
+    inset 0 0 24px rgba(0, 0, 0, 0.76),
+    0 0 0 1px rgba(45, 12, 28, 0.56);
+}
+
+.tile {
+  background:
+    radial-gradient(circle at 50% 18%, rgba(255, 255, 255, 0.038), transparent 42%),
+    linear-gradient(180deg, rgba(43, 10, 35, 0.44), rgba(7, 4, 12, 0.84));
+}
+
+.candy-img {
+  width: 85%;
+  height: 85%;
+  filter:
+    drop-shadow(0 4px 3px rgba(0, 0, 0, 0.3))
+    saturate(0.84)
+    brightness(0.96);
+}
+
+.tile.multiplier .multiplier-symbol,
+.multiplier-art {
+  filter:
+    drop-shadow(0 0 13px rgba(255, 242, 145, 0.86))
+    drop-shadow(0 7px 5px rgba(0, 0, 0, 0.44));
+}
+
+.drop-arrows {
+  height: 15px;
+  padding: 0 24px;
+  opacity: 0.92;
+}
+
+.drop-arrows span::before {
+  width: 6px;
+  height: 9px;
+  background: linear-gradient(180deg, #fff3b5, #f0b33f 64%, #a95227);
+}
+
+.drop-arrows span::after {
+  border-left-width: 7px;
+  border-right-width: 7px;
+  border-top-width: 8px;
+  border-top-color: #eec75d;
+}
+
+.slots {
+  height: 64px;
+  gap: 13px;
+  padding: 0 9px 3px;
+}
+
+.slot {
+  transform: translateY(0);
+  border-radius: 999px 999px 18px 18px;
+  background:
+    radial-gradient(ellipse at 50% 72%, rgba(0, 0, 0, 0.92), rgba(12, 5, 13, 0.78) 56%, transparent 72%),
+    linear-gradient(180deg, rgba(255, 210, 105, 0.11), rgba(12, 3, 12, 0.62));
+  box-shadow:
+    inset 0 2px 0 rgba(255, 238, 174, 0.2),
+    inset 0 -12px 18px rgba(3, 1, 4, 0.78),
+    0 0 0 1px rgba(255, 221, 130, 0.34),
+    0 0 12px rgba(255, 188, 74, 0.13);
+}
+
+.slot::before {
+  top: -8px;
+  width: 20px;
+  height: 12px;
+  background: linear-gradient(180deg, rgba(255, 227, 128, 0.84), rgba(207, 87, 38, 0.36));
+}
+
+.slot::after {
+  inset: 11px 9px 6px;
+  border-radius: 999px 999px 16px 16px;
+  background:
+    radial-gradient(ellipse at 50% 72%, rgba(0, 0, 0, 0.96), rgba(8, 3, 9, 0.92) 62%, rgba(255, 215, 112, 0.12) 100%);
+}
+
+.slot.filled {
+  background:
+    linear-gradient(180deg, rgba(255, 237, 183, 0.18), transparent 38%),
+    url("assets/ui/candy-match-slot-reward-73.png") center / 115% 178% no-repeat,
+    linear-gradient(180deg, #aa1234, #360713);
+}
+
+.slot-symbol {
+  width: 48px;
+  height: 48px;
+}
+
+.slot strong {
+  font-size: 20px;
+  -webkit-text-stroke: 1.45px #341020;
+}
+
+.hud {
+  padding: 4px 20px 13px;
+}
+
+.hud-panel,
+.bet-panel,
+.icon-button {
+  min-height: 46px;
+  background:
+    linear-gradient(180deg, rgba(255, 247, 218, 0.15), transparent 42%),
+    linear-gradient(180deg, rgba(147, 27, 64, 0.92), rgba(43, 8, 30, 0.96));
+  border-color: rgba(255, 224, 132, 0.28);
+}
+
+.hud-panel strong,
+.bet-panel strong {
+  font-size: 18px;
+}
+
+@media (max-width: 520px) {
+  .phone {
+    width: 100vw;
+  }
+
+  .topbar {
+    padding-top: 8px;
+  }
+
+  .brand {
+    width: min(286px, 73%);
+  }
+
+  .play-area {
+    padding-inline: 18px;
+  }
+
+  .board-bar {
+    min-height: 60px;
+    padding: 2px 7px 9px;
+  }
+
+  .special-meter {
+    grid-template-rows: 30px 10px auto;
+    padding: 3px 28px 5px;
+  }
+
+  .stage-slots {
+    height: 30px;
+  }
+
+  .mini-slot {
+    width: 30px;
+    height: 30px;
+  }
+
+  .drop-arrows {
+    height: 14px;
+    padding-inline: 21px;
+  }
+
+  .slots {
+    height: 61px;
+    gap: 12px;
+    padding-inline: 8px;
+  }
+
+  .slot-symbol {
+    width: 45px;
+    height: 45px;
+  }
+
+  .hud {
+    padding: 4px 17px 9px;
+  }
+}
+
+@media (max-width: 430px) {
+  .play-area {
+    padding-inline: 17px;
+  }
+
+  .hud {
+    padding-inline: 16px;
+  }
+}
+
+/* Candy machine final preview: fit the approved cabinet and logo assets. */
+.stage {
+  padding: 0;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255, 211, 120, 0.18), transparent 28rem),
+    linear-gradient(180deg, #16040b 0%, #070205 100%);
+}
+
+.phone {
+  width: min(440px, 100vw);
+  height: min(100dvh, 920px);
+  border: 0;
+  border-radius: 0;
+  background:
+    url("assets/ui/candy-machine-final-bg.jpg") center / 112% 100% no-repeat,
+    linear-gradient(180deg, #170408, #070205);
+  box-shadow: 0 18px 52px rgba(0, 0, 0, 0.58);
+}
+
+.phone::before,
+.phone::after,
+.ambient {
+  display: none;
+}
+
+.topbar {
+  padding: 20px 42px 0;
+}
+
+.brand {
+  width: min(330px, 84%);
+  filter:
+    drop-shadow(0 6px 7px rgba(0, 0, 0, 0.5))
+    drop-shadow(0 0 12px rgba(255, 206, 96, 0.22));
+}
+
+.brand::before {
+  display: none;
+}
+
+.brand-logo {
+  mix-blend-mode: normal;
+  filter: saturate(1.04) brightness(1.02);
+}
+
+.play-area {
+  padding: 0 48px 3px;
+}
+
+.board-shell {
+  padding: 0;
+}
+
+.board-bar {
+  min-height: 98px;
+  padding: 15px 0 12px;
+}
+
+.special-meter {
+  width: 100%;
+  min-height: 68px;
+  grid-template-rows: 29px 10px auto;
+  padding: 2px 30px 4px;
+  border-radius: 999px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.03) 43%, rgba(36, 2, 15, 0.28)),
+    linear-gradient(90deg, rgba(255, 143, 72, 0.16), rgba(229, 39, 103, 0.2) 55%, rgba(66, 197, 255, 0.13));
+  border: 1px solid rgba(255, 220, 132, 0.2);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 -7px 12px rgba(8, 1, 5, 0.36),
+    0 0 14px rgba(255, 67, 121, 0.15);
+  backdrop-filter: blur(2px) saturate(1.18);
+}
+
+.special-meter-copy {
+  opacity: 0.9;
+}
+
+.special-meter-track {
+  height: 9px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.22), transparent 44%),
+    rgba(15, 3, 10, 0.7);
+}
+
+.stage-slots {
+  height: 30px;
+  margin-top: -2px;
+}
+
+.stage-slot[data-stage="1"] {
+  left: 18%;
+}
+
+.stage-slot[data-stage="2"] {
+  left: 50%;
+}
+
+.stage-slot[data-stage="3"] {
+  left: 82%;
+}
+
+.mini-slot {
+  width: 30px;
+  height: 30px;
+  background:
+    radial-gradient(circle at 35% 24%, rgba(255, 255, 255, 0.36), transparent 24%),
+    linear-gradient(180deg, rgba(92, 23, 38, 0.72), rgba(14, 4, 8, 0.8));
+  border-color: rgba(255, 221, 126, 0.5);
+}
+
+.board {
+  padding: 3px;
+  gap: 3px;
+  border-radius: 10px;
+  background:
+    linear-gradient(180deg, rgba(72, 7, 26, 0.48), rgba(8, 2, 9, 0.84)),
+    rgba(5, 2, 7, 0.78);
+  border: 1px solid rgba(255, 213, 122, 0.24);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 242, 197, 0.12),
+    inset 0 0 28px rgba(0, 0, 0, 0.62),
+    0 0 0 1px rgba(62, 10, 18, 0.5);
+  backdrop-filter: blur(1px);
+}
+
+.tile {
+  background:
+    radial-gradient(circle at 50% 15%, rgba(255, 255, 255, 0.038), transparent 40%),
+    linear-gradient(180deg, rgba(38, 6, 24, 0.36), rgba(8, 4, 10, 0.78));
+}
+
+.drop-arrows {
+  height: 14px;
+  opacity: 0.84;
+}
+
+.slots {
+  height: 76px;
+  gap: 11px;
+  padding: 4px 1px 8px;
+}
+
+.slot {
+  border-radius: 999px;
+  background:
+    radial-gradient(ellipse at 50% 72%, rgba(4, 1, 4, 0.96), rgba(19, 5, 10, 0.86) 58%, rgba(255, 71, 115, 0.12) 100%),
+    linear-gradient(180deg, rgba(255, 224, 131, 0.12), rgba(24, 3, 10, 0.7));
+  border: 1px solid rgba(255, 220, 130, 0.34);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 239, 184, 0.17),
+    inset 0 -14px 18px rgba(0, 0, 0, 0.62),
+    0 0 12px rgba(255, 191, 76, 0.16);
+}
+
+.slot::before {
+  display: none;
+}
+
+.slot::after {
+  inset: 12px 7px 7px;
+  border-radius: 999px;
+  background:
+    radial-gradient(ellipse at 50% 74%, rgba(0, 0, 0, 0.96), rgba(9, 2, 5, 0.88) 61%, rgba(255, 81, 125, 0.12));
+}
+
+.slot.empty {
+  box-shadow:
+    inset 0 2px 0 rgba(255, 239, 184, 0.18),
+    inset 0 -14px 18px rgba(0, 0, 0, 0.64),
+    0 0 0 1px rgba(255, 216, 118, 0.32),
+    0 0 16px rgba(255, 72, 124, 0.18);
+}
+
+.slot.filled {
+  background:
+    linear-gradient(180deg, rgba(255, 238, 178, 0.2), transparent 36%),
+    linear-gradient(180deg, #c2173e, #4a0615);
+}
+
+.slot-symbol {
+  width: 49px;
+  height: 49px;
+}
+
+.slot strong {
+  font-size: 20px;
+  -webkit-text-stroke: 1.35px #2d0710;
+}
+
+.status-text {
+  display: none;
+}
+
+.hud {
+  padding: 5px 36px 11px;
+  gap: 8px;
+}
+
+.hud-panel,
+.bet-panel,
+.icon-button {
+  min-height: 45px;
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(255, 244, 212, 0.13), transparent 42%),
+    linear-gradient(180deg, rgba(93, 20, 37, 0.66), rgba(23, 5, 12, 0.78));
+  border: 1px solid rgba(255, 220, 132, 0.24);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.13),
+    inset 0 -6px 10px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(2px);
+}
+
+.hud-panel span,
+.bet-panel span {
+  color: rgba(255, 235, 190, 0.78);
+}
+
+.hud-panel strong,
+.bet-panel strong {
+  color: #fff6d8;
+  font-size: 17px;
+  text-shadow: 0 0 8px rgba(255, 91, 143, 0.35);
+}
+
+@media (max-width: 520px) {
+  .phone {
+    width: 100vw;
+  }
+
+  .topbar {
+    padding: 19px 38px 0;
+  }
+
+  .brand {
+    width: min(318px, 84%);
+  }
+
+  .play-area {
+    padding-inline: 44px;
+  }
+
+  .board-bar {
+    min-height: 95px;
+    padding-top: 14px;
+  }
+
+  .special-meter {
+    min-height: 66px;
+    padding-inline: 28px;
+  }
+
+  .slots {
+    height: 73px;
+    gap: 10px;
+  }
+
+  .slot-symbol {
+    width: 46px;
+    height: 46px;
+  }
+
+  .hud {
+    padding: 5px 32px 10px;
+  }
+}
+
+@media (max-width: 430px) {
+  .phone {
+    background-size: 114% 100%;
+  }
+
+  .topbar {
+    padding: 17px 35px 0;
+  }
+
+  .play-area {
+    padding-inline: 40px;
+  }
+
+  .board-bar {
+    min-height: 91px;
+  }
+
+  .special-meter {
+    min-height: 64px;
+    padding-inline: 24px;
+  }
+
+  .slots {
+    height: 70px;
+  }
+
+  .hud {
+    padding-inline: 28px;
+  }
+}
+
 /* Final override: win title is bitmap art, never live CSS text. */
 .win-overlay .win-copy {
   display: flex !important;
