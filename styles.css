@@ -26,6 +26,7 @@ html,
 body {
   margin: 0;
   min-height: 100%;
+  font-family: "Arial Black", "Microsoft JhengHei", Arial, sans-serif;
 }
 
 body {
@@ -342,7 +343,7 @@ button {
 
 .special-meter-track {
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   height: 9px;
   border-radius: 999px;
   background: rgba(10, 8, 34, 0.88);
@@ -358,8 +359,8 @@ button {
   z-index: 2;
   pointer-events: none;
   background:
-    linear-gradient(90deg, transparent calc(33.333% - 1px), rgba(255, 255, 255, 0.74) calc(33.333% - 1px) calc(33.333% + 1px), transparent calc(33.333% + 1px)),
-    linear-gradient(90deg, transparent calc(66.667% - 1px), rgba(255, 255, 255, 0.74) calc(66.667% - 1px) calc(66.667% + 1px), transparent calc(66.667% + 1px));
+    linear-gradient(90deg, transparent calc(22.222% - 1px), rgba(255, 255, 255, 0.82) calc(22.222% - 1px) calc(22.222% + 1px), transparent calc(22.222% + 1px)),
+    linear-gradient(90deg, transparent calc(50% - 1px), rgba(255, 255, 255, 0.82) calc(50% - 1px) calc(50% + 1px), transparent calc(50% + 1px));
 }
 
 .special-meter-track i {
@@ -372,6 +373,36 @@ button {
   background: linear-gradient(90deg, #46dcff, #e85bff, #ffd75a);
   box-shadow: 0 0 10px rgba(255, 222, 93, 0.62);
   transition: width 320ms ease;
+}
+
+.meter-mark {
+  position: absolute;
+  top: -18px;
+  z-index: 3;
+  min-width: 18px;
+  transform: translateX(-50%);
+  color: #fff8cf;
+  font-size: 10px;
+  line-height: 1;
+  text-align: center;
+  -webkit-text-stroke: 0.55px rgba(55, 24, 96, 0.95);
+  text-shadow:
+    0 1px 0 rgba(37, 13, 70, 0.9),
+    0 0 7px rgba(255, 224, 91, 0.7);
+  pointer-events: none;
+}
+
+.meter-mark-1 {
+  left: 22.222%;
+}
+
+.meter-mark-2 {
+  left: 50%;
+}
+
+.meter-mark-3 {
+  left: 100%;
+  transform: translateX(-100%);
 }
 
 .stage-slots {
@@ -1802,7 +1833,7 @@ button {
 
 .slot-countdown {
   position: absolute;
-  inset: -4px;
+  inset: -3px;
   z-index: 2;
   pointer-events: none;
 }
@@ -1814,16 +1845,16 @@ button {
 .slot-countdown i {
   position: absolute;
   opacity: 0.16;
-  background: rgba(255, 226, 103, 0.7);
+  background: rgba(255, 226, 103, 0.58);
   box-shadow: none;
 }
 
 .slot-countdown i.on {
   opacity: 1;
-  background: linear-gradient(90deg, #fff8b6, #ffbc3e);
+  background: linear-gradient(90deg, #ffd2b0, #ff554e);
   box-shadow:
-    0 0 6px rgba(255, 207, 63, 0.72),
-    0 0 11px rgba(255, 93, 211, 0.24);
+    0 0 7px rgba(255, 77, 62, 0.82),
+    0 0 14px rgba(255, 18, 70, 0.34);
 }
 
 .slot-countdown i:nth-child(1),
@@ -1844,16 +1875,16 @@ button {
   border-radius: 999px;
 }
 
-.slot-countdown i:nth-child(1) { left: 6px; top: 0; width: 24%; }
-.slot-countdown i:nth-child(2) { left: 38%; top: 0; width: 24%; }
-.slot-countdown i:nth-child(3) { right: 6px; top: 0; width: 24%; }
-.slot-countdown i:nth-child(4) { right: 0; top: 8px; height: 30%; }
-.slot-countdown i:nth-child(5) { right: 0; bottom: 8px; height: 30%; }
-.slot-countdown i:nth-child(6) { right: 6px; bottom: 0; width: 24%; }
-.slot-countdown i:nth-child(7) { left: 38%; bottom: 0; width: 24%; }
-.slot-countdown i:nth-child(8) { left: 6px; bottom: 0; width: 24%; }
-.slot-countdown i:nth-child(9) { left: 0; bottom: 8px; height: 30%; }
-.slot-countdown i:nth-child(10) { left: 0; top: 8px; height: 30%; }
+.slot-countdown i:nth-child(1) { left: 4px; top: 0; width: 27%; }
+.slot-countdown i:nth-child(2) { left: 36.5%; top: 0; width: 27%; }
+.slot-countdown i:nth-child(3) { right: 4px; top: 0; width: 27%; }
+.slot-countdown i:nth-child(4) { right: 0; top: 7px; height: 32%; }
+.slot-countdown i:nth-child(5) { right: 0; bottom: 7px; height: 32%; }
+.slot-countdown i:nth-child(6) { right: 4px; bottom: 0; width: 27%; }
+.slot-countdown i:nth-child(7) { left: 36.5%; bottom: 0; width: 27%; }
+.slot-countdown i:nth-child(8) { left: 4px; bottom: 0; width: 27%; }
+.slot-countdown i:nth-child(9) { left: 0; bottom: 7px; height: 32%; }
+.slot-countdown i:nth-child(10) { left: 0; top: 7px; height: 32%; }
 
 .slot.flash .slot-countdown i.on {
   animation: slot-segment-charge 780ms ease-out both;
@@ -1916,10 +1947,11 @@ button {
 }
 
 .slot.filled {
-  border-color: #fff5a6;
+  border-color: #ff514e;
   box-shadow:
     inset 0 -9px 14px rgba(0, 0, 0, 0.56),
-    0 0 0 1px rgba(122, 58, 10, 0.8);
+    0 0 0 1px rgba(137, 19, 22, 0.82),
+    0 0 14px rgba(255, 34, 58, 0.48);
 }
 
 .slot.filled strong {
@@ -1927,7 +1959,7 @@ button {
 }
 
 .slot.jackpot-slot {
-  border-color: #fff5a6;
+  border-color: #ff514e;
 }
 
 .slot.flash.jackpot-slot {
@@ -2985,16 +3017,16 @@ button {
     opacity: 1;
     filter: brightness(1.45);
     box-shadow:
-      0 0 12px rgba(255, 230, 103, 1),
-      0 0 24px rgba(255, 89, 209, 0.7),
-      0 0 34px rgba(255, 175, 48, 0.44);
+      0 0 12px rgba(255, 116, 77, 1),
+      0 0 24px rgba(255, 34, 79, 0.72),
+      0 0 34px rgba(255, 26, 57, 0.44);
   }
   100% {
     opacity: 1;
     filter: brightness(1);
     box-shadow:
-      0 0 9px rgba(255, 207, 63, 0.92),
-      0 0 17px rgba(255, 93, 211, 0.36);
+      0 0 7px rgba(255, 77, 62, 0.82),
+      0 0 14px rgba(255, 18, 70, 0.34);
   }
 }
 

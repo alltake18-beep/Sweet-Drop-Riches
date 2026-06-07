@@ -4,14 +4,14 @@ const SLOT_COUNT = 3;
 const MULTIPLIER_SIZE = 2;
 const MULTIPLIER_SIZES = [1, 2];
 const MULTIPLIER_COLS = [0, 2, 4];
-const SYMBOL_VERSION = "symbol-rules-67-meter-odds";
+const SYMBOL_VERSION = "symbol-rules-68-meter-bet-audio";
 const SLOT_TURN_MAX = 10;
 const PERF_ENABLED = new URLSearchParams(window.location.search).has("perf");
-const SPECIAL_METER_TARGET = 9;
-const SPECIAL_METER_THRESHOLDS = [9, 21, 33];
+const SPECIAL_METER_TARGET = 8;
+const SPECIAL_METER_THRESHOLDS = [8, 18, 36];
 const SPECIAL_METER_MAX = SPECIAL_METER_THRESHOLDS[SPECIAL_METER_THRESHOLDS.length - 1];
-const SOUND_GAIN_BOOST = 1.5;
-const BET_STEPS = [20, 50, 100, 200, 500];
+const SOUND_GAIN_BOOST = 3;
+const BET_STEPS = [50, 100, 200, 300, 500, 1000];
 const CANDIES = ["red", "blue", "green", "orange", "purple"];
 const MULTIPLIER_VALUES = [5, 10, 20, 30, 50, 100, 200];
 const COLLECTION_SLOT_ITEM_WEIGHTS = [
@@ -138,8 +138,8 @@ const state = {
   slotTurns: Array(SLOT_COUNT).fill(0),
   filledSlots: new Set(),
   multipliers: [],
-  balance: 2732,
-  betIndex: 2,
+  balance: 10000,
+  betIndex: 1,
   currentWin: 0,
   lastWin: 0,
   resolving: false,
@@ -2219,7 +2219,7 @@ function ensureAudio() {
   if (!state.audioContext) state.audioContext = new AudioContext();
   if (!state.masterGain) {
     state.masterGain = state.audioContext.createGain();
-    state.masterGain.gain.value = Math.min(0.95, 0.58 * SOUND_GAIN_BOOST);
+    state.masterGain.gain.value = Math.min(1.9, 0.58 * SOUND_GAIN_BOOST);
     state.masterGain.connect(state.audioContext.destination);
   }
   if (state.audioContext.state === "suspended") state.audioContext.resume();
