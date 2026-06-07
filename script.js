@@ -4,7 +4,7 @@ const SLOT_COUNT = 3;
 const MULTIPLIER_SIZE = 2;
 const MULTIPLIER_SIZES = [1, 2];
 const MULTIPLIER_COLS = [0, 2, 4];
-const SYMBOL_VERSION = "symbol-rules-69-meter-slots";
+const SYMBOL_VERSION = "symbol-rules-70-no-deadlock-rescue";
 const SLOT_TURN_MAX = 10;
 const PERF_ENABLED = new URLSearchParams(window.location.search).has("perf");
 const SPECIAL_METER_TARGET = 9;
@@ -12,6 +12,11 @@ const SPECIAL_METER_THRESHOLDS = [9, 21, 33];
 const SPECIAL_METER_MAX = SPECIAL_METER_THRESHOLDS[SPECIAL_METER_THRESHOLDS.length - 1];
 const SOUND_GAIN_BOOST = 3;
 const BET_STEPS = [50, 100, 200, 300, 500, 1000];
+const MOVE_PRESSURE_SOFT_LIMIT = 5;
+const MOVE_PRESSURE_HARD_LIMIT = 3;
+const RESCUE_FLAME_WEIGHT = 0.76;
+const RESCUE_CASCADE_CHANCE_SOFT = 0.42;
+const RESCUE_CASCADE_CHANCE_HARD = 0.84;
 const CANDIES = ["red", "blue", "green", "orange", "purple"];
 const MULTIPLIER_VALUES = [5, 10, 20, 30, 50, 100, 200];
 const COLLECTION_SLOT_ITEM_WEIGHTS = [
@@ -182,6 +187,7 @@ const state = {
   rollingStage: null,
   miniSlotWin: false,
   eventPulse: false,
+  boardRescueLevel: 0,
   sniperTarget: null,
   flameCells: new Set(),
   flameFinal: false,
@@ -442,6 +448,9 @@ function initialStagePreviews() {
 }
 
 function randomBoardEvent(stageIndex = currentSpecialStageIndex()) {
+  if (state.boardRescueLevel >= 2 && hasTwoByTwoMultiplier() && Math.random() < RESCUE_FLAME_WEIGHT) {
+    return { kind: "flame" };
+  }
   const item = weightedPick(stageEventWeights(stageIndex));
   if (item.kind === "candyClear") return { kind: item.kind, type: item.type };
   if (item.kind === "multiplier") return { kind: item.kind, value: item.value, size: item.size };
@@ -498,6 +507,10 @@ function multiplierCells(multiplier) {
     }
   }
   return cells;
+}
+
+function hasTwoByTwoMultiplier() {
+  return state.multipliers.some((multiplier) => multiplierSize(multiplier) > 1);
 }
 
 function clearMultiplierFootprint(board, multiplier) {
@@ -1278,9 +1291,13 @@ function findFishTarget() {
 }
 
 function hasLegalMove(board, multipliers = board === state.board ? state.multipliers : []) {
+  return countLegalMoves(board, multipliers, 1) > 0;
+}
+
+function countLegalMoves(board, multipliers = board === state.board ? state.multipliers : [], limit = Infinity) {
+  let count = 0;
   for (let row = 0; row < ROWS; row += 1) {
     for (let col = 0; col < COLS; col += 1) {
-      if (multiplierAt(row, col, multipliers)) continue;
       const here = { row, col };
       const checks = [
         { row, col: col + 1 },
@@ -1289,15 +1306,54 @@ function hasLegalMove(board, multipliers = board === state.board ? state.multipl
 
       for (const there of checks) {
         if (there.row >= ROWS || there.col >= COLS) continue;
-        if (multiplierAt(there.row, there.col, multipliers)) continue;
-        if (canTriggerGenericSpecial(board[here.row][here.col], board[there.row][there.col])) return true;
-        const test = cloneBoard(board);
-        swap(test, here, there);
-        if (findMatches(test, multipliers).cells.size > 0) return true;
+        if (wouldSwapCreateMatch(board, multipliers, here, there)) {
+          count += 1;
+          if (count >= limit) return count;
+        }
       }
     }
   }
-  return false;
+  return count;
+}
+
+function wouldSwapCreateMatch(board, multipliers, a, b) {
+  const aMultiplier = multiplierAt(a.row, a.col, multipliers);
+  const bMultiplier = multiplierAt(b.row, b.col, multipliers);
+  if (aMultiplier && bMultiplier) return false;
+
+  if (aMultiplier || bMultiplier) {
+    const multiplier = aMultiplier || bMultiplier;
+    if (multiplierSize(multiplier) !== 1) return false;
+    const multiplierPoint = aMultiplier ? a : b;
+    const candyPoint = aMultiplier ? b : a;
+    if (!isOrdinaryCandy(board[candyPoint.row]?.[candyPoint.col])) return false;
+
+    const testBoard = cloneBoard(board);
+    const testMultipliers = multipliers.map(cloneMultiplier);
+    const testMultiplier = testMultipliers.find((item) => item.id === multiplier.id);
+    if (!testMultiplier) return false;
+    const candy = testBoard[candyPoint.row][candyPoint.col];
+    testMultiplier.row = candyPoint.row;
+    testMultiplier.col = candyPoint.col;
+    testBoard[candyPoint.row][candyPoint.col] = null;
+    testBoard[multiplierPoint.row][multiplierPoint.col] = candy;
+    return findMatches(testBoard, testMultipliers).cells.size > 0;
+  }
+
+  const aTile = board[a.row]?.[a.col];
+  const bTile = board[b.row]?.[b.col];
+  if (!aTile || !bTile) return false;
+  if (canTriggerGenericSpecial(aTile, bTile)) return true;
+
+  const test = cloneBoard(board);
+  swap(test, a, b);
+  return findMatches(test, multipliers).cells.size > 0;
+}
+
+function movePressureLevel(moveCount) {
+  if (moveCount <= MOVE_PRESSURE_HARD_LIMIT) return 2;
+  if (moveCount <= MOVE_PRESSURE_SOFT_LIMIT) return 1;
+  return 0;
 }
 
 function canTriggerGenericSpecial(a, b) {
@@ -1520,6 +1576,112 @@ function multiplierBlocksColumn(multiplier, col, seen = new Set()) {
   return multiplierBlocksColumn(belowMultiplier, col, seen);
 }
 
+function wouldCreateMatchOnBoard(board, multipliers, row, col, tile) {
+  if (!isMatchableCandy(tile)) return false;
+  const test = cloneBoard(board);
+  test[row][col] = { ...tile };
+  return findMatches(test, multipliers).cells.has(`${row},${col}`);
+}
+
+function rescueCandyForCell(row, col) {
+  if (state.boardRescueLevel <= 0) return randomCandy([], { allowFish: true });
+  const chance = state.boardRescueLevel >= 2 ? 0.72 : 0.42;
+  if (Math.random() > chance) return randomCandy([], { allowFish: true });
+  const candidates = CANDIES.filter((type) =>
+    wouldCreateMatchOnBoard(state.board, state.multipliers, row, col, { kind: "candy", type })
+  );
+  return candidates.length ? { kind: "candy", type: randomItem(candidates) } : randomCandy([], { allowFish: true });
+}
+
+function seedImmediateCascadeMatch() {
+  const options = [];
+  const collect = (cells) => {
+    if (cells.some(({ row, col }) => multiplierAt(row, col))) return;
+    if (cells.some(({ row, col }) => state.board[row]?.[col]?.kind !== "candy")) return;
+    const falling = cells.some(({ row, col }) => state.board[row][col]?._fall);
+    options.push({ cells, falling });
+  };
+
+  for (let row = 0; row < ROWS; row += 1) {
+    for (let col = 0; col <= COLS - 3; col += 1) {
+      collect([{ row, col }, { row, col: col + 1 }, { row, col: col + 2 }]);
+    }
+  }
+  for (let row = 0; row <= ROWS - 3; row += 1) {
+    for (let col = 0; col < COLS; col += 1) {
+      collect([{ row, col }, { row: row + 1, col }, { row: row + 2, col }]);
+    }
+  }
+
+  const pool = options.filter((option) => option.falling);
+  const picked = randomItem(pool.length ? pool : options);
+  if (!picked) return false;
+  const type = randomItem(CANDIES);
+  for (const { row, col } of picked.cells) {
+    state.board[row][col] = { kind: "candy", type, _fall: state.board[row][col]._fall || 1 };
+  }
+  return true;
+}
+
+function maybeSeedRescueCascade(cascadeIndex) {
+  if (state.boardRescueLevel <= 0) return false;
+  if (findMatches(state.board).cells.size > 0) return false;
+  const chance = state.boardRescueLevel >= 2 && cascadeIndex < 3 ? RESCUE_CASCADE_CHANCE_HARD : RESCUE_CASCADE_CHANCE_SOFT;
+  if (Math.random() > chance) return false;
+  return seedImmediateCascadeMatch();
+}
+
+function ensurePlayableBoard() {
+  if (findMatches(state.board).cells.size > 0) return false;
+  if (hasLegalMove(state.board)) return false;
+  return seedPlayableMovePattern();
+}
+
+function seedPlayableMovePattern() {
+  const options = [];
+  for (let row = 0; row <= ROWS - 3; row += 1) {
+    for (let col = 0; col <= COLS - 3; col += 1) {
+      const cells = [
+        { row, col },
+        { row, col: col + 1 },
+        { row, col: col + 2 },
+        { row: row + 1, col },
+        { row: row + 1, col: col + 1 },
+        { row: row + 1, col: col + 2 },
+        { row: row + 2, col },
+        { row: row + 2, col: col + 1 },
+        { row: row + 2, col: col + 2 },
+      ];
+      if (cells.some((cell) => multiplierAt(cell.row, cell.col))) continue;
+      options.push({ row, col });
+    }
+  }
+
+  while (options.length) {
+    const option = randomItem(options);
+    options.splice(options.indexOf(option), 1);
+    const [a, b, c] = CANDIES.slice().sort(() => Math.random() - 0.5);
+    const test = cloneBoard(state.board);
+    const pattern = [
+      [a, b, a],
+      [c, a, c],
+      [b, c, b],
+    ];
+    for (let y = 0; y < 3; y += 1) {
+      for (let x = 0; x < 3; x += 1) {
+        test[option.row + y][option.col + x] = { kind: "candy", type: pattern[y][x] };
+      }
+    }
+    if (findMatches(test, state.multipliers).cells.size > 0 || !hasLegalMove(test, state.multipliers)) continue;
+    state.board = test;
+    clearMultiplierFootprints();
+    return true;
+  }
+  forcePlayablePattern(state.board);
+  clearMultiplierFootprints();
+  return true;
+}
+
 function fillEmptyCells() {
   clearMultiplierFootprints();
 
@@ -1530,7 +1692,7 @@ function fillEmptyCells() {
         continue;
       }
       if (!state.board[row][col]) {
-        const tile = randomCandy([], { allowFish: true });
+        const tile = rescueCandyForCell(row, col);
         tile._fall = row + 1;
         state.board[row][col] = tile;
       }
@@ -1538,6 +1700,7 @@ function fillEmptyCells() {
   }
 
   clearMultiplierFootprints();
+  ensurePlayableBoard();
 }
 
 function clearFallMarks() {
@@ -1636,6 +1799,7 @@ async function attemptSwap(from, to) {
   }
 
   if (!isAdjacent(from, to)) return;
+  const moveCountBefore = countLegalMoves(state.board, state.multipliers, MOVE_PRESSURE_SOFT_LIMIT + 1);
   const multiplierSwap = multiplierSwapContext(from, to);
   if ((multiplierAt(from.row, from.col) || multiplierAt(to.row, to.col)) && !multiplierSwap) return;
 
@@ -1667,6 +1831,7 @@ async function attemptSwap(from, to) {
   state.slotFlash = Array(SLOT_COUNT).fill(null);
   tickCollectedSlotTurns();
   resetSpecialMeterForAction();
+  state.boardRescueLevel = movePressureLevel(moveCountBefore);
   playSound("move");
   await resolveMove(matches, specialPoint || (multiplierSwap ? multiplierSwap.multiplierPoint : to));
 }
@@ -1806,6 +1971,7 @@ async function resolveMove(initialMatches, preferredSpawn = null) {
     collapseEnd();
     const fillEnd = startPerfSpan("move.fill");
     fillEmptyCells();
+    maybeSeedRescueCascade(cascades);
     fillEnd();
     render();
     playSound("drop");
@@ -1832,6 +1998,7 @@ async function resolveMove(initialMatches, preferredSpawn = null) {
   setPerfPhase("idle");
   render();
   await ensureLegalMove();
+  state.boardRescueLevel = 0;
   setStatus(showedWinCard ? "大獎入帳" : "繼續追高倍糖果");
   if (state.perf.enabled) {
     state.perf.resolveCount += 1;
@@ -1933,10 +2100,7 @@ async function ensureLegalMove() {
   if (hasLegalMove(state.board)) return;
   const wasResolving = state.resolving;
   state.resolving = true;
-  setStatus("無可走步，自動洗牌");
-  render();
-  await wait(resolveDelay(700, 280));
-  reshuffleBoard();
+  ensurePlayableBoard();
   state.resolving = wasResolving;
   render();
 }
@@ -2867,7 +3031,10 @@ function mergeAdjacentMultipliers() {
   return false;
 }
 
-function flameBurnChance(value) {
+function flameBurnChance(multiplierOrValue) {
+  const value = typeof multiplierOrValue === "number" ? multiplierOrValue : multiplierOrValue?.value;
+  const size = typeof multiplierOrValue === "number" ? 1 : multiplierSize(multiplierOrValue);
+  if (state.boardRescueLevel >= 2 && size > 1) return 0.9;
   if (value >= 100) return 0.18;
   if (value >= 50) return 0.28;
   if (value >= 20) return 0.4;
@@ -2931,6 +3098,46 @@ function randomFlamePattern() {
   };
 }
 
+function rescueFlamePattern() {
+  if (state.boardRescueLevel < 2) return null;
+  const targets = state.multipliers.filter((multiplier) => multiplierSize(multiplier) > 1);
+  if (!targets.length) return null;
+
+  const patterns = [];
+  for (let col = 0; col < COLS; col += 1) patterns.push({ kind: "col1", col });
+  for (let row = 0; row < ROWS; row += 1) patterns.push({ kind: "row1", row });
+  for (let row = 0; row < ROWS; row += 1) {
+    for (let col = 0; col < COLS; col += 1) patterns.push({ kind: "cross1", row, col });
+  }
+  for (let col = 0; col < COLS - 1; col += 1) patterns.push({ kind: "col2", col });
+  for (let row = 0; row < ROWS - 1; row += 1) patterns.push({ kind: "row2", row });
+  for (let row = 0; row < ROWS - 1; row += 1) {
+    for (let col = 0; col < COLS - 1; col += 1) patterns.push({ kind: "cross2", row, col });
+  }
+
+  const scored = patterns.map((pattern) => {
+    const cells = flamePatternCells(pattern);
+    const multiplierHits = targets.filter((multiplier) =>
+      multiplierCells(multiplier).some((cell) => cells.has(pointKey(cell)))
+    ).length;
+    if (!multiplierHits) return null;
+    let candyHits = 0;
+    for (const key of cells) {
+      const { row, col } = keyToPoint(key);
+      if (isVisibleOrdinaryCandy(row, col)) candyHits += 1;
+    }
+    return { pattern, score: multiplierHits * 100 + candyHits };
+  }).filter(Boolean);
+
+  if (!scored.length) return null;
+  const bestScore = Math.max(...scored.map((item) => item.score));
+  return randomItem(scored.filter((item) => item.score === bestScore)).pattern;
+}
+
+function nextFlamePattern(finalStep = false) {
+  return (finalStep && rescueFlamePattern()) || randomFlamePattern();
+}
+
 function flameTouchedMultipliers(flameCells) {
   const touched = new Map();
   for (const multiplier of state.multipliers) {
@@ -2956,7 +3163,7 @@ async function playFlameEvent() {
   playSound("specialReady");
 
   for (let i = 0; i < steps; i += 1) {
-    finalCells = flamePatternCells(randomFlamePattern());
+    finalCells = flamePatternCells(nextFlamePattern(i === steps - 1));
     state.flameCells = finalCells;
     state.flameFinal = false;
     render();
@@ -2981,7 +3188,7 @@ async function playFlameEvent() {
     for (const cell of multiplierCells(multiplier)) {
       coveredMultiplierCells.add(pointKey(cell));
     }
-    if (Math.random() < flameBurnChance(multiplier.value)) {
+    if (Math.random() < flameBurnChance(multiplier)) {
       destroyedIds.add(multiplier.id);
       for (const cell of multiplierCells(multiplier)) {
         clearedCells.add(pointKey(cell));
@@ -3030,6 +3237,7 @@ async function playFlameEvent() {
   state.clearing = new Set();
 
   fillEmptyCells();
+  maybeSeedRescueCascade(0);
   render();
   playSound("drop");
   await wait(resolveDelay(430, 170));
