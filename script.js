@@ -4,39 +4,40 @@ const SLOT_COUNT = 3;
 const MULTIPLIER_SIZE = 2;
 const MULTIPLIER_SIZES = [1, 2];
 const MULTIPLIER_COLS = [0, 2, 4];
-const SYMBOL_VERSION = "symbol-rules-66-event-math-tuning";
+const SYMBOL_VERSION = "symbol-rules-67-meter-odds";
 const SLOT_TURN_MAX = 10;
 const PERF_ENABLED = new URLSearchParams(window.location.search).has("perf");
 const SPECIAL_METER_TARGET = 9;
-const SPECIAL_METER_THRESHOLDS = [9, 18, 27];
+const SPECIAL_METER_THRESHOLDS = [9, 21, 33];
 const SPECIAL_METER_MAX = SPECIAL_METER_THRESHOLDS[SPECIAL_METER_THRESHOLDS.length - 1];
 const SOUND_GAIN_BOOST = 1.5;
 const BET_STEPS = [20, 50, 100, 200, 500];
 const CANDIES = ["red", "blue", "green", "orange", "purple"];
 const MULTIPLIER_VALUES = [5, 10, 20, 30, 50, 100, 200];
 const COLLECTION_SLOT_ITEM_WEIGHTS = [
-  { kind: "candyClear", type: "red", weight: 6.8 },
-  { kind: "candyClear", type: "blue", weight: 6.8 },
-  { kind: "candyClear", type: "green", weight: 6.8 },
-  { kind: "candyClear", type: "orange", weight: 6.8 },
-  { kind: "candyClear", type: "purple", weight: 6.8 },
-  { kind: "multiplier", value: 5, size: 1, weight: 6.6 },
-  { kind: "multiplier", value: 10, size: 1, weight: 8.25 },
-  { kind: "multiplier", value: 20, size: 1, weight: 8.25 },
-  { kind: "multiplier", value: 30, size: 1, weight: 8.25 },
-  { kind: "multiplier", value: 50, size: 2, weight: 1.32 },
-  { kind: "multiplier", value: 100, size: 2, weight: 0.264 },
-  { kind: "multiplier", value: 200, size: 2, weight: 0.066 },
-  { kind: "flame", weight: 33 },
+  { kind: "candyClear", type: "red", weight: 4 },
+  { kind: "candyClear", type: "blue", weight: 4 },
+  { kind: "candyClear", type: "green", weight: 4 },
+  { kind: "candyClear", type: "orange", weight: 4 },
+  { kind: "candyClear", type: "purple", weight: 4 },
+  { kind: "multiplier", value: 5, size: 1, weight: 8 },
+  { kind: "multiplier", value: 10, size: 1, weight: 10 },
+  { kind: "multiplier", value: 20, size: 1, weight: 10 },
+  { kind: "multiplier", value: 30, size: 1, weight: 10 },
+  { kind: "multiplier", value: 50, size: 2, weight: 1.6 },
+  { kind: "multiplier", value: 100, size: 2, weight: 0.32 },
+  { kind: "multiplier", value: 200, size: 2, weight: 0.08 },
+  { kind: "flame", weight: 40 },
 ];
 const STAGE_TWO_EVENT_WEIGHTS = [
   ...COLLECTION_SLOT_ITEM_WEIGHTS,
 ];
 const STAGE_THREE_EVENT_WEIGHTS = [
-  { kind: "multiplier", value: 30, size: 1, weight: 40 },
-  { kind: "multiplier", value: 50, size: 2, weight: 30 },
-  { kind: "multiplier", value: 100, size: 2, weight: 20 },
-  { kind: "multiplier", value: 200, size: 2, weight: 10 },
+  { kind: "multiplier", value: 30, size: 1, weight: 20 },
+  { kind: "multiplier", value: 50, size: 2, weight: 15 },
+  { kind: "multiplier", value: 100, size: 2, weight: 10 },
+  { kind: "multiplier", value: 200, size: 2, weight: 5 },
+  { kind: "flame", weight: 50 },
 ];
 const FLAME_PATTERN_WEIGHTS = [
   { kind: "col1", weight: 10 },
