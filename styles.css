@@ -148,7 +148,7 @@ button {
   z-index: 5;
   display: flex;
   justify-content: center;
-  padding: 8px 13px 2px;
+  padding: 8px 13px 7px;
 }
 
 .brand {
@@ -236,7 +236,7 @@ button {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  padding: 0 9px 5px;
+  padding: 2px 9px 5px;
   justify-content: flex-start;
 }
 
@@ -479,6 +479,10 @@ button {
 
 .mini-slot.win {
   animation: mini-slot-win 680ms cubic-bezier(0.18, 1.22, 0.28, 1) both;
+}
+
+.stage-slot.win {
+  animation: stage-slot-win 680ms cubic-bezier(0.18, 1.22, 0.28, 1) both;
 }
 
 .phone.event-pulse .mini-slot.win,
@@ -1728,7 +1732,7 @@ button {
 .slots {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 2px;
+  gap: 8px;
   width: var(--board-width, 100%);
 }
 
@@ -1775,8 +1779,8 @@ button {
 }
 
 .slots {
-  height: 58px;
-  padding: 0 1px 1px;
+  height: 52px;
+  padding: 0 4px 1px;
 }
 
 .slot {
@@ -1798,7 +1802,7 @@ button {
 
 .slot-countdown {
   position: absolute;
-  inset: -5px;
+  inset: -4px;
   z-index: 2;
   pointer-events: none;
 }
@@ -1818,8 +1822,8 @@ button {
   opacity: 1;
   background: linear-gradient(90deg, #fff8b6, #ffbc3e);
   box-shadow:
-    0 0 9px rgba(255, 207, 63, 0.92),
-    0 0 17px rgba(255, 93, 211, 0.36);
+    0 0 6px rgba(255, 207, 63, 0.72),
+    0 0 11px rgba(255, 93, 211, 0.24);
 }
 
 .slot-countdown i:nth-child(1),
@@ -1828,7 +1832,7 @@ button {
 .slot-countdown i:nth-child(6),
 .slot-countdown i:nth-child(7),
 .slot-countdown i:nth-child(8) {
-  height: 4px;
+  height: 3px;
   border-radius: 999px;
 }
 
@@ -1836,7 +1840,7 @@ button {
 .slot-countdown i:nth-child(5),
 .slot-countdown i:nth-child(9),
 .slot-countdown i:nth-child(10) {
-  width: 4px;
+  width: 3px;
   border-radius: 999px;
 }
 
@@ -1871,8 +1875,8 @@ button {
   z-index: 1;
   display: grid;
   place-items: center;
-  width: 62px;
-  height: 62px;
+  width: 52px;
+  height: 52px;
 }
 
 .slot-symbol img {
@@ -1899,7 +1903,7 @@ button {
 
 .slot.flash {
   overflow: visible;
-  animation: slot-flash 520ms cubic-bezier(0.16, 1.08, 0.28, 1), slot-charge 560ms ease;
+  animation: slot-flash 460ms cubic-bezier(0.16, 1.08, 0.28, 1), slot-charge 520ms ease;
 }
 
 .slot.flash::before {
@@ -2954,6 +2958,23 @@ button {
   }
 }
 
+@keyframes stage-slot-win {
+  0% {
+    transform: translateX(-50%) scale(1);
+  }
+  42% {
+    transform: translateX(-50%) scale(1.18);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.24),
+      inset 0 -5px 10px rgba(0, 0, 0, 0.42),
+      0 0 22px rgba(255, 229, 91, 0.86),
+      0 0 14px rgba(232, 91, 255, 0.7);
+  }
+  100% {
+    transform: translateX(-50%) scale(1);
+  }
+}
+
 @keyframes slot-segment-charge {
   0% {
     opacity: 0.2;
@@ -3396,7 +3417,7 @@ button {
   }
 
   .topbar {
-    padding: 7px 10px 1px;
+    padding: 7px 10px 6px;
   }
 
   .brand {
@@ -3404,7 +3425,7 @@ button {
   }
 
   .play-area {
-    padding: 0 8px 2px;
+    padding: 2px 8px 2px;
   }
 
   .board-shell {
@@ -3453,17 +3474,19 @@ button {
   }
 
   .slots {
-    height: 50px;
+    height: 46px;
+    gap: 8px;
+    padding-inline: 5px;
   }
 
   .slot-symbol {
-    width: 56px;
-    height: 56px;
+    width: 47px;
+    height: 47px;
   }
 
   .status-text {
-    min-height: 26px;
-    padding-top: 4px;
+    min-height: 30px;
+    padding-top: 7px;
     font-size: 12px;
   }
 
