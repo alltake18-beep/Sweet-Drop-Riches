@@ -6886,24 +6886,28 @@ button {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 58%;
-  height: 3px;
-  border-radius: 999px;
-  background: #ffc955;
-  transform: translate(-50%, -50%);
+  width: 54%;
+  height: 54%;
+  border-radius: 0;
+  background: none;
+  transform: translate(-50%, -50%) rotate(45deg);
   box-shadow:
-    0 1px 0 rgba(48, 3, 10, 0.94),
+    -2px 2px 0 rgba(48, 3, 10, 0.82),
     0 0 6px rgba(255, 219, 105, 0.52);
+}
+
+.bet-panel #betDown::before {
+  border-bottom: 4px solid #ffc955;
+  border-left: 4px solid #ffc955;
+}
+
+.bet-panel #betUp::before {
+  border-top: 4px solid #ffc955;
+  border-right: 4px solid #ffc955;
 }
 
 .bet-panel button::after {
   display: none;
-}
-
-.bet-panel #betUp::after {
-  display: block;
-  width: 3px;
-  height: 58%;
 }
 
 .icon-button {
@@ -6924,8 +6928,8 @@ button {
 }
 
 #fastButton::before {
-  width: 64%;
-  height: 86%;
+  width: 82%;
+  height: 104%;
   clip-path: polygon(58% 0, 15% 47%, 43% 47%, 28% 100%, 88% 34%, 58% 34%);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.34), transparent 28%),
@@ -6948,12 +6952,12 @@ button {
 }
 
 #menuButton::before {
-  width: 68%;
-  height: 58%;
+  width: 82%;
+  height: 70%;
   background:
-    linear-gradient(#ffe591, #ffe591) 0 0 / 100% 18% no-repeat,
-    linear-gradient(#ffe591, #ffe591) 0 50% / 100% 18% no-repeat,
-    linear-gradient(#ffe591, #ffe591) 0 100% / 100% 18% no-repeat;
+    linear-gradient(#ffe591, #ffe591) 0 0 / 100% 23% no-repeat,
+    linear-gradient(#ffe591, #ffe591) 0 50% / 100% 23% no-repeat,
+    linear-gradient(#ffe591, #ffe591) 0 100% / 100% 23% no-repeat;
 }
 
 @media (max-width: 430px) {
