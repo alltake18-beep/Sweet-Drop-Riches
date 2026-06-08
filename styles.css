@@ -6363,6 +6363,22 @@ button {
   border: 0 !important;
 }
 
+.slot.empty,
+.slot.filled,
+.slot.flash,
+.slot.jackpot-slot,
+.slot.flash.jackpot-slot {
+  transform: translate(-50%, -50%) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border: 0 !important;
+}
+
+.slot.flash,
+.slot.flash.jackpot-slot {
+  animation: slot-flash 520ms cubic-bezier(0.16, 1.08, 0.28, 1) !important;
+}
+
 .slot:nth-child(1) {
   left: 22.9%;
 }
