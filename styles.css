@@ -6254,6 +6254,7 @@ button {
 
 /* Event socket coordinate lock: 720x1280 cabinet-space centers. */
 .board-bar {
+  z-index: 7;
   inset: 0;
   top: 0;
   left: 0;
@@ -6287,8 +6288,8 @@ button {
   position: absolute;
   top: 20.9%;
   bottom: auto;
-  width: clamp(24px, 7.2vw, 36px);
-  height: clamp(24px, 7.2vw, 36px);
+  width: clamp(36px, 10.8vw, 54px);
+  height: clamp(36px, 10.8vw, 54px);
   display: grid;
   place-items: center;
   overflow: hidden;
@@ -6376,7 +6377,7 @@ button {
   display: grid;
   place-items: center;
   color: #fff8d9;
-  font-size: clamp(8px, 2vw, 11px);
+  font-size: clamp(12px, 3vw, 16px);
   font-weight: 1000;
   letter-spacing: 0;
   -webkit-text-stroke: 1px #263577;
@@ -6393,11 +6394,52 @@ button {
 
 .special-meter-track {
   position: absolute;
-  left: 31.4%;
-  right: 31.4%;
-  top: 23.1%;
+  z-index: 5;
+  left: 50%;
+  right: auto;
+  top: 23.8%;
   bottom: auto;
-  width: auto;
+  width: 68.9%;
+  display: block;
+  height: 18px;
+  border-radius: 999px;
+  overflow: hidden;
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.04) 44%, rgba(0, 0, 0, 0.18)),
+    rgba(9, 2, 9, 0.82);
+  border: 1px solid rgba(255, 210, 92, 0.82);
+  box-shadow:
+    0 5px 8px rgba(0, 0, 0, 0.32),
+    0 0 10px rgba(255, 199, 72, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    inset 0 -4px 7px rgba(0, 0, 0, 0.38);
+}
+
+.special-meter-track i {
+  height: calc(100% - 8px);
+  margin: 4px;
+  border-radius: 999px;
+  background:
+    linear-gradient(90deg, #ffe474 0%, #7bf8ff 54%, #35dff8 100%);
+  box-shadow:
+    0 0 7px rgba(94, 242, 255, 0.76),
+    0 0 12px rgba(255, 227, 106, 0.34);
+}
+
+.meter-mark {
+  top: 2px;
+  bottom: 2px;
+  width: 2px;
+  height: auto;
+  border-radius: 999px;
+  color: transparent;
+  font-size: 0;
+  text-shadow: none;
+  background: rgba(255, 248, 202, 0.9);
+  box-shadow: 0 0 5px rgba(255, 248, 202, 0.55);
 }
 
 @keyframes stage-slot-focus {
@@ -6555,11 +6597,11 @@ button {
 .slot-symbol {
   position: absolute;
   left: 50%;
-  top: 18%;
+  top: 10%;
   right: auto;
   bottom: auto;
-  width: 42%;
-  height: 82%;
+  width: 63%;
+  height: 123%;
   transform: translate(-50%, -50%);
   filter:
     drop-shadow(0 0 10px rgba(255, 222, 88, 0.86))
@@ -6568,8 +6610,8 @@ button {
 }
 
 .slot strong {
-  font-size: clamp(18px, 5.2vw, 24px);
-  -webkit-text-stroke: 1.25px rgba(56, 7, 42, 0.92);
+  font-size: clamp(27px, 7.8vw, 36px);
+  -webkit-text-stroke: 1.7px rgba(56, 7, 42, 0.92);
   text-shadow:
     0 2px 0 rgba(44, 5, 35, 0.95),
     0 0 8px rgba(255, 255, 255, 0.88),
