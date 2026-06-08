@@ -6755,6 +6755,193 @@ button {
     0 0 14px rgba(255, 222, 88, 0.86) !important;
 }
 
+/* Final override: bottom controls live inside the cabinet slot art. */
+.hud {
+  position: absolute !important;
+  z-index: 9 !important;
+  top: 94.25% !important;
+  left: 6.5% !important;
+  right: auto !important;
+  bottom: auto !important;
+  width: 86.1% !important;
+  height: 3.6% !important;
+  display: grid !important;
+  grid-template-columns: 1.87fr 1.64fr 0.58fr 0.58fr !important;
+  gap: 7.75% !important;
+  align-items: center !important;
+  padding: 0 !important;
+  background: transparent !important;
+  transform: perspective(430px) rotateX(5deg) !important;
+  transform-origin: 50% 100% !important;
+  pointer-events: none;
+}
+
+.hud-panel,
+.bet-panel,
+.icon-button {
+  position: relative !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  pointer-events: auto;
+}
+
+.hud-panel {
+  display: grid !important;
+  grid-template-rows: 38% 62% !important;
+  align-items: center !important;
+  justify-items: center !important;
+  padding: 2px 8px 1px !important;
+}
+
+.hud-panel span {
+  align-self: end !important;
+  color: rgba(255, 218, 128, 0.88) !important;
+  font-size: clamp(9px, 2.05vw, 15px) !important;
+  line-height: 1 !important;
+  letter-spacing: 0 !important;
+  text-shadow:
+    0 1px 0 rgba(25, 0, 7, 0.95),
+    0 0 5px rgba(255, 180, 75, 0.42) !important;
+}
+
+.hud-panel strong {
+  align-self: start !important;
+  margin: -1px 0 0 !important;
+  color: #ffe88e !important;
+  font-size: clamp(17px, 4.25vw, 28px) !important;
+  line-height: 1 !important;
+  letter-spacing: 0 !important;
+  white-space: nowrap !important;
+  -webkit-text-stroke: 0.45px rgba(70, 11, 18, 0.78);
+  text-shadow:
+    0 2px 0 rgba(45, 2, 10, 0.9),
+    0 0 8px rgba(255, 216, 97, 0.58) !important;
+}
+
+.bet-panel {
+  display: grid !important;
+  grid-template-columns: 28% 44% 28% !important;
+  align-items: center !important;
+  justify-items: center !important;
+  padding: 3px 7px !important;
+}
+
+.bet-panel div {
+  min-width: 0 !important;
+  display: grid !important;
+  place-items: center !important;
+}
+
+.bet-panel span {
+  display: none !important;
+}
+
+.bet-panel strong {
+  margin: 0 !important;
+  color: #ffe88e !important;
+  font-size: clamp(17px, 4.15vw, 27px) !important;
+  line-height: 1 !important;
+  letter-spacing: 0 !important;
+  white-space: nowrap !important;
+  -webkit-text-stroke: 0.45px rgba(70, 11, 18, 0.78);
+  text-shadow:
+    0 2px 0 rgba(45, 2, 10, 0.9),
+    0 0 8px rgba(255, 216, 97, 0.58) !important;
+}
+
+.bet-panel button {
+  width: 78% !important;
+  max-width: 38px !important;
+  height: 78% !important;
+  max-height: 34px !important;
+  display: grid !important;
+  place-items: center !important;
+  padding: 0 0 2px !important;
+  border: 1px solid rgba(255, 224, 137, 0.72) !important;
+  border-radius: 2px !important;
+  background:
+    linear-gradient(180deg, rgba(255, 231, 148, 0.22), rgba(54, 8, 18, 0.18)) !important;
+  color: #ffc955 !important;
+  font-size: clamp(19px, 4.95vw, 32px) !important;
+  line-height: 1 !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.24),
+    inset 0 -2px 0 rgba(32, 1, 7, 0.62),
+    0 0 5px rgba(255, 205, 92, 0.22) !important;
+  text-shadow:
+    0 2px 0 rgba(48, 3, 10, 0.94),
+    0 0 6px rgba(255, 219, 105, 0.45) !important;
+}
+
+.icon-button {
+  display: grid !important;
+  place-items: center !important;
+  padding: 0 !important;
+  color: transparent !important;
+  font-size: 0 !important;
+  overflow: hidden !important;
+}
+
+.icon-button::before {
+  content: "";
+  display: block;
+  filter:
+    drop-shadow(0 2px 0 rgba(36, 2, 9, 0.92))
+    drop-shadow(0 0 6px rgba(255, 219, 105, 0.46));
+}
+
+#fastButton::before {
+  width: 47%;
+  height: 76%;
+  clip-path: polygon(58% 0, 15% 47%, 43% 47%, 28% 100%, 88% 34%, 58% 34%);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.86), transparent 24%),
+    linear-gradient(180deg, #fff0a6 0%, #75f4ff 52%, #ffbf4c 100%);
+}
+
+#fastButton[aria-pressed="true"]::before {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.9), transparent 24%),
+    linear-gradient(180deg, #fff8be 0%, #9dfff9 42%, #ff4fc4 100%);
+  filter:
+    drop-shadow(0 2px 0 rgba(36, 2, 9, 0.92))
+    drop-shadow(0 0 9px rgba(111, 244, 255, 0.84));
+}
+
+#menuButton::before {
+  width: 56%;
+  height: 48%;
+  background:
+    linear-gradient(#ffe591, #ffe591) 0 0 / 100% 18% no-repeat,
+    linear-gradient(#ffe591, #ffe591) 0 50% / 100% 18% no-repeat,
+    linear-gradient(#ffe591, #ffe591) 0 100% / 100% 18% no-repeat;
+}
+
+@media (max-width: 430px) {
+  .hud {
+    top: 94.25% !important;
+    left: 6.55% !important;
+    width: 85.9% !important;
+    height: 3.55% !important;
+    grid-template-columns: 1.87fr 1.64fr 0.58fr 0.58fr !important;
+    gap: 7.7% !important;
+  }
+
+  .hud-panel {
+    padding-inline: 5px !important;
+  }
+
+  .bet-panel {
+    padding-inline: 5px !important;
+  }
+}
+
 .win-overlay .win-rays {
   width: min(72vw, 320px) !important;
   height: min(72vw, 320px) !important;
