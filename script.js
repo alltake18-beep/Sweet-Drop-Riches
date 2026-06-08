@@ -2344,6 +2344,23 @@ function drawFx(now) {
     context.translate(x * dpr, y * dpr);
     context.rotate((item.rotation || 0) + t * (item.spin || 0));
     context.scale(dpr, dpr);
+    if (item.streak) {
+      context.save();
+      context.rotate(Math.atan2(item.ty || 0, item.tx || 0));
+      context.lineWidth = item.streakWidth || 3;
+      context.lineCap = "round";
+      const trail = item.streakLength || 24;
+      const streak = context.createLinearGradient(-trail, 0, 0, 0);
+      streak.addColorStop(0, "rgba(255,255,255,0)");
+      streak.addColorStop(0.44, item.color || "#ff59d6");
+      streak.addColorStop(1, item.hot || "#fff27a");
+      context.strokeStyle = streak;
+      context.beginPath();
+      context.moveTo(-trail, 0);
+      context.lineTo(0, 0);
+      context.stroke();
+      context.restore();
+    }
     const gradient = context.createRadialGradient(-radius * 0.25, -radius * 0.25, 1, 0, 0, radius * 2.2);
     gradient.addColorStop(0, "#ffffff");
     gradient.addColorStop(0.28, item.hot || "#fff27a");
@@ -2376,7 +2393,7 @@ function spawnCollectEnergy(cells) {
   const targetX = targetRect.left + targetRect.width * 0.5 - hostRect.left;
   const targetY = targetRect.top + targetRect.height * 0.46 - hostRect.top;
 
-  const maxEnergy = window.innerWidth <= 520 ? 14 : 22;
+  const maxEnergy = window.innerWidth <= 520 ? 20 : 30;
   const points = Array.from(cells).slice(0, maxEnergy);
   const now = performance.now();
   const items = [];
@@ -2389,17 +2406,20 @@ function spawnCollectEnergy(cells) {
     items.push({
       kind: "fly",
       start: now,
-      delay: Math.random() * 110,
-      duration: 620 + Math.random() * 120,
+      delay: Math.random() * 150,
+      duration: 860 + Math.random() * 180,
       x: startX,
       y: startY,
       tx: targetX - startX,
       ty: targetY - startY,
-      arc: 24 + Math.random() * 26,
-      radius: 4.5 + Math.random() * 2,
-      color: "#ff58d4",
-      hot: "#fff37e",
-      alpha: 0.96,
+      arc: 42 + Math.random() * 34,
+      radius: 6.2 + Math.random() * 2.4,
+      color: Math.random() > 0.5 ? "#35f4ff" : "#ff58d4",
+      hot: "#fff7a8",
+      alpha: 1,
+      streak: true,
+      streakLength: 30 + Math.random() * 18,
+      streakWidth: 3.2,
     });
   }
   enqueueFx(items);
@@ -3077,7 +3097,6 @@ function collectAndPayMultipliers() {
     for (const item of collected) {
       collectSlotMultiplier(item.col, item.value);
       addWin(currentBet() * item.value);
-      spawnSlotEnergy(item.col, item.value);
     }
   }
   return collected;
