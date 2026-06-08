@@ -6350,18 +6350,21 @@ button {
 
 .slot {
   position: absolute;
-  top: 81.6%;
-  width: 19.8%;
+  top: 85%;
+  width: 18%;
   height: auto;
   aspect-ratio: 1;
   display: grid;
   place-items: center;
   border-radius: 50%;
   transform: translate(-50%, -50%);
+  background: transparent !important;
+  box-shadow: none !important;
+  border: 0 !important;
 }
 
 .slot:nth-child(1) {
-  left: 27.8%;
+  left: 22.9%;
 }
 
 .slot:nth-child(2) {
@@ -6369,25 +6372,16 @@ button {
 }
 
 .slot:nth-child(3) {
-  left: 72.2%;
+  left: 77.1%;
 }
 
+.slot::before,
 .slot::after {
-  inset: 10%;
-  border-radius: 50%;
+  display: none !important;
 }
 
 .slot-countdown {
-  position: absolute;
-  inset: 7%;
-  border-radius: 50%;
-  background:
-    conic-gradient(from -90deg, rgba(255, 59, 55, 0.95) calc((var(--slot-turns, 0) / 10) * 1turn), rgba(45, 6, 12, 0.48) 0);
-  box-shadow:
-    0 0 10px rgba(255, 59, 55, 0.46),
-    inset 0 0 0 2px rgba(255, 230, 138, 0.3);
-  -webkit-mask: radial-gradient(circle, transparent 61%, #000 62%);
-  mask: radial-gradient(circle, transparent 61%, #000 62%);
+  display: none !important;
 }
 
 .slot-countdown i {
@@ -6397,16 +6391,25 @@ button {
 .slot-symbol {
   position: absolute;
   left: 50%;
-  top: 50%;
+  top: 43%;
   right: auto;
   bottom: auto;
-  width: 60%;
-  height: 60%;
+  width: 66%;
+  height: 66%;
   transform: translate(-50%, -50%);
+  filter:
+    drop-shadow(0 0 10px rgba(255, 222, 88, 0.86))
+    drop-shadow(0 9px 12px rgba(0, 0, 0, 0.5));
+  animation: floating-slot-candy 2.4s ease-in-out infinite;
 }
 
 .slot strong {
-  font-size: clamp(16px, 4.8vw, 22px);
+  font-size: clamp(18px, 5.2vw, 24px);
+  -webkit-text-stroke: 1.25px rgba(56, 7, 42, 0.92);
+  text-shadow:
+    0 2px 0 rgba(44, 5, 35, 0.95),
+    0 0 8px rgba(255, 255, 255, 0.88),
+    0 0 13px rgba(255, 214, 91, 0.76);
 }
 
 @keyframes slot-flash {
@@ -6416,6 +6419,16 @@ button {
   }
   40% {
     transform: translate(-50%, -50%) scale(1.08);
+  }
+}
+
+@keyframes floating-slot-candy {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) translateY(0) scale(1);
+  }
+  50% {
+    transform: translate(-50%, -50%) translateY(-5px) scale(1.035);
   }
 }
 
