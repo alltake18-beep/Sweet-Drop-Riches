@@ -918,43 +918,13 @@ function scheduleBoardSizeSync(force = false) {
 
 function syncBoardSize() {
   const phone = document.querySelector(".phone");
-  const topbar = document.querySelector(".topbar");
-  const playArea = document.querySelector(".play-area");
-  const boardShell = document.querySelector(".board-shell");
-  const boardBar = document.querySelector(".board-bar");
-  const dropArrows = document.querySelector(".drop-arrows");
-  const statusText = document.querySelector(".status-text");
-  const hud = document.querySelector(".hud");
+  if (!phone) return;
 
-  if (!phone || !playArea || !boardShell || !boardBar || !dropArrows || !statusText || !hud) return;
-
-  const phoneStyles = getComputedStyle(phone);
-  const playStyles = getComputedStyle(playArea);
-  const shellStyles = getComputedStyle(boardShell);
-  const verticalPadding =
-    parseFloat(playStyles.paddingTop) +
-    parseFloat(playStyles.paddingBottom) +
-    parseFloat(shellStyles.paddingTop) +
-    parseFloat(shellStyles.paddingBottom) +
-    parseFloat(phoneStyles.borderTopWidth) +
-    parseFloat(phoneStyles.borderBottomWidth);
-  const fixedHeight =
-    topbar.getBoundingClientRect().height +
-    boardBar.getBoundingClientRect().height +
-    dropArrows.getBoundingClientRect().height +
-    slotsEl.getBoundingClientRect().height +
-    statusText.getBoundingClientRect().height +
-    hud.getBoundingClientRect().height +
-    verticalPadding +
-    10;
-  const viewportHeight = window.visualViewport?.height || window.innerHeight || phone.clientHeight;
-  const phoneHeight = Math.min(phone.clientHeight || viewportHeight, viewportHeight);
-  const maxByHeight = Math.max(220, ((phoneHeight - fixedHeight) * COLS) / ROWS);
-  const maxByWidth = Math.max(220, boardShell.clientWidth - parseFloat(shellStyles.paddingLeft) - parseFloat(shellStyles.paddingRight));
-  const width = Math.floor(Math.min(maxByWidth, maxByHeight));
-
-  phone.style.setProperty("--board-width", `${width}px`);
-  boardEl.style.height = `${Math.round((width * ROWS) / COLS)}px`;
+  boardEl.style.removeProperty("height");
+  const boardRect = boardEl.getBoundingClientRect();
+  if (boardRect.width > 0) {
+    phone.style.setProperty("--board-width", `${Math.round(boardRect.width)}px`);
+  }
   resizeFxCanvas();
 }
 

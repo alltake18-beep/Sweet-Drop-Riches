@@ -6080,15 +6080,16 @@ button {
 .board {
   position: absolute;
   z-index: 3;
-  top: 28.7%;
+  top: 27%;
   left: 50%;
-  width: 60.5% !important;
-  height: auto !important;
-  aspect-ratio: 6 / 9;
+  width: 76% !important;
+  height: 50.8% !important;
+  aspect-ratio: auto;
   transform: translateX(-50%);
   padding: 3px;
   gap: 3px;
   border-radius: 10px;
+  overflow: hidden;
   background:
     linear-gradient(180deg, rgba(42, 4, 18, 0.58), rgba(6, 1, 7, 0.9)),
     rgba(4, 1, 6, 0.84);
@@ -6102,9 +6103,9 @@ button {
 .drop-arrows {
   position: absolute;
   z-index: 5;
-  top: 77%;
-  left: 24%;
-  right: 24%;
+  top: 76.8%;
+  left: 16%;
+  right: 16%;
   height: 12px;
   padding: 0;
   opacity: 0.54;
@@ -6236,7 +6237,8 @@ button {
 
 @media (max-width: 430px) {
   .board {
-    width: 60.5% !important;
+    width: 76% !important;
+    height: 50.8% !important;
   }
 
   .mini-slot {
