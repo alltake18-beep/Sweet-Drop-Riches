@@ -6250,6 +6250,89 @@ button {
   }
 }
 
+/* Event socket coordinate lock: 720x1280 cabinet-space centers. */
+.board-bar {
+  inset: 0;
+  top: 0;
+  left: 0;
+  width: 100% !important;
+  height: 100%;
+  transform: none;
+  pointer-events: none;
+}
+
+.special-meter,
+.stage-slots {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.stage-slot,
+.stage-slot.active,
+.stage-slot.complete,
+.stage-slot.dimmed,
+.stage-slot.rolling,
+.stage-slot.win {
+  top: 20.9%;
+  bottom: auto;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.stage-slot[data-stage="1"] {
+  left: 29.2%;
+}
+
+.stage-slot[data-stage="2"] {
+  left: 50%;
+}
+
+.stage-slot[data-stage="3"] {
+  left: 70.8%;
+}
+
+.mini-slot {
+  width: clamp(24px, 7.2vw, 36px);
+  height: clamp(24px, 7.2vw, 36px);
+}
+
+.special-meter-track {
+  position: absolute;
+  left: 31.4%;
+  right: 31.4%;
+  top: 23.1%;
+  bottom: auto;
+  width: auto;
+}
+
+@keyframes stage-slot-focus {
+  0% {
+    transform: translate(-50%, -50%) scale(1.08);
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.16);
+  }
+}
+
+@keyframes stage-slot-win {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  42% {
+    transform: translate(-50%, -50%) scale(1.18);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.24),
+      inset 0 -5px 10px rgba(0, 0, 0, 0.42),
+      0 0 22px rgba(255, 229, 91, 0.86),
+      0 0 14px rgba(232, 91, 255, 0.7);
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
 /* Final override: win title is bitmap art, never live CSS text. */
 .win-overlay .win-copy {
   display: flex !important;
