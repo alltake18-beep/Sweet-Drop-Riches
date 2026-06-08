@@ -2407,15 +2407,15 @@ function spawnCollectEnergy(cells) {
 
 function spawnSlotEnergy(col, value) {
   const host = document.querySelector(".play-area");
-  const slot = slotsEl.children[col];
-  if (!host || !slot) return;
+  const target = document.querySelector(".special-meter");
+  if (!host || !target) return;
 
   const hostRect = host.getBoundingClientRect();
-  const targetRect = slot.getBoundingClientRect();
+  const targetRect = target.getBoundingClientRect();
   const startX = hostRect.width * 0.5;
   const startY = hostRect.height * 0.48;
   const targetX = targetRect.left + targetRect.width * 0.5 - hostRect.left;
-  const targetY = targetRect.top + targetRect.height * 0.48 - hostRect.top;
+  const targetY = targetRect.top + targetRect.height * 0.46 - hostRect.top;
   const count = value >= 100 ? 12 : value >= 50 ? 9 : value >= 20 ? 6 : 4;
   const now = performance.now();
   const items = [];
