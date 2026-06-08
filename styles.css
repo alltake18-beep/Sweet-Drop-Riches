@@ -6335,6 +6335,40 @@ button {
   }
 }
 
+/* Multiplier well coordinate lock: 720x1280 cabinet-space centers. */
+.slots {
+  position: absolute;
+  z-index: 4;
+  inset: 0;
+  width: 100% !important;
+  height: 100%;
+  display: block;
+  padding: 0;
+  transform: none;
+  pointer-events: none;
+}
+
+.slot {
+  position: absolute;
+  top: 80.2%;
+  width: 21%;
+  height: auto;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+}
+
+.slot:nth-child(1) {
+  left: 29.2%;
+}
+
+.slot:nth-child(2) {
+  left: 50%;
+}
+
+.slot:nth-child(3) {
+  left: 70.8%;
+}
+
 /* Final override: win title is bitmap art, never live CSS text. */
 .win-overlay .win-copy {
   display: flex !important;
