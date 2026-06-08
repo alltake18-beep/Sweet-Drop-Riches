@@ -4,7 +4,7 @@ const SLOT_COUNT = 3;
 const MULTIPLIER_SIZE = 2;
 const MULTIPLIER_SIZES = [1, 2];
 const MULTIPLIER_COLS = [0, 2, 4];
-const SYMBOL_VERSION = "symbol-rules-70-no-deadlock-rescue";
+const SYMBOL_VERSION = "multiplier-rim-segment-mask-event-clamp";
 const SLOT_TURN_MAX = 10;
 const PERF_ENABLED = new URLSearchParams(window.location.search).has("perf");
 const SPECIAL_METER_TARGET = 9;
@@ -118,7 +118,7 @@ const specialMeterFillEl = document.getElementById("specialMeterFill");
 const specialMiniSlotEl = document.getElementById("specialMiniSlot");
 const miniSlotIconEl = document.getElementById("miniSlotIcon");
 const stageSlotsEl = document.getElementById("stageSlots");
-const stageSlotEls = Array.from(document.querySelectorAll(".stage-slot"));
+const stageSlotEls = Array.from(document.querySelectorAll(".event-socket"));
 const balanceEl = document.getElementById("balance");
 const betEl = document.getElementById("bet");
 const statusTextEl = document.getElementById("statusText");
@@ -140,6 +140,7 @@ const state = {
   invalid: null,
   slotFlash: Array(SLOT_COUNT).fill(null),
   slotValues: Array(SLOT_COUNT).fill(null),
+  slotSymbolValues: Array(SLOT_COUNT).fill(null),
   slotTurns: Array(SLOT_COUNT).fill(0),
   filledSlots: new Set(),
   multipliers: [],
@@ -697,6 +698,7 @@ function startNewBoard(keepScore = false) {
   state.invalid = null;
   state.slotFlash = Array(SLOT_COUNT).fill(null);
   state.slotValues = Array(SLOT_COUNT).fill(null);
+  state.slotSymbolValues = Array(SLOT_COUNT).fill(null);
   state.slotTurns = Array(SLOT_COUNT).fill(0);
   state.filledSlots = new Set();
   state.specialMeter = 0;
@@ -865,13 +867,11 @@ function renderSlots() {
     if (value >= 50) slot.classList.add("jackpot-slot");
     slot.style.setProperty("--slot-turns", String(turns));
     slot.innerHTML = `
-      <div class="slot-countdown" aria-hidden="true">
-        ${Array.from({ length: SLOT_TURN_MAX }, (_, index) => `<i class="${index < turns ? "on" : ""}"></i>`).join("")}
-      </div>
+      ${slotCountdownMarkup(turns, col)}
       ${
         value
           ? `<div class="slot-symbol">
-              <img src="${multiplierAsset(value)}" alt="">
+              <img src="${multiplierAsset(state.slotSymbolValues[col] || value)}" alt="">
               <strong>x${value}</strong>
             </div>`
           : `<div class="slot-guide-arrow" aria-hidden="true"></div>`
@@ -883,25 +883,61 @@ function renderSlots() {
   if (hasFlash) state.slotFlash = Array(SLOT_COUNT).fill(null);
 }
 
-function renderHud() {
-  document.querySelector(".special-meter-copy span").textContent = "事件收集";
-  specialMiniSlotEl.setAttribute("aria-label", "事件預覽");
-  specialMeterTextEl.textContent = `${Math.min(state.specialMeter, SPECIAL_METER_TARGET)}/${SPECIAL_METER_TARGET}`;
-  specialMeterFillEl.style.width = `${Math.min(100, (state.specialMeter / SPECIAL_METER_TARGET) * 100)}%`;
-  miniSlotIconEl.src = specialAsset(state.miniSlotPreview.special, state.miniSlotPreview.type);
-  specialMiniSlotEl.classList.toggle("rolling", state.miniSlotRolling);
-  specialMiniSlotEl.classList.toggle("win", state.miniSlotWin);
-  balanceEl.textContent = formatMoney(state.balance);
-  betEl.textContent = currentBet().toLocaleString("en-US");
-  fastButton.setAttribute("aria-pressed", String(state.fast));
-  soundMenuButton.textContent = state.sound ? "音效開啟" : "音效關閉";
-}
-
 function render() {
   measurePerf("render.board", renderBoard);
   measurePerf("render.slots", renderSlots);
   measurePerf("render.hud", renderHud);
   scheduleBoardSizeSync();
+}
+
+function slotRingPoint(angleDeg, rx = 82, ry = 43, cx = 92, cy = 49) {
+  const angle = (angleDeg * Math.PI) / 180;
+  return {
+    x: cx + rx * Math.cos(angle),
+    y: cy + ry * Math.sin(angle),
+  };
+}
+
+function slotRingPath(startAngle, sweepAngle) {
+  const start = slotRingPoint(startAngle);
+  const end = slotRingPoint(startAngle + sweepAngle);
+  const largeArc = sweepAngle > 180 ? 1 : 0;
+  return `M ${start.x.toFixed(2)} ${start.y.toFixed(2)} A 82 43 0 ${largeArc} 1 ${end.x.toFixed(2)} ${end.y.toFixed(2)}`;
+}
+
+function slotCountdownMarkup(turns, col) {
+  const maskId = `slot-ring-mask-${col}`;
+  const filterId = `slot-ring-glow-${col}`;
+  const segments = Array.from({ length: SLOT_TURN_MAX }, (_, index) => {
+    const start = -162 + index * 36;
+    const path = slotRingPath(start, 24);
+    const stateClass = index < turns ? "on" : "off";
+    return `<path class="ring-segment ${stateClass}" d="${path}" pathLength="1"></path>`;
+  }).join("");
+
+  return `
+    <svg class="slot-countdown" viewBox="0 0 184 98" preserveAspectRatio="none" aria-hidden="true">
+      <defs>
+        <filter id="${filterId}" x="-18%" y="-24%" width="136%" height="148%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="1.35" result="blur"></feGaussianBlur>
+          <feMerge>
+            <feMergeNode in="blur"></feMergeNode>
+            <feMergeNode in="SourceGraphic"></feMergeNode>
+          </feMerge>
+        </filter>
+        <mask id="${maskId}">
+          <rect width="184" height="98" fill="black"></rect>
+          <ellipse cx="92" cy="49" rx="86" ry="45" fill="none" stroke="white" stroke-width="15" stroke-linecap="round"></ellipse>
+        </mask>
+      </defs>
+      <g class="ring-track" mask="url(#${maskId})">
+        ${segments}
+      </g>
+      <g class="ring-glow" mask="url(#${maskId})" filter="url(#${filterId})">
+        ${segments}
+      </g>
+    </svg>
+  `;
 }
 
 function scheduleBoardSizeSync(force = false) {
@@ -978,6 +1014,7 @@ function tickCollectedSlotTurns() {
 function clearCollectedSlot(col) {
   state.filledSlots.delete(col);
   state.slotValues[col] = null;
+  state.slotSymbolValues[col] = null;
   state.slotFlash[col] = null;
   state.slotTurns[col] = 0;
 }
@@ -986,6 +1023,7 @@ function collectSlotMultiplier(col, value) {
   const currentValue = state.slotValues[col] || 0;
   const nextValue = currentValue + value;
   state.slotValues[col] = nextValue;
+  state.slotSymbolValues[col] = value;
   state.slotFlash[col] = nextValue;
   state.slotTurns[col] = SLOT_TURN_MAX;
   state.filledSlots.add(col);
@@ -2062,6 +2100,7 @@ async function maybeFullDropBonus() {
   state.multipliers = next.multipliers;
   state.filledSlots = new Set();
   state.slotValues = Array(SLOT_COUNT).fill(null);
+  state.slotSymbolValues = Array(SLOT_COUNT).fill(null);
   state.slotFlash = Array(SLOT_COUNT).fill(null);
   state.slotTurns = Array(SLOT_COUNT).fill(0);
 }
@@ -2652,22 +2691,6 @@ function specialEffectCells(row, col, tile) {
     return candyCellsByType(tile._targetType, false);
   }
   return new Set();
-}
-
-function renderHud() {
-  document.querySelector(".special-meter-copy span").textContent = "事件收集";
-  specialMiniSlotEl.setAttribute("aria-label", "事件預覽");
-  specialMeterTextEl.textContent = `${Math.min(state.specialMeter, SPECIAL_METER_TARGET)}/${SPECIAL_METER_TARGET}`;
-  specialMeterFillEl.style.width = `${Math.min(100, (state.specialMeter / SPECIAL_METER_TARGET) * 100)}%`;
-  specialMiniSlotEl.classList.toggle("multiplier-preview", state.miniSlotPreview.kind === "multiplier");
-  specialMiniSlotEl.dataset.value = state.miniSlotPreview.kind === "multiplier" ? `x${state.miniSlotPreview.value || 10}` : "";
-  miniSlotIconEl.src = eventPreviewAsset(state.miniSlotPreview);
-  specialMiniSlotEl.classList.toggle("rolling", state.miniSlotRolling);
-  specialMiniSlotEl.classList.toggle("win", state.miniSlotWin);
-  balanceEl.textContent = formatMoney(state.balance);
-  betEl.textContent = currentBet().toLocaleString("en-US");
-  fastButton.setAttribute("aria-pressed", String(state.fast));
-  soundMenuButton.textContent = state.sound ? "音效開啟" : "音效關閉";
 }
 
 function renderHud() {
