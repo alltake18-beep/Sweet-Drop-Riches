@@ -196,8 +196,8 @@ const state = {
 
 function formatMoney(value) {
   return value.toLocaleString("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
   });
 }
 
@@ -2036,7 +2036,7 @@ async function maybeShowWinCard() {
   winTitleArtEl.src = winArtAsset(tier.art);
   winTitleArtEl.alt = tier.label;
   winMultiplierEl.textContent = `${Math.floor(ratio)}x`;
-  winAmountEl.textContent = "0.00";
+  winAmountEl.textContent = "0";
   winOverlay.className = `win-overlay ${tier.className}`;
   winOverlay.classList.remove("hidden");
   animateWinAmount(state.currentWin, 2000);

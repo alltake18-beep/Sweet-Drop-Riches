@@ -6832,8 +6832,8 @@ button {
 
 .bet-panel div {
   position: absolute !important;
-  left: 24% !important;
-  right: 24% !important;
+  left: 18% !important;
+  right: 18% !important;
   top: 50% !important;
   min-width: 0 !important;
   height: 82% !important;
@@ -6849,7 +6849,7 @@ button {
 .bet-panel strong {
   margin: 0 !important;
   color: #ffe88e !important;
-  font-size: clamp(17px, 4.15vw, 27px) !important;
+  font-size: clamp(16px, 3.75vw, 24px) !important;
   line-height: 1 !important;
   letter-spacing: 0 !important;
   white-space: nowrap !important;
@@ -6862,8 +6862,8 @@ button {
 .bet-panel button {
   position: absolute !important;
   top: 50% !important;
-  width: 22% !important;
-  height: 88% !important;
+  width: 16% !important;
+  height: 78% !important;
   max-height: none !important;
   display: grid !important;
   place-items: center !important;
@@ -6880,11 +6880,11 @@ button {
 }
 
 .bet-panel #betDown {
-  left: 2% !important;
+  left: 3% !important;
 }
 
 .bet-panel #betUp {
-  right: 2% !important;
+  right: 3% !important;
 }
 
 .bet-panel button::before {
@@ -6892,8 +6892,8 @@ button {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 72%;
-  height: 74%;
+  width: 64%;
+  height: 66%;
   border-radius: 0;
   background: #ffc955;
   transform: translate(-50%, -50%);
@@ -6935,8 +6935,10 @@ button {
 }
 
 #fastButton::before {
-  width: clamp(34px, 9.5vw, 62px);
-  height: clamp(38px, 10.6vw, 68px);
+  left: 53%;
+  top: 49%;
+  width: clamp(38px, 10.8vw, 70px);
+  height: clamp(42px, 12vw, 76px);
   clip-path: polygon(61% 0, 4% 52%, 40% 52%, 21% 100%, 100% 26%, 62% 26%);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.34), transparent 28%),
@@ -6959,8 +6961,10 @@ button {
 }
 
 #menuButton::before {
-  width: clamp(38px, 10.2vw, 66px);
-  height: clamp(30px, 8vw, 50px);
+  left: 48%;
+  top: 51%;
+  width: clamp(34px, 9vw, 58px);
+  height: clamp(26px, 6.9vw, 44px);
   background:
     linear-gradient(#ffe591, #ffe591) 0 0 / 100% 30% no-repeat,
     linear-gradient(#ffe591, #ffe591) 0 50% / 100% 30% no-repeat,
