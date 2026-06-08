@@ -108,6 +108,10 @@ const WIN_TIERS = [
   { ratio: 20, label: "MEGA WIN", art: "mega", sound: "superWin", className: "tier-mega", duration: 2500, quick: 2500, particles: 46, countVolume: 0.04 },
   { ratio: 5, label: "BIG WIN", art: "big", sound: "win", className: "tier-big", duration: 2500, quick: 2500, particles: 34, countVolume: 0.035 },
 ];
+const EVENT_ROLL_STEPS = 5;
+const EVENT_ROLL_TOTAL = 1398;
+const EVENT_ROLL_TOTAL_FAST = 489;
+const EVENT_ROLL_WEIGHTS = [0.72, 0.86, 1.02, 1.15, 1.25];
 
 const boardEl = document.getElementById("board");
 const slotsEl = document.getElementById("slots");
@@ -312,6 +316,18 @@ function wait(ms) {
 
 function resolveDelay(slow, quick) {
   return state.fast ? quick : slow;
+}
+
+function eventRollDelay(index, fast = state.fast) {
+  const total = fast ? EVENT_ROLL_TOTAL_FAST : EVENT_ROLL_TOTAL;
+  const weightTotal = EVENT_ROLL_WEIGHTS.reduce((sum, weight) => sum + weight, 0);
+  if (index === EVENT_ROLL_STEPS - 1) {
+    const used = EVENT_ROLL_WEIGHTS
+      .slice(0, index)
+      .reduce((sum, weight) => sum + Math.round((total * weight) / weightTotal), 0);
+    return total - used;
+  }
+  return Math.round((total * EVENT_ROLL_WEIGHTS[index]) / weightTotal);
 }
 
 function randomItem(items) {
@@ -3595,13 +3611,10 @@ async function processSpecialAwards() {
     state.rollingStage = stage;
     state.miniSlotWin = false;
 
-    const steps = state.fast ? 7 : 12;
-    for (let i = 0; i < steps; i += 1) {
+    for (let i = 0; i < EVENT_ROLL_STEPS; i += 1) {
       state.stagePreviews[stage - 1] = randomBoardEvent(stage);
       render();
-      const progress = steps <= 1 ? 1 : i / (steps - 1);
-      const delay = 58 + Math.round(progress * progress * 168);
-      await wait(resolveDelay(delay, Math.max(38, Math.round(delay * 0.58))));
+      await wait(eventRollDelay(i));
     }
 
     state.stagePreviews[stage - 1] = event;
