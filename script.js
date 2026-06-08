@@ -2524,23 +2524,47 @@ function playChord(freqs, duration, options = {}) {
   freqs.forEach((freq, index) => playTone(freq, duration, { ...options, delay: (options.delay || 0) + index * 0.012 }));
 }
 
+function isSlotHypeActive() {
+  return state.filledSlots.size >= 2;
+}
+
+function playNormalMusicBeat(beat) {
+  const melody = [659, 784, 880, 784, 698, 784, 988, 880, 659, 740, 880, 740, 587, 659, 784, 880];
+  const bounce = [262, 330, 392, 330, 294, 370, 440, 370];
+  const sparkle = [1319, 1568, 1760, 1568];
+  playTone(melody[beat % melody.length], 0.105, { type: "triangle", volume: 0.036, music: true });
+  if (beat % 2 === 0) playTone(bounce[(beat / 2) % bounce.length], 0.09, { type: "sine", volume: 0.03, music: true });
+  if (beat % 4 === 1) playTone(sparkle[(beat / 4) % sparkle.length], 0.055, { type: "sine", volume: 0.022, music: true });
+  if (beat % 8 === 7) playChord([988, 1319], 0.07, { type: "triangle", volume: 0.018, music: true });
+}
+
+function playHypeMusicBeat(beat) {
+  const lead = [880, 988, 1175, 1319, 1175, 988, 1568, 1319];
+  const bass = [330, 392, 494, 392, 370, 440, 523, 440];
+  const arps = [
+    [880, 1175, 1568],
+    [988, 1319, 1760],
+    [784, 1175, 1568],
+    [1047, 1397, 2093],
+  ];
+  playTone(lead[beat % lead.length], 0.11, { type: "triangle", volume: 0.04, music: true });
+  playTone(bass[beat % bass.length], 0.085, { type: "square", volume: 0.024, music: true });
+  arps[beat % arps.length].forEach((freq, index) => {
+    playTone(freq, 0.065, { delay: 0.045 + index * 0.045, type: index === 2 ? "square" : "triangle", volume: 0.023, music: true });
+  });
+  if (beat % 4 === 3) playChord([1319, 1568, 2093], 0.08, { delay: 0.18, type: "triangle", volume: 0.018, music: true });
+}
+
 function startBackgroundMusic() {
   if (!state.sound || state.musicTimer) return;
   const context = ensureAudio();
   if (!context) return;
-  const groove = [196, 196, 247, 196, 220, 220, 247, 165, 196, 196, 294, 247, 220, 196, 165, 147];
-  const pulse = [98, 98, 147, 98, 110, 110, 147, 110];
-  const hook = [392, 494, 523, 494, 392, 330, 392, 440];
-  const chime = [784, 659, 880, 784];
   state.musicTimer = window.setInterval(() => {
     if (!state.sound || document.hidden) return;
     const beat = state.musicStep;
-    const base = groove[beat % groove.length];
     state.musicStep += 1;
-    playTone(base, 0.085, { type: "triangle", volume: 0.044, music: true });
-    if (beat % 2 === 0) playTone(pulse[(beat / 2) % pulse.length], 0.075, { type: "square", volume: 0.04, music: true });
-    if (beat % 8 === 3) playTone(hook[(beat / 8) % hook.length], 0.06, { type: "sine", volume: 0.024, music: true });
-    if (beat % 16 === 15) playChord([chime[(beat / 16) % chime.length], chime[(beat / 16 + 1) % chime.length]], 0.055, { type: "triangle", volume: 0.018, music: true });
+    if (isSlotHypeActive()) playHypeMusicBeat(beat);
+    else playNormalMusicBeat(beat);
   }, 330);
 }
 
@@ -2801,7 +2825,9 @@ function renderHud() {
   document.querySelector(".special-meter-copy span").textContent = "事件收集";
   specialMeterTextEl.textContent = `${Math.min(state.specialMeter, SPECIAL_METER_MAX)}/${SPECIAL_METER_MAX}`;
   specialMeterFillEl.style.width = `${Math.min(100, (state.specialMeter / SPECIAL_METER_MAX) * 100)}%`;
-  document.querySelector(".phone")?.classList.toggle("low-balance", !hasEnoughBalanceForMove());
+  const phoneEl = document.querySelector(".phone");
+  phoneEl?.classList.toggle("low-balance", !hasEnoughBalanceForMove());
+  phoneEl?.classList.toggle("slot-hype", isSlotHypeActive());
   if (!state.stagePreviews.length) state.stagePreviews = initialStagePreviews();
   const currentStage = currentSpecialStageIndex();
   const focusedStage = state.rollingStage && (state.miniSlotRolling || state.miniSlotWin);
