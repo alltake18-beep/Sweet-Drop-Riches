@@ -874,7 +874,7 @@ function renderSlots() {
               <img src="${multiplierAsset(value)}" alt="">
               <strong>x${value}</strong>
             </div>`
-          : ""
+          : `<div class="slot-guide-arrow" aria-hidden="true"></div>`
       }
     `;
     slotsEl.appendChild(slot);
@@ -984,7 +984,7 @@ function clearCollectedSlot(col) {
 
 function collectSlotMultiplier(col, value) {
   const currentValue = state.slotValues[col] || 0;
-  const nextValue = Math.max(currentValue, value);
+  const nextValue = currentValue + value;
   state.slotValues[col] = nextValue;
   state.slotFlash[col] = nextValue;
   state.slotTurns[col] = SLOT_TURN_MAX;
