@@ -6825,18 +6825,21 @@ button {
 }
 
 .bet-panel {
-  display: grid !important;
-  grid-template-columns: clamp(22px, 5.2vw, 28px) minmax(0, 1fr) clamp(22px, 5.2vw, 28px) !important;
-  gap: clamp(1px, 0.35vw, 3px) !important;
-  align-items: center !important;
-  justify-items: center !important;
-  padding: 3px 5px !important;
+  position: relative !important;
+  display: block !important;
+  padding: 0 !important;
 }
 
 .bet-panel div {
+  position: absolute !important;
+  left: 24% !important;
+  right: 24% !important;
+  top: 50% !important;
   min-width: 0 !important;
+  height: 82% !important;
   display: grid !important;
   place-items: center !important;
+  transform: translateY(-50%) !important;
 }
 
 .bet-panel span {
@@ -6857,35 +6860,31 @@ button {
 }
 
 .bet-panel button {
-  position: relative !important;
-  width: 100% !important;
-  height: 82% !important;
-  max-height: 34px !important;
+  position: absolute !important;
+  top: 50% !important;
+  width: 22% !important;
+  height: 88% !important;
+  max-height: none !important;
   display: grid !important;
   place-items: center !important;
   padding: 0 !important;
-  border: 1px solid rgba(255, 224, 137, 0.72) !important;
-  border-radius: 2px !important;
-  background:
-    linear-gradient(180deg, rgba(255, 231, 148, 0.22), rgba(54, 8, 18, 0.18)) !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
   color: transparent !important;
   font-size: 0 !important;
   line-height: 1 !important;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.24),
-    inset 0 -2px 0 rgba(32, 1, 7, 0.62),
-    0 0 5px rgba(255, 205, 92, 0.22) !important;
-  text-shadow:
-    0 2px 0 rgba(48, 3, 10, 0.94),
-    0 0 6px rgba(255, 219, 105, 0.45) !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  transform: translateY(-50%) !important;
 }
 
 .bet-panel #betDown {
-  justify-self: start !important;
+  left: 2% !important;
 }
 
 .bet-panel #betUp {
-  justify-self: end !important;
+  right: 2% !important;
 }
 
 .bet-panel button::before {
@@ -6894,18 +6893,18 @@ button {
   left: 50%;
   top: 50%;
   width: 72%;
-  height: 68%;
+  height: 74%;
   border-radius: 0;
   background: #ffc955;
   transform: translate(-50%, -50%);
-  clip-path: polygon(78% 6%, 18% 50%, 78% 94%);
+  clip-path: polygon(82% 3%, 12% 50%, 82% 97%);
   box-shadow:
     0 2px 0 rgba(48, 3, 10, 0.82),
-    0 0 6px rgba(255, 219, 105, 0.52);
+    0 0 7px rgba(255, 219, 105, 0.7);
 }
 
 .bet-panel #betUp::before {
-  clip-path: polygon(22% 6%, 82% 50%, 22% 94%);
+  clip-path: polygon(18% 3%, 88% 50%, 18% 97%);
 }
 
 .bet-panel button::after {
@@ -6914,6 +6913,7 @@ button {
 }
 
 .icon-button {
+  position: relative !important;
   display: grid !important;
   place-items: center !important;
   padding: 0 !important;
@@ -6924,16 +6924,20 @@ button {
 
 .icon-button::before {
   content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
   display: block;
+  transform: translate(-50%, -50%);
   filter:
     drop-shadow(0 2px 0 rgba(36, 2, 9, 0.92))
     drop-shadow(0 0 6px rgba(255, 219, 105, 0.46));
 }
 
 #fastButton::before {
-  width: 112%;
-  height: 128%;
-  clip-path: polygon(60% 0, 8% 50%, 39% 50%, 23% 100%, 96% 31%, 63% 31%);
+  width: clamp(34px, 9.5vw, 62px);
+  height: clamp(38px, 10.6vw, 68px);
+  clip-path: polygon(61% 0, 4% 52%, 40% 52%, 21% 100%, 100% 26%, 62% 26%);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.34), transparent 28%),
     linear-gradient(180deg, #8e7650 0%, #3e7f88 52%, #7c5321 100%);
@@ -6955,12 +6959,12 @@ button {
 }
 
 #menuButton::before {
-  width: 108%;
-  height: 88%;
+  width: clamp(38px, 10.2vw, 66px);
+  height: clamp(30px, 8vw, 50px);
   background:
-    linear-gradient(#ffe591, #ffe591) 0 0 / 100% 28% no-repeat,
-    linear-gradient(#ffe591, #ffe591) 0 50% / 100% 28% no-repeat,
-    linear-gradient(#ffe591, #ffe591) 0 100% / 100% 28% no-repeat;
+    linear-gradient(#ffe591, #ffe591) 0 0 / 100% 30% no-repeat,
+    linear-gradient(#ffe591, #ffe591) 0 50% / 100% 30% no-repeat,
+    linear-gradient(#ffe591, #ffe591) 0 100% / 100% 30% no-repeat;
 }
 
 @media (max-width: 430px) {
@@ -6978,7 +6982,7 @@ button {
   }
 
   .bet-panel {
-    padding-inline: 4px !important;
+    padding-inline: 0 !important;
   }
 }
 
