@@ -10,7 +10,22 @@ const PERF_ENABLED = new URLSearchParams(window.location.search).has("perf");
 const SPECIAL_METER_TARGET = 9;
 const SPECIAL_METER_THRESHOLDS = [9, 21, 33];
 const SPECIAL_METER_MAX = SPECIAL_METER_THRESHOLDS[SPECIAL_METER_THRESHOLDS.length - 1];
-const SOUND_GAIN_BOOST = 3;
+const AUDIO_MASTER_VOLUME = 0.5;
+const AUDIO_SFX_VOLUME = 0.68;
+const AUDIO_BGM_VOLUME = 0.34;
+const AUDIO_LOWCUT_HZ = 85;
+const AUDIO_SFX_PEAK_LIMIT = 0.16;
+const AUDIO_BGM_PEAK_LIMIT = 0.045;
+const AUDIO_CATEGORY_GAINS = {
+  button: 0.74,
+  movement: 0.7,
+  match: 0.68,
+  coin: 0.64,
+  multiplier: 0.62,
+  payout: 0.66,
+  special: 0.58,
+  error: 0.55,
+};
 const BET_STEPS = [50, 100, 200, 300, 500, 1000];
 const MOVE_PRESSURE_SOFT_LIMIT = 5;
 const MOVE_PRESSURE_HARD_LIMIT = 3;
@@ -112,6 +127,30 @@ const EVENT_ROLL_STEPS = 5;
 const EVENT_ROLL_TOTAL = 1398;
 const EVENT_ROLL_TOTAL_FAST = 489;
 const EVENT_ROLL_WEIGHTS = [0.72, 0.86, 1.02, 1.15, 1.25];
+const DEFAULT_SOUND_PROFILE = { category: "movement", cooldown: 40, maxVoices: 2, attenuation: 0.4, release: 360, gain: 0.72 };
+const SOUND_PROFILES = {
+  button: { category: "button", cooldown: 80, maxVoices: 1, attenuation: 0.5, release: 180, gain: 0.78 },
+  move: { category: "movement", cooldown: 70, maxVoices: 1, attenuation: 0.45, release: 180, gain: 0.74 },
+  error: { category: "error", cooldown: 140, maxVoices: 1, attenuation: 0.5, release: 240, gain: 0.7 },
+  match: { category: "match", cooldown: 110, maxVoices: 2, attenuation: 0.45, release: 320, gain: 0.78 },
+  cascade: { category: "match", cooldown: 140, maxVoices: 2, attenuation: 0.5, release: 320, gain: 0.72 },
+  drop: { category: "movement", cooldown: 170, maxVoices: 1, attenuation: 0.55, release: 260, gain: 0.68 },
+  specialReady: { category: "special", cooldown: 220, maxVoices: 1, attenuation: 0.5, release: 500, gain: 0.74 },
+  specialSpawn: { category: "special", cooldown: 180, maxVoices: 1, attenuation: 0.55, release: 560, gain: 0.72 },
+  specialBlast: { category: "special", cooldown: 260, maxVoices: 1, attenuation: 0.6, release: 640, gain: 0.62 },
+  flameBurn: { category: "special", cooldown: 260, maxVoices: 1, attenuation: 0.65, release: 720, gain: 0.56 },
+  flameResist: { category: "special", cooldown: 180, maxVoices: 1, attenuation: 0.5, release: 360, gain: 0.62 },
+  multiplierMerge: { category: "multiplier", cooldown: 180, maxVoices: 1, attenuation: 0.5, release: 480, gain: 0.68 },
+  multiplierHigh: { category: "multiplier", cooldown: 180, maxVoices: 1, attenuation: 0.55, release: 520, gain: 0.7 },
+  multiplierCollect: { category: "coin", cooldown: 120, maxVoices: 2, attenuation: 0.45, release: 360, gain: 0.72 },
+  multiplierCollectHigh: { category: "multiplier", cooldown: 150, maxVoices: 2, attenuation: 0.5, release: 480, gain: 0.68 },
+  multiplierEpicCollect: { category: "multiplier", cooldown: 190, maxVoices: 1, attenuation: 0.58, release: 620, gain: 0.64 },
+  multiplierJackpotCollect: { category: "multiplier", cooldown: 240, maxVoices: 1, attenuation: 0.62, release: 760, gain: 0.62 },
+  slotProgress: { category: "coin", cooldown: 130, maxVoices: 2, attenuation: 0.45, release: 280, gain: 0.66 },
+  win: { category: "payout", cooldown: 300, maxVoices: 1, attenuation: 0.6, release: 900, gain: 0.66 },
+  superWin: { category: "payout", cooldown: 420, maxVoices: 1, attenuation: 0.65, release: 1200, gain: 0.62 },
+  jackpot: { category: "payout", cooldown: 560, maxVoices: 1, attenuation: 0.7, release: 1600, gain: 0.58 },
+};
 
 const boardEl = document.getElementById("board");
 const slotsEl = document.getElementById("slots");
@@ -157,11 +196,17 @@ const state = {
   sound: true,
   audioContext: null,
   masterGain: null,
+  sfxGain: null,
+  bgmGain: null,
+  lowCutFilter: null,
+  limiter: null,
   musicTimer: null,
   musicStep: 0,
   musicDuckingUntil: 0,
   activeTones: 0,
   lastSoundAt: {},
+  soundVoiceState: {},
+  soundScope: null,
   fx: {
     context: null,
     dpr: 1,
@@ -2407,18 +2452,47 @@ function ensureAudio() {
   if (!AudioContext) return null;
   if (!state.audioContext) state.audioContext = new AudioContext();
   if (!state.masterGain) {
+    state.lowCutFilter = state.audioContext.createBiquadFilter();
+    state.lowCutFilter.type = "highpass";
+    state.lowCutFilter.frequency.value = AUDIO_LOWCUT_HZ;
+    state.lowCutFilter.Q.value = 0.7;
+
+    state.limiter = state.audioContext.createDynamicsCompressor();
+    state.limiter.threshold.value = -6;
+    state.limiter.knee.value = 4;
+    state.limiter.ratio.value = 16;
+    state.limiter.attack.value = 0.004;
+    state.limiter.release.value = 0.18;
+
+    state.sfxGain = state.audioContext.createGain();
+    state.sfxGain.gain.value = AUDIO_SFX_VOLUME;
+
+    state.bgmGain = state.audioContext.createGain();
+    state.bgmGain.gain.value = AUDIO_BGM_VOLUME;
+
     state.masterGain = state.audioContext.createGain();
-    state.masterGain.gain.value = Math.min(1.9, 0.58 * SOUND_GAIN_BOOST);
+    state.masterGain.gain.value = AUDIO_MASTER_VOLUME;
+
+    state.sfxGain.connect(state.lowCutFilter);
+    state.bgmGain.connect(state.lowCutFilter);
+    state.lowCutFilter.connect(state.limiter);
+    state.limiter.connect(state.masterGain);
     state.masterGain.connect(state.audioContext.destination);
   }
   if (state.audioContext.state === "suspended") state.audioContext.resume();
   return state.audioContext;
 }
 
+function normalizeToneVolume(volume, group, category) {
+  const categoryGain = group === "sfx" ? (AUDIO_CATEGORY_GAINS[category] || 0.65) : 1;
+  const peakLimit = group === "bgm" ? AUDIO_BGM_PEAK_LIMIT : AUDIO_SFX_PEAK_LIMIT;
+  return Math.min(peakLimit, Math.max(0, (volume || 0.08) * categoryGain));
+}
+
 function playTone(freq, duration = 0.08, options = {}) {
   const context = ensureAudio();
-  if (!context || !state.masterGain) return;
-  const maxTones = window.innerWidth <= 520 ? 14 : 18;
+  if (!context || !state.masterGain || !state.sfxGain || !state.bgmGain) return;
+  const maxTones = window.innerWidth <= 520 ? 10 : 16;
   if (state.activeTones >= maxTones) return;
   state.activeTones += 1;
   const now = context.currentTime + (options.delay || 0);
@@ -2427,14 +2501,18 @@ function playTone(freq, duration = 0.08, options = {}) {
   osc.type = options.type || "triangle";
   osc.frequency.setValueAtTime(freq, now);
   if (options.to) osc.frequency.exponentialRampToValueAtTime(Math.max(40, options.to), now + duration);
+  const group = options.music ? "bgm" : "sfx";
+  const scopeGain = options.music ? 1 : (options.soundGain ?? state.soundScope?.gain ?? 1);
+  const category = options.category || state.soundScope?.category || "movement";
+  const requestedVolume = (options.volume || 0.08) * scopeGain;
   const volume = options.music && performance.now() < state.musicDuckingUntil
-    ? (options.volume || 0.08) * 0.42
-    : (options.volume || 0.08);
+    ? normalizeToneVolume(requestedVolume * 0.42, group, category)
+    : normalizeToneVolume(requestedVolume, group, category);
   gain.gain.setValueAtTime(0.0001, now);
   gain.gain.exponentialRampToValueAtTime(volume, now + 0.012);
   gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
   osc.connect(gain);
-  gain.connect(state.masterGain);
+  gain.connect(options.music ? state.bgmGain : state.sfxGain);
   osc.start(now);
   osc.stop(now + duration + 0.03);
   window.setTimeout(() => {
@@ -2489,30 +2567,36 @@ function playMultiplierCollectSound(value) {
   }
 }
 
+function reserveSoundVoice(kind, profile, now) {
+  const voice = state.soundVoiceState[kind] || { active: 0, lastAt: 0 };
+  const elapsed = now - voice.lastAt;
+  if (elapsed < profile.cooldown) return null;
+  if (voice.active >= profile.maxVoices) return null;
+  const attenuation = 1 / (1 + voice.active * (profile.attenuation || 0.4));
+  voice.active += 1;
+  voice.lastAt = now;
+  state.soundVoiceState[kind] = voice;
+  window.setTimeout(() => {
+    voice.active = Math.max(0, voice.active - 1);
+  }, profile.release || 360);
+  return attenuation;
+}
+
 function playSound(kind) {
   if (!state.sound) return;
   recordPerf(`sound.${kind}`, 0);
-  const throttle = {
-    button: 55,
-    move: 55,
-    match: 90,
-    cascade: 120,
-    drop: 150,
-    slotProgress: 95,
-    flameBurn: 120,
-    flameResist: 150,
-    multiplierCollect: 90,
-    multiplierCollectHigh: 110,
-    multiplierEpicCollect: 130,
-    multiplierJackpotCollect: 160,
-  };
   const now = performance.now();
-  const minGap = throttle[kind] || 28;
-  if ((state.lastSoundAt[kind] || 0) + minGap > now) return;
+  const profile = SOUND_PROFILES[kind] || DEFAULT_SOUND_PROFILE;
+  const attenuation = reserveSoundVoice(kind, profile, now);
+  if (attenuation === null) return;
   state.lastSoundAt[kind] = now;
   ensureAudio();
   startBackgroundMusic();
   if (kind !== "button" && kind !== "move") state.musicDuckingUntil = now + 520;
+  state.soundScope = {
+    category: profile.category,
+    gain: (profile.gain || 1) * attenuation,
+  };
 
   const soundMap = {
     button: () => playChord([420, 630], 0.045, { volume: 0.04 }),
@@ -2573,7 +2657,11 @@ function playSound(kind) {
     error: () => playTone(150, 0.09, { to: 92, type: "sawtooth", volume: 0.055 }),
   };
 
-  (soundMap[kind] || soundMap.button)();
+  try {
+    (soundMap[kind] || soundMap.button)();
+  } finally {
+    state.soundScope = null;
+  }
 }
 
 boardEl.addEventListener("pointerdown", (event) => {
