@@ -843,7 +843,6 @@ function maybeFullDropBonus(state) {
   state.slotValues = Array(SLOT_COUNT).fill(null);
   state.slotSymbolValues = Array(SLOT_COUNT).fill(null);
   state.slotTurns = Array(SLOT_COUNT).fill(0);
-  rebuildBoard(state);
 }
 
 function addWin(amount) {
@@ -878,27 +877,38 @@ function buildReport(runStats) {
   lines.push("");
   const multiplierWin = Object.values(runStats.multiplier).reduce((sum, item) => sum + item.win, 0);
   lines.push(`## 倍數糖RTP：${pct(multiplierWin / runStats.totalBet)}`);
+  lines.push("");
+  lines.push("| 倍數糖 | 次數 | 贏分 | RTP |");
+  lines.push("| --- | ---: | ---: | ---: |");
   for (const value of [5, 10, 20, 30, 50, 100, 200]) {
     const item = runStats.multiplier[value];
-    lines.push(`- ${value}x：次數 ${fmt(item.count)} / 贏分 ${fmt(item.win)} / RTP ${pct(item.win / runStats.totalBet)}`);
+    lines.push(`| ${value}x | ${fmt(item.count)} | ${fmt(item.win)} | ${pct(item.win / runStats.totalBet)} |`);
   }
   lines.push("");
   lines.push("## 收集槽觸發統計");
+  lines.push("");
+  lines.push("| 收集槽 | 平均幾轉出現 | 次數 |");
+  lines.push("| --- | ---: | ---: |");
   for (const stage of [1, 2, 3]) {
     const count = runStats.stages[stage].count;
     const avg = count ? runStats.totalMoves / count : 0;
-    lines.push(`- 第${stage}槽平均幾轉出現：${count ? fmt(avg, 2) : "未觸發"}（次數 ${fmt(count)}）`);
+    lines.push(`| 第${stage}槽 | ${count ? fmt(avg, 2) : "未觸發"} | ${fmt(count)} |`);
   }
   lines.push("");
   const wheelWin = Object.values(runStats.wheel).reduce((sum, item) => sum + item.win, 0);
   const wheelBase = Object.values(runStats.wheel).reduce((sum, item) => sum + item.base, 0);
+  const wheelAverageAward = runStats.wheelTriggers ? wheelWin / runStats.wheelTriggers / runStats.bet : 0;
+  const wheelAverageMultiplier = wheelBase ? wheelWin / wheelBase : 0;
   lines.push(`## 轉輪觸發RTP：${pct(wheelWin / runStats.totalBet)}`);
   lines.push(`觸發次數：${fmt(runStats.wheelTriggers)}`);
   lines.push(`平均幾轉觸發：${runStats.wheelTriggers ? fmt(runStats.totalMoves / runStats.wheelTriggers, 2) : "未觸發"}`);
-  lines.push(`平均倍數：${wheelBase ? fmt(wheelWin / wheelBase, 3) : "0.000"}x`);
+  lines.push(`實際拿到的平均倍數：${fmt(wheelAverageAward, 3)}x（轉輪平均乘倍 ${fmt(wheelAverageMultiplier, 3)}x）`);
+  lines.push("");
+  lines.push("| 結果 | 次數 | 佔總RTP |");
+  lines.push("| --- | ---: | ---: |");
   for (const prize of FULL_DROP_WHEEL_PRIZES) {
     const item = runStats.wheel[prize.label];
-    lines.push(`- ${prize.label}：次數 ${fmt(item.count)} / 佔總RTP ${pct(item.win / runStats.totalBet)}`);
+    lines.push(`| ${prize.label} | ${fmt(item.count)} | ${pct(item.win / runStats.totalBet)} |`);
   }
   if (config.seed) {
     lines.push("");

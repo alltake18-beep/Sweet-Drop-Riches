@@ -6695,12 +6695,14 @@ button {
 .slot-symbol {
   position: absolute;
   left: 50%;
-  top: 10%;
+  top: 26%;
   right: auto;
   bottom: auto;
   width: 63%;
-  height: 123%;
+  height: 112%;
   transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
   filter:
     drop-shadow(0 0 10px rgba(255, 222, 88, 0.86))
     drop-shadow(0 9px 12px rgba(0, 0, 0, 0.5));
@@ -6708,6 +6710,10 @@ button {
 }
 
 .slot strong {
+  display: block;
+  width: 100%;
+  text-align: center;
+  transform: translateY(6%);
   font-size: clamp(27px, 7.8vw, 36px);
   max-width: 100%;
   white-space: nowrap;
@@ -6916,19 +6922,22 @@ button {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 58px;
-  margin-left: -29px;
-  margin-top: -11px;
-  color: #290b30;
-  font-size: clamp(12px, 3.45vw, 18px);
+  width: 70px;
+  margin-left: -35px;
+  margin-top: -13px;
+  color: #210628;
+  font-size: clamp(14px, 4.15vw, 21px);
   font-weight: 1000;
   line-height: 1;
   text-align: center;
-  -webkit-text-stroke: 0.65px rgba(255, 249, 198, 0.78);
+  -webkit-text-stroke: 1.15px rgba(255, 248, 193, 0.96);
   text-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.82),
-    0 2px 4px rgba(58, 10, 45, 0.38);
-  transform: rotate(var(--angle)) translateY(calc(min(29.5vw, 145px) * -1)) rotate(calc(var(--angle) * -1));
+    0 1px 0 rgba(255, 255, 255, 0.96),
+    0 2px 0 rgba(255, 219, 107, 0.72),
+    0 3px 6px rgba(36, 3, 35, 0.72),
+    0 0 8px rgba(255, 244, 184, 0.9),
+    0 0 14px rgba(255, 88, 204, 0.42);
+  transform: rotate(var(--angle)) translateY(calc(min(25.7vw, 126px) * -1)) rotate(calc(var(--angle) * -1));
 }
 
 .full-drop-wheel-core {

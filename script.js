@@ -2229,9 +2229,6 @@ async function maybeFullDropBonus() {
 
   await playFullDropWheel();
 
-  const next = buildBoard();
-  state.board = next.board;
-  state.multipliers = next.multipliers;
   state.filledSlots = new Set();
   state.slotValues = Array(SLOT_COUNT).fill(null);
   state.slotSymbolValues = Array(SLOT_COUNT).fill(null);
