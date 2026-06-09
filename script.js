@@ -129,6 +129,20 @@ const EVENT_ROLL_TOTAL = 1398;
 const EVENT_ROLL_TOTAL_FAST = 489;
 const EVENT_ROLL_WEIGHTS = [0.72, 0.86, 1.02, 1.15, 1.25];
 const DEFAULT_SOUND_PROFILE = { category: "movement", cooldown: 40, maxVoices: 2, attenuation: 0.4, release: 360, gain: 0.72 };
+const FULL_DROP_WHEEL_PRIZES = [
+  { label: "0.1x", multiplier: 0.1, weight: 30 },
+  { label: "0.2x", multiplier: 0.2, weight: 30 },
+  { label: "0.5x", multiplier: 0.5, weight: 30 },
+  { label: "1x", multiplier: 1, weight: 6 },
+  { label: "1.5x", multiplier: 1.5, weight: 2 },
+  { label: "2x", multiplier: 2, weight: 1 },
+  { label: "5x", multiplier: 5, weight: 0.8 },
+  { label: "10x", multiplier: 10, weight: 0.1 },
+  { label: "20x", multiplier: 20, weight: 0.08 },
+  { label: "30x", multiplier: 30, weight: 0.01 },
+  { label: "50x", multiplier: 50, weight: 0.005 },
+  { label: "100x", multiplier: 100, weight: 0.005 },
+];
 const SOUND_PROFILES = {
   button: { category: "button", cooldown: 80, maxVoices: 1, attenuation: 0.5, release: 180, gain: 0.78 },
   move: { category: "movement", cooldown: 70, maxVoices: 1, attenuation: 0.45, release: 180, gain: 0.74 },
@@ -139,6 +153,8 @@ const SOUND_PROFILES = {
   specialReady: { category: "special", cooldown: 220, maxVoices: 1, attenuation: 0.5, release: 500, gain: 0.74 },
   specialSpawn: { category: "special", cooldown: 180, maxVoices: 1, attenuation: 0.55, release: 560, gain: 0.72 },
   specialBlast: { category: "special", cooldown: 260, maxVoices: 1, attenuation: 0.6, release: 640, gain: 0.62 },
+  candyClearEvent: { category: "special", cooldown: 220, maxVoices: 1, attenuation: 0.55, release: 520, gain: 0.76 },
+  flameSweep: { category: "special", cooldown: 180, maxVoices: 1, attenuation: 0.5, release: 420, gain: 0.7 },
   flameBurn: { category: "special", cooldown: 260, maxVoices: 1, attenuation: 0.65, release: 720, gain: 0.56 },
   flameResist: { category: "special", cooldown: 180, maxVoices: 1, attenuation: 0.5, release: 360, gain: 0.62 },
   multiplierMerge: { category: "multiplier", cooldown: 180, maxVoices: 1, attenuation: 0.5, release: 480, gain: 0.68 },
@@ -151,6 +167,8 @@ const SOUND_PROFILES = {
   win: { category: "payout", cooldown: 300, maxVoices: 1, attenuation: 0.6, release: 900, gain: 0.66 },
   superWin: { category: "payout", cooldown: 420, maxVoices: 1, attenuation: 0.65, release: 1200, gain: 0.62 },
   jackpot: { category: "payout", cooldown: 560, maxVoices: 1, attenuation: 0.7, release: 1600, gain: 0.58 },
+  wheelSpin: { category: "payout", cooldown: 140, maxVoices: 1, attenuation: 0.45, release: 360, gain: 0.66 },
+  wheelStop: { category: "payout", cooldown: 320, maxVoices: 1, attenuation: 0.55, release: 760, gain: 0.7 },
 };
 
 const boardEl = document.getElementById("board");
@@ -244,11 +262,28 @@ const state = {
   flameFinal: false,
 };
 
-function formatMoney(value) {
+function formatMoney(value, decimals = 0) {
   return value.toLocaleString("en-US", {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
   });
+}
+
+function formatBalance(value) {
+  return formatMoney(value, 2);
+}
+
+function formatScore(value) {
+  return formatMoney(Math.round(value || 0), 0);
+}
+
+function multiplierPayout(multiplierOrValue) {
+  if (typeof multiplierOrValue === "number") return currentBet() * multiplierOrValue;
+  return multiplierOrValue?.payout ?? currentBet() * (multiplierOrValue?.value || 0);
+}
+
+function multiplierDisplay(multiplierOrValue) {
+  return formatScore(multiplierPayout(multiplierOrValue));
 }
 
 function recordPerf(name, duration) {
@@ -530,7 +565,7 @@ function eventPreviewAsset(event) {
 
 function eventName(event) {
   if (event.kind === "candyClear") return `${event.type} 糖果`;
-  if (event.kind === "multiplier") return `x${event.value} 倍數糖`;
+  if (event.kind === "multiplier") return `${multiplierDisplay(event)} 倍數糖`;
   if (event.kind === "flame") return "火焰槍";
   if (event.kind === "sniper") return "狙擊槍";
   return "巧克力糖";
@@ -651,10 +686,12 @@ function canPlaceMultiplierAt(row, col, multipliers = state.multipliers, ignore 
 
 function createMultiplier(value, row, col, flags = {}) {
   const size = multiplierSizeForValue(value, flags);
+  const payout = flags.payout ?? currentBet() * value;
   return {
     id: `m-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
     kind: "multiplier",
     value,
+    payout,
     row,
     col,
     ...flags,
@@ -780,7 +817,7 @@ function startNewBoard(keepScore = false) {
 
 function tileLabel(tile) {
   if (!tile) return "空格";
-  if (tile.kind === "multiplier") return `x${tile.value} 倍數糖`;
+  if (tile.kind === "multiplier") return `${multiplierDisplay(tile)} 倍數糖`;
   if (tile.special === "horizontal") return `${tile.type} 橫向糖`;
   if (tile.special === "vertical") return `${tile.type} 直向糖`;
   if (tile.special === "bomb") return `${tile.type} 炸彈糖`;
@@ -791,7 +828,7 @@ function tileLabel(tile) {
 
 function tileSignature(tile) {
   if (!tile) return "empty";
-  if (tile.kind === "multiplier") return `m:${tile.value}`;
+  if (tile.kind === "multiplier") return `m:${tile.value}:${multiplierPayout(tile)}`;
   return `c:${tile.type}:${tile.special || "normal"}`;
 }
 
@@ -807,7 +844,7 @@ function tileMarkup(tile) {
       <div class="multiplier-symbol" aria-hidden="true">
         <span class="multiplier-halo"></span>
         <img class="multiplier-art" src="${multiplierAsset(tile.value)}" alt="">
-        <span class="multiplier-mark">x${tile.value}</span>
+        <span class="multiplier-mark score-length-${Math.min(6, multiplierDisplay(tile).replace(/[^0-9]/g, "").length)}">${multiplierDisplay(tile)}</span>
         <span class="multiplier-glint"></span>
       </div>
     `;
@@ -919,6 +956,7 @@ function renderSlots() {
   for (let col = 0; col < SLOT_COUNT; col += 1) {
     const slot = document.createElement("div");
     const value = state.slotValues[col] || state.slotFlash[col];
+    const scoreLength = formatScore(value).replace(/[^0-9]/g, "").length;
     const turns = Math.max(0, Math.min(SLOT_TURN_MAX, state.slotTurns[col] || 0));
     slot.className = "slot";
     if (state.slotFlash[col]) {
@@ -926,15 +964,16 @@ function renderSlots() {
       slot.classList.add("flash");
     }
     if (state.filledSlots.has(col)) slot.classList.add("filled");
-    if (value >= 50) slot.classList.add("jackpot-slot");
+    if ((state.slotSymbolValues[col] || 0) >= 50) slot.classList.add("jackpot-slot");
+    if (value) slot.classList.add(`score-length-${Math.min(6, scoreLength)}`);
     slot.style.setProperty("--slot-turns", String(turns));
     slot.innerHTML = `
       ${slotCountdownMarkup(turns, col)}
       ${
         value
           ? `<div class="slot-symbol">
-              <img src="${multiplierAsset(state.slotSymbolValues[col] || value)}" alt="">
-              <strong>x${value}</strong>
+              <img src="${multiplierAsset(state.slotSymbolValues[col] || 5)}" alt="">
+              <strong>${formatScore(value)}</strong>
             </div>`
           : `<div class="slot-guide-arrow" aria-hidden="true"></div>`
       }
@@ -1081,9 +1120,9 @@ function clearCollectedSlot(col) {
   state.slotTurns[col] = 0;
 }
 
-function collectSlotMultiplier(col, value) {
+function collectSlotMultiplier(col, value, payout = currentBet() * value) {
   const currentValue = state.slotValues[col] || 0;
-  const nextValue = currentValue + value;
+  const nextValue = currentValue + payout;
   state.slotValues[col] = nextValue;
   state.slotSymbolValues[col] = value;
   state.slotFlash[col] = nextValue;
@@ -2026,7 +2065,7 @@ async function resolveMove(initialMatches, preferredSpawn = null) {
     state.lastClearedCells = null;
     collectEnd();
     if (collected.length > 0) {
-      setStatus(collected.map((item) => `第${item.col + 1}槽 x${item.value}`).join("  "));
+      setStatus(collected.map((item) => `第${item.col + 1}槽 ${formatScore(item.payout)}`).join("  "));
       render();
       spawnParticles(collected.length * 12);
       const highCollect = Math.max(...collected.map((item) => item.value));
@@ -2149,6 +2188,8 @@ function playWinCountLoop(duration, volume = 0.04) {
 async function maybeFullDropBonus() {
   if (state.filledSlots.size < SLOT_COUNT) return;
 
+  await playFullDropWheel();
+
   const next = buildBoard();
   state.board = next.board;
   state.multipliers = next.multipliers;
@@ -2157,6 +2198,98 @@ async function maybeFullDropBonus() {
   state.slotSymbolValues = Array(SLOT_COUNT).fill(null);
   state.slotFlash = Array(SLOT_COUNT).fill(null);
   state.slotTurns = Array(SLOT_COUNT).fill(0);
+}
+
+function fullDropWheelGradient() {
+  const colors = ["#ff4fc4", "#32d7ff", "#ffe06a", "#82ff62", "#ff8b37", "#b86cff"];
+  const slice = 100 / FULL_DROP_WHEEL_PRIZES.length;
+  return `conic-gradient(${FULL_DROP_WHEEL_PRIZES.map((_, index) => {
+    const start = +(index * slice).toFixed(3);
+    const end = +((index + 1) * slice).toFixed(3);
+    return `${colors[index % colors.length]} ${start}% ${end}%`;
+  }).join(", ")})`;
+}
+
+function fullDropWheelLabels() {
+  return FULL_DROP_WHEEL_PRIZES.map((prize, index) => {
+    const angle = (index + 0.5) * (360 / FULL_DROP_WHEEL_PRIZES.length);
+    return `<span style="--angle:${angle}deg">${prize.label}</span>`;
+  }).join("");
+}
+
+async function playFullDropWheel() {
+  const host = document.querySelector(".play-area");
+  if (!host) return;
+  const slotTotals = state.slotValues.map((value) => Math.round(value || 0));
+  const baseTotal = slotTotals.reduce((sum, value) => sum + value, 0);
+  if (baseTotal <= 0) return;
+
+  const prize = weightedPick(FULL_DROP_WHEEL_PRIZES);
+  const prizeIndex = FULL_DROP_WHEEL_PRIZES.indexOf(prize);
+  const sliceAngle = 360 / FULL_DROP_WHEEL_PRIZES.length;
+  const finalRotation = 360 * 7 + (360 - (prizeIndex * sliceAngle + sliceAngle * 0.5));
+  const award = Math.round(baseTotal * prize.multiplier);
+
+  const overlay = document.createElement("div");
+  overlay.className = "full-drop-wheel-overlay";
+  overlay.innerHTML = `
+    <div class="full-drop-wheel-pointer"></div>
+    <div class="full-drop-wheel" style="background:${fullDropWheelGradient()}">
+      <div class="full-drop-wheel-labels">${fullDropWheelLabels()}</div>
+      <div class="full-drop-wheel-core">
+        <span>TOTAL</span>
+        <strong>${formatScore(baseTotal)}</strong>
+      </div>
+    </div>
+    <div class="full-drop-wheel-result" aria-live="polite">
+      <span>DROP WHEEL</span>
+      <strong>${formatScore(baseTotal)}</strong>
+    </div>
+  `;
+  host.appendChild(overlay);
+
+  const overlayRect = overlay.getBoundingClientRect();
+  const centerX = overlayRect.width * 0.5;
+  const centerY = overlayRect.height * 0.5;
+  slotTotals.forEach((value, index) => {
+    const slotRect = slotsEl.children[index]?.getBoundingClientRect();
+    const chip = document.createElement("div");
+    chip.className = "full-drop-fly-chip";
+    chip.textContent = formatScore(value);
+    const startX = slotRect ? slotRect.left + slotRect.width * 0.5 - overlayRect.left : centerX;
+    const startY = slotRect ? slotRect.top + slotRect.height * 0.5 - overlayRect.top : centerY + 260;
+    chip.style.setProperty("--dx", `${startX - centerX}px`);
+    chip.style.setProperty("--dy", `${startY - centerY}px`);
+    chip.style.setProperty("--delay", `${index * 120}ms`);
+    overlay.appendChild(chip);
+  });
+
+  playSound("slotProgress");
+  await wait(resolveDelay(980, 620));
+
+  const wheel = overlay.querySelector(".full-drop-wheel");
+  const result = overlay.querySelector(".full-drop-wheel-result strong");
+  overlay.classList.add("is-spinning");
+  let spinElapsed = 0;
+  const spinTimer = window.setInterval(() => {
+    spinElapsed += 180;
+    playSound("wheelSpin");
+    if (spinElapsed >= 3000) window.clearInterval(spinTimer);
+  }, 180);
+  await wait(40);
+  wheel.style.transform = `translate(-50%, -50%) rotate(${finalRotation}deg)`;
+  await wait(3000);
+  window.clearInterval(spinTimer);
+
+  playSound("wheelStop");
+  addWin(award);
+  result.textContent = `${prize.label}  ${formatScore(award)}`;
+  overlay.classList.remove("is-spinning");
+  overlay.classList.add("is-complete");
+  triggerScreenFx(prize.multiplier >= 5 ? "fx-jackpot" : prize.multiplier >= 1 ? "fx-blast" : "fx-bump", 820);
+  render();
+  await wait(resolveDelay(1500, 900));
+  overlay.remove();
 }
 
 async function ensureLegalMove() {
@@ -2171,7 +2304,7 @@ async function ensureLegalMove() {
 function reshuffleBoard() {
   const multipliers = [];
   for (const multiplier of state.multipliers) {
-    multipliers.push({ value: multiplier.value, size: multiplierSize(multiplier) });
+    multipliers.push({ value: multiplier.value, size: multiplierSize(multiplier), payout: multiplierPayout(multiplier) });
   }
 
   let attempts = 0;
@@ -2179,7 +2312,7 @@ function reshuffleBoard() {
     state.board = makeCandyBoard();
     state.multipliers = [];
     for (const item of multipliers) {
-      const multiplier = multiplierSpawnPoint(item.value, { size: item.size });
+      const multiplier = multiplierSpawnPoint(item.value, { size: item.size, payout: item.payout });
       if (multiplier) {
         state.multipliers.push(multiplier);
         clearMultiplierFootprint(state.board, multiplier);
@@ -2653,6 +2786,14 @@ function playSound(kind) {
       playTone(140, 0.18, { to: 70, type: "sawtooth", volume: 0.13 });
       playChord([720, 960, 1280], 0.13, { delay: 0.05, volume: 0.105 });
     },
+    candyClearEvent: () => {
+      playChord([760, 1040, 1480], 0.12, { volume: 0.105 });
+      playTone(1320, 0.08, { delay: 0.075, to: 1880, type: "triangle", volume: 0.08 });
+    },
+    flameSweep: () => {
+      playTone(260, 0.12, { to: 520, type: "sawtooth", volume: 0.065 });
+      playChord([620, 880], 0.07, { delay: 0.045, volume: 0.052 });
+    },
     flameBurn: () => {
       playTone(180, 0.28, { to: 64, type: "sawtooth", volume: 0.095 });
       playTone(92, 0.22, { delay: 0.035, to: 48, type: "square", volume: 0.05 });
@@ -2690,6 +2831,14 @@ function playSound(kind) {
     jackpot: () => {
       [392, 523, 659, 784, 1047, 1319, 1568].forEach((freq, i) => playTone(freq, 0.17, { delay: i * 0.07, type: i > 3 ? "square" : "triangle", volume: 0.12 }));
       playChord([262, 330, 392, 523], 0.42, { delay: 0.48, type: "sawtooth", volume: 0.085 });
+    },
+    wheelSpin: () => {
+      playTone(420, 0.16, { to: 760, type: "triangle", volume: 0.07 });
+      playTone(980, 0.08, { delay: 0.04, to: 1320, type: "sine", volume: 0.052 });
+    },
+    wheelStop: () => {
+      playChord([660, 990, 1320], 0.18, { volume: 0.12 });
+      playTone(220, 0.2, { delay: 0.08, to: 160, type: "square", volume: 0.05 });
     },
     error: () => playTone(150, 0.09, { to: 92, type: "sawtooth", volume: 0.055 }),
   };
@@ -2817,7 +2966,7 @@ function chooseCreatedSpecial() {
 
 function tileLabel(tile) {
   if (!tile) return "空格";
-  if (tile.kind === "multiplier") return `x${tile.value} 倍數糖`;
+  if (tile.kind === "multiplier") return `${multiplierDisplay(tile)} 倍數糖`;
   if (tile.special === "chocolate") return "巧克力糖";
   return `${tile.type} 糖果`;
 }
@@ -2856,11 +3005,11 @@ function renderHud() {
     slot.classList.toggle("win", state.miniSlotWin && state.rollingStage === stage);
     slot.classList.toggle("dimmed", Boolean(focusedStage && state.rollingStage !== stage));
     slot.classList.toggle("multiplier-preview", preview.kind === "multiplier");
-    slot.dataset.value = preview.kind === "multiplier" ? `x${preview.value || 10}` : "";
+    slot.dataset.value = preview.kind === "multiplier" ? multiplierDisplay(preview) : "";
   });
   state.miniSlotPreview = state.stagePreviews[0] || state.miniSlotPreview;
   miniSlotIconEl.src = eventPreviewAsset(state.miniSlotPreview);
-  balanceEl.textContent = formatMoney(state.balance);
+  balanceEl.textContent = formatBalance(state.balance);
   betEl.textContent = currentBet().toLocaleString("en-US");
   fastButton.setAttribute("aria-pressed", String(state.fast));
   soundMenuButton.textContent = state.sound ? "音效開啟" : "音效關閉";
@@ -3045,7 +3194,7 @@ function boardGravitySignature() {
     }
   }
   const multipliers = state.multipliers
-    .map((multiplier) => `${multiplier.id}:${multiplier.row}:${multiplier.col}:${multiplier.value}:${multiplierSize(multiplier)}`)
+    .map((multiplier) => `${multiplier.id}:${multiplier.row}:${multiplier.col}:${multiplier.value}:${multiplierSize(multiplier)}:${multiplierPayout(multiplier)}`)
     .sort()
     .join("|");
   return `${cells.join(",")}::${multipliers}`;
@@ -3077,7 +3226,7 @@ function collectMultipliers() {
       }
 
       if (multiplier.row >= ROWS - multiplierSize(multiplier)) {
-        collected.push({ col: slotIndexFromMultiplier(multiplier), value: multiplier.value });
+        collected.push({ col: slotIndexFromMultiplier(multiplier), value: multiplier.value, payout: multiplierPayout(multiplier) });
         state.multipliers = state.multipliers.filter((item) => item.id !== multiplier.id);
         clearMultiplierFootprints();
         changed = true;
@@ -3097,8 +3246,8 @@ function collectAndPayMultipliers() {
   if (collected.length > 0) {
     state.slotFlash = Array(SLOT_COUNT).fill(null);
     for (const item of collected) {
-      collectSlotMultiplier(item.col, item.value);
-      addWin(currentBet() * item.value);
+      collectSlotMultiplier(item.col, item.value, item.payout);
+      addWin(item.payout);
     }
   }
   return collected;
@@ -3312,6 +3461,7 @@ async function playFlameEvent(stage = currentSpecialStageIndex()) {
     state.flameCells = finalCells;
     state.flameFinal = false;
     render();
+    if (i === 0 || i === steps - 1 || i % 3 === 0) playSound("flameSweep");
     await wait(stepDelays[i]);
   }
 
@@ -3429,7 +3579,7 @@ async function playCandyClearEvent(type) {
   spawnClearBursts(clearedCells, true);
   spawnCollectEnergy(clearedCells);
   spawnParticles(Math.min(42, Math.max(18, clearedCells.size * 2)));
-  playSound("specialBlast");
+  playSound("candyClearEvent");
   triggerScreenFx("fx-blast", 460);
   await wait(resolveDelay(430, 160));
 
@@ -3546,7 +3696,12 @@ function transformSniperMultiplierCross(multiplier) {
     seen.add(key);
     if (point.row === multiplier.row && point.col === multiplier.col) continue;
     if (!canPlaceMultiplierAt(point.row, point.col, state.multipliers, null, state.board, size)) continue;
-    state.multipliers.push(createMultiplier(multiplier.value, point.row, point.col, { size, _eventTransform: true, _reward: true }));
+    state.multipliers.push(createMultiplier(multiplier.value, point.row, point.col, {
+      size,
+      payout: multiplierPayout(multiplier),
+      _eventTransform: true,
+      _reward: true,
+    }));
     count += 1;
   }
   return count;
@@ -3665,13 +3820,14 @@ function reshuffleBoard() {
   const values = state.multipliers.map((multiplier) => ({
     value: multiplier.value,
     size: multiplierSize(multiplier),
+    payout: multiplierPayout(multiplier),
   }));
   let attempts = 0;
   do {
     state.board = makeCandyBoard();
     state.multipliers = [];
     for (const item of values) {
-      const multiplier = multiplierSpawnPoint(item.value, { size: item.size });
+      const multiplier = multiplierSpawnPoint(item.value, { size: item.size, payout: item.payout });
       if (multiplier) {
         state.multipliers.push(multiplier);
         clearMultiplierFootprint(state.board, multiplier);
