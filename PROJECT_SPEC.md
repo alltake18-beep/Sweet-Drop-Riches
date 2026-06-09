@@ -312,3 +312,14 @@
 - 部署：
   - 使用者要求 Push 才 push
   - Push 後提供帶 commit 與時間參數的 GitHub Pages 強刷網址
+
+## Push / Mobile Cache-Bust Rule
+
+- Every time the user asks to push, refresh the mobile cache hash before committing.
+- Update both asset URLs in `index.html`:
+  - `styles.css?v=<topic-or-short-commit>-<yyyyMMdd-HHmmss>`
+  - `script.js?v=<topic-or-short-commit>-<yyyyMMdd-HHmmss>`
+- After pushing, provide a GitHub Pages URL with a page-level cache-bust query:
+  - `https://alltake18-beep.github.io/Sweet-Drop-Riches/?v=<commit>&t=<yyyyMMdd-HHmmss>`
+- Do not provide a game URL before the push succeeds.
+- Do not commit `.codex-remote-attachments/`.

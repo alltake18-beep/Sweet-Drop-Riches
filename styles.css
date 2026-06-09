@@ -6699,11 +6699,11 @@ button {
 .slot-symbol {
   position: absolute;
   left: 50%;
-  top: 26%;
+  top: 50%;
   right: auto;
   bottom: auto;
-  width: 63%;
-  height: 112%;
+  width: 66%;
+  height: 80%;
   transform: translate(-50%, -50%);
   display: grid;
   place-items: center;
@@ -6735,9 +6735,9 @@ button {
 .slot-guide-arrow {
   position: absolute;
   left: 50%;
-  top: 0%;
-  width: 24%;
-  height: 28%;
+  top: 50%;
+  width: 18%;
+  height: 24%;
   transform: translate(-50%, -50%);
   filter:
     drop-shadow(0 0 7px rgba(117, 244, 255, 0.72))
