@@ -189,6 +189,7 @@ const menuButton = document.getElementById("menuButton");
 const closeMenu = document.getElementById("closeMenu");
 const menuPanel = document.getElementById("menuPanel");
 const soundMenuButton = document.getElementById("soundMenuButton");
+const specialOddsButton = document.getElementById("specialOddsButton");
 const winOverlay = document.getElementById("winOverlay");
 const winLabelEl = document.getElementById("winLabel");
 const winTitleArtEl = document.getElementById("winTitleArt");
@@ -213,6 +214,7 @@ const state = {
   resolving: false,
   fast: false,
   sound: true,
+  specialOdds: false,
   audioContext: null,
   masterGain: null,
   sfxGain: null,
@@ -719,6 +721,8 @@ function makeCandyBoard() {
 }
 
 function addMultipliers(board) {
+  if (state.specialOdds) return addSpecialOddsMultipliers(board);
+
   const count = Math.random() < 0.75 ? 2 : 3;
   const multipliers = [];
 
@@ -729,6 +733,24 @@ function addMultipliers(board) {
     const point = pickMultiplierSpawnCell(board, (cell) => canPlaceMultiplierAt(cell.row, cell.col, multipliers, null, board, size), size);
     if (!point) break;
     const multiplier = createMultiplier(value, point.row, point.col, { size });
+    multipliers.push(multiplier);
+    clearMultiplierFootprint(board, multiplier);
+  }
+
+  return multipliers;
+}
+
+function addSpecialOddsMultipliers(board) {
+  const anchors = [
+    { row: ROWS - 2, col: 0 },
+    { row: ROWS - 2, col: 2 },
+    { row: ROWS - 2, col: 4 },
+  ];
+  const multipliers = [];
+
+  for (const point of anchors) {
+    const value = weightedPick(INITIAL_MULTIPLIER_VALUE_WEIGHTS_2X2).value;
+    const multiplier = createMultiplier(value, point.row, point.col, { size: 2 });
     multipliers.push(multiplier);
     clearMultiplierFootprint(board, multiplier);
   }
@@ -2952,6 +2974,14 @@ soundMenuButton.addEventListener("click", () => {
   render();
 });
 
+specialOddsButton.addEventListener("click", () => {
+  if (state.resolving) return;
+  state.specialOdds = !state.specialOdds;
+  playSound("button");
+  startNewBoard(true);
+  menuPanel.classList.add("hidden");
+});
+
 window.setTimeout(() => armBackgroundMusic(), 420);
 window.addEventListener("pointerdown", armBackgroundMusic, { once: true });
 window.addEventListener("keydown", armBackgroundMusic, { once: true });
@@ -3013,6 +3043,7 @@ function renderHud() {
   betEl.textContent = currentBet().toLocaleString("en-US");
   fastButton.setAttribute("aria-pressed", String(state.fast));
   soundMenuButton.textContent = state.sound ? "音效開啟" : "音效關閉";
+  specialOddsButton.textContent = state.specialOdds ? "特殊機率開啟" : "特殊機率關閉";
 }
 
 function triggerStageRollStep(stage) {
