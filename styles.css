@@ -6528,12 +6528,34 @@ button {
   bottom: 2px;
   width: 2px;
   height: auto;
+  min-width: 0;
+  padding-left: 0;
   border-radius: 999px;
-  color: transparent;
-  font-size: 0;
-  text-shadow: none;
+  color: #fff8cf;
+  font-size: 9px;
+  text-align: right;
+  overflow: visible;
+  text-indent: -20px;
+  -webkit-text-stroke: 0.55px rgba(55, 24, 96, 0.95);
+  text-shadow:
+    0 1px 0 rgba(37, 13, 70, 0.9),
+    0 0 7px rgba(255, 224, 91, 0.7);
   background: rgba(255, 248, 202, 0.9);
   box-shadow: 0 0 5px rgba(255, 248, 202, 0.55);
+}
+
+.meter-mark-1 {
+  left: 22.5% !important;
+}
+
+.meter-mark-2 {
+  left: 52.5% !important;
+}
+
+.meter-mark-3 {
+  left: 100% !important;
+  transform: translateX(-100%);
+  text-indent: -22px;
 }
 
 @keyframes stage-slot-focus {
@@ -7098,13 +7120,82 @@ button {
 }
 
 .meter-mark-2 {
-  left: 43.3% !important;
+  left: 52.5% !important;
 }
 
 .special-meter-track::after {
   background:
     linear-gradient(90deg, transparent calc(27.273% - 1px), rgba(255, 247, 205, 0.95) calc(27.273% - 1px) calc(27.273% + 1px), transparent calc(27.273% + 1px)),
-    linear-gradient(90deg, transparent calc(43.3% - 1px), rgba(255, 247, 205, 0.95) calc(43.3% - 1px) calc(43.3% + 1px), transparent calc(43.3% + 1px)) !important;
+    linear-gradient(90deg, transparent calc(52.5% - 1px), rgba(255, 247, 205, 0.95) calc(52.5% - 1px) calc(52.5% + 1px), transparent calc(52.5% + 1px)) !important;
+}
+
+.tile.multiplier {
+  overflow: visible !important;
+}
+
+.tile.multiplier .multiplier-symbol {
+  width: 122% !important;
+  height: 122% !important;
+  --relic-scale: 1.18;
+  overflow: visible !important;
+}
+
+.tile.multiplier-size-1 .multiplier-symbol {
+  width: 128% !important;
+  height: 128% !important;
+  --relic-scale: 1.08;
+}
+
+.tile.multiplier-size-2 .multiplier-symbol {
+  width: 118% !important;
+  height: 118% !important;
+  --relic-scale: 1.14;
+}
+
+.tile.multiplier .multiplier-art {
+  width: 118% !important;
+  height: 118% !important;
+}
+
+.tile.multiplier .multiplier-mark {
+  max-width: 74% !important;
+  overflow: visible !important;
+  text-align: center !important;
+  text-overflow: clip !important;
+}
+
+.tile.multiplier-size-2 .multiplier-mark {
+  font-size: clamp(18px, 6.6vw, 32px) !important;
+  -webkit-text-stroke-width: 1.8px !important;
+}
+
+.tile.multiplier-size-2 .multiplier-mark.score-length-4 {
+  font-size: clamp(16px, 5.8vw, 28px) !important;
+}
+
+.tile.multiplier-size-2 .multiplier-mark.score-length-5 {
+  font-size: clamp(14px, 5vw, 24px) !important;
+}
+
+.tile.multiplier-size-2 .multiplier-mark.score-length-6 {
+  font-size: clamp(12px, 4.25vw, 20px) !important;
+  -webkit-text-stroke-width: 1.25px !important;
+}
+
+.tile.multiplier-size-1 .multiplier-mark {
+  font-size: clamp(12px, 4.2vw, 19px) !important;
+  max-width: 72% !important;
+  -webkit-text-stroke-width: 1px !important;
+}
+
+.tile.multiplier-size-1 .multiplier-mark.score-length-4 {
+  font-size: clamp(11px, 3.65vw, 16px) !important;
+}
+
+.tile.multiplier-size-1 .multiplier-mark.score-length-5,
+.tile.multiplier-size-1 .multiplier-mark.score-length-6 {
+  font-size: clamp(9px, 3vw, 13px) !important;
+  -webkit-text-stroke-width: 0.75px !important;
 }
 
 /* Final override: bottom controls live inside the cabinet slot art. */

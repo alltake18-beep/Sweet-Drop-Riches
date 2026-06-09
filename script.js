@@ -1952,7 +1952,10 @@ async function attemptSwap(from, to) {
   if (!isAdjacent(from, to)) return;
   const moveCountBefore = countLegalMoves(state.board, state.multipliers, MOVE_PRESSURE_SOFT_LIMIT + 1);
   const multiplierSwap = multiplierSwapContext(from, to);
-  if ((multiplierAt(from.row, from.col) || multiplierAt(to.row, to.col)) && !multiplierSwap) return;
+  const fromMultiplier = multiplierAt(from.row, from.col);
+  const toMultiplier = multiplierAt(to.row, to.col);
+  if ([fromMultiplier, toMultiplier].some((multiplier) => multiplier && multiplierSize(multiplier) > 1)) return;
+  if ((fromMultiplier || toMultiplier) && !multiplierSwap) return;
 
   state.selected = null;
   if (multiplierSwap) moveMultiplierForSwap(multiplierSwap);
@@ -2887,6 +2890,9 @@ boardEl.addEventListener("pointerdown", (event) => {
   armBackgroundMusic();
   const tile = event.target.closest(".tile");
   if (!tile || state.resolving) return;
+  const point = pointFromTile(tile);
+  const multiplier = multiplierAt(point.row, point.col);
+  if (multiplier && multiplierSize(multiplier) > 1) return;
   if (!hasEnoughBalanceForMove()) {
     showInsufficientBalance();
     event.preventDefault();
@@ -2894,7 +2900,7 @@ boardEl.addEventListener("pointerdown", (event) => {
   }
 
   state.pointer = {
-    ...pointFromTile(tile),
+    ...point,
     id: event.pointerId,
     x: event.clientX,
     y: event.clientY,
