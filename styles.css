@@ -6587,7 +6587,7 @@ button {
   }
 }
 
-/* Multiplier well coordinate lock: 720x1280 cabinet-space centers. */
+/* Multiplier well coordinate lock: aligned to the 720x1280 cabinet art. */
 .slots {
   position: absolute;
   z-index: 4;
@@ -6602,9 +6602,9 @@ button {
 
 .slot {
   position: absolute;
-  top: 85%;
-  width: 25.6%;
-  height: 7.65%;
+  top: 75.8%;
+  width: 27.2%;
+  height: 10.2%;
   aspect-ratio: auto;
   display: grid;
   place-items: center;
@@ -6632,7 +6632,7 @@ button {
 }
 
 .slot:nth-child(1) {
-  left: 22.9%;
+  left: 24.2%;
 }
 
 .slot:nth-child(2) {
@@ -6640,7 +6640,7 @@ button {
 }
 
 .slot:nth-child(3) {
-  left: 77.1%;
+  left: 75.8%;
 }
 
 .slot::before,
