@@ -53,11 +53,11 @@ const STAGE_TWO_EVENT_WEIGHTS = [
   ...COLLECTION_SLOT_ITEM_WEIGHTS,
 ];
 const STAGE_THREE_EVENT_WEIGHTS = [
-  { kind: "multiplier", value: 20, size: 1, weight: 30 },
-  { kind: "multiplier", value: 30, size: 2, weight: 20 },
-  { kind: "multiplier", value: 50, size: 2, weight: 15 },
-  { kind: "multiplier", value: 100, size: 2, weight: 3 },
-  { kind: "multiplier", value: 200, size: 2, weight: 2 },
+  { kind: "multiplier", value: 20, size: 1, weight: 35 },
+  { kind: "multiplier", value: 30, size: 2, weight: 25 },
+  { kind: "multiplier", value: 50, size: 2, weight: 8 },
+  { kind: "multiplier", value: 100, size: 2, weight: 1.5 },
+  { kind: "multiplier", value: 200, size: 2, weight: 0.5 },
   { kind: "flame", weight: 30 },
 ];
 const FLAME_PATTERN_WEIGHTS = [
@@ -86,15 +86,15 @@ const INITIAL_MULTIPLIER_SIZE_WEIGHTS = [
   { size: 2, weight: 10 },
 ];
 const INITIAL_MULTIPLIER_VALUE_WEIGHTS_1X1 = [
-  { value: 5, weight: 25 },
-  { value: 10, weight: 25 },
-  { value: 20, weight: 25 },
+  { value: 5, weight: 70 },
+  { value: 10, weight: 20 },
+  { value: 20, weight: 10 },
 ];
 const INITIAL_MULTIPLIER_VALUE_WEIGHTS_2X2 = [
-  { value: 30, weight: 25 },
-  { value: 50, weight: 55 },
-  { value: 100, weight: 10 },
-  { value: 200, weight: 10 },
+  { value: 30, weight: 95 },
+  { value: 50, weight: 4 },
+  { value: 100, weight: 0.8 },
+  { value: 200, weight: 0.2 },
 ];
 const MULTIPLIER_ANCHOR_ROW_WEIGHTS_1X1 = [
   { row: 0, weight: 20 },
@@ -682,7 +682,7 @@ function makeCandyBoard() {
 }
 
 function addMultipliers(board) {
-  const count = Math.random() < 0.5 ? 2 : 3;
+  const count = Math.random() < 0.75 ? 2 : 3;
   const multipliers = [];
 
   while (multipliers.length < count) {
@@ -2149,14 +2149,6 @@ function playWinCountLoop(duration, volume = 0.04) {
 async function maybeFullDropBonus() {
   if (state.filledSlots.size < SLOT_COUNT) return;
 
-  const bonus = currentBet() * 10;
-  addWin(bonus);
-  setStatus("FULL DROP BONUS");
-  render();
-  spawnParticles(30);
-  playSound("win");
-  triggerScreenFx("fx-jackpot", 900);
-  await wait(resolveDelay(800, 480));
   const next = buildBoard();
   state.board = next.board;
   state.multipliers = next.multipliers;
@@ -3183,14 +3175,15 @@ function mergeAdjacentMultipliers() {
   return false;
 }
 
-function flameBurnChance(multiplierOrValue) {
+function flameBurnChance(multiplierOrValue, stage = currentSpecialStageIndex()) {
   const value = typeof multiplierOrValue === "number" ? multiplierOrValue : multiplierOrValue?.value;
   const size = typeof multiplierOrValue === "number" ? 1 : multiplierSize(multiplierOrValue);
-  if (state.boardRescueLevel >= 2 && size > 1) return 0.9;
-  if (value >= 100) return 0.18;
-  if (value >= 50) return 0.28;
-  if (value >= 20) return 0.4;
-  return 0.55;
+  let chance = 0.55;
+  if (state.boardRescueLevel >= 2 && size > 1) chance = 0.9;
+  else if (value >= 100) chance = 0.18;
+  else if (value >= 50) chance = 0.28;
+  else if (value >= 20) chance = 0.4;
+  return stage === 3 ? Math.min(1, chance * 2) : chance;
 }
 
 function pointKey(point) {
@@ -3308,7 +3301,7 @@ function clearFlameMarks() {
   }
 }
 
-async function playFlameEvent() {
+async function playFlameEvent(stage = currentSpecialStageIndex()) {
   const steps = state.fast ? 8 : 14;
   const stepDelays = flameStepDelays(steps);
   let finalCells = new Set();
@@ -3340,7 +3333,7 @@ async function playFlameEvent() {
     for (const cell of multiplierCells(multiplier)) {
       coveredMultiplierCells.add(pointKey(cell));
     }
-    if (Math.random() < flameBurnChance(multiplier)) {
+    if (Math.random() < flameBurnChance(multiplier, stage)) {
       destroyedIds.add(multiplier.id);
       for (const cell of multiplierCells(multiplier)) {
         clearedCells.add(pointKey(cell));
@@ -3772,7 +3765,7 @@ async function processSpecialAwards() {
 
     if (event.kind === "flame") {
       setStatus("火焰");
-      await playFlameEvent();
+      await playFlameEvent(stage);
     } else if (event.kind === "multiplier") {
       const multiplier = multiplierSpawnPoint(event.value, { _reward: true, size: event.size });
       if (multiplier) {
