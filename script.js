@@ -35,29 +35,30 @@ const RESCUE_CASCADE_CHANCE_HARD = 0.84;
 const CANDIES = ["red", "blue", "green", "orange", "purple"];
 const MULTIPLIER_VALUES = [5, 10, 20, 30, 50, 100, 200];
 const COLLECTION_SLOT_ITEM_WEIGHTS = [
-  { kind: "candyClear", type: "red", weight: 4 },
-  { kind: "candyClear", type: "blue", weight: 4 },
-  { kind: "candyClear", type: "green", weight: 4 },
-  { kind: "candyClear", type: "orange", weight: 4 },
-  { kind: "candyClear", type: "purple", weight: 4 },
-  { kind: "multiplier", value: 5, size: 1, weight: 8 },
-  { kind: "multiplier", value: 10, size: 1, weight: 10 },
-  { kind: "multiplier", value: 20, size: 1, weight: 10 },
-  { kind: "multiplier", value: 30, size: 2, weight: 10 },
-  { kind: "multiplier", value: 50, size: 2, weight: 1.6 },
-  { kind: "multiplier", value: 100, size: 2, weight: 0.32 },
-  { kind: "multiplier", value: 200, size: 2, weight: 0.08 },
+  { kind: "candyClear", type: "red", weight: 6 },
+  { kind: "candyClear", type: "blue", weight: 6 },
+  { kind: "candyClear", type: "green", weight: 6 },
+  { kind: "candyClear", type: "orange", weight: 6 },
+  { kind: "candyClear", type: "purple", weight: 6 },
+  { kind: "multiplier", value: 5, size: 1, weight: 12 },
+  { kind: "multiplier", value: 10, size: 1, weight: 8 },
+  { kind: "multiplier", value: 20, size: 1, weight: 5 },
+  { kind: "multiplier", value: 30, size: 2, weight: 3 },
+  { kind: "multiplier", value: 50, size: 2, weight: 1 },
+  { kind: "multiplier", value: 100, size: 2, weight: 0.9 },
+  { kind: "multiplier", value: 200, size: 2, weight: 0.1 },
   { kind: "flame", weight: 40 },
 ];
 const STAGE_TWO_EVENT_WEIGHTS = [
   ...COLLECTION_SLOT_ITEM_WEIGHTS,
 ];
 const STAGE_THREE_EVENT_WEIGHTS = [
+  { kind: "multiplier", value: 20, size: 1, weight: 30 },
   { kind: "multiplier", value: 30, size: 2, weight: 20 },
   { kind: "multiplier", value: 50, size: 2, weight: 15 },
-  { kind: "multiplier", value: 100, size: 2, weight: 10 },
-  { kind: "multiplier", value: 200, size: 2, weight: 5 },
-  { kind: "flame", weight: 50 },
+  { kind: "multiplier", value: 100, size: 2, weight: 3 },
+  { kind: "multiplier", value: 200, size: 2, weight: 2 },
+  { kind: "flame", weight: 30 },
 ];
 const FLAME_PATTERN_WEIGHTS = [
   { kind: "col1", weight: 10 },
@@ -2335,7 +2336,7 @@ function drawFx(now) {
     } else {
       const arc = Math.sin(t * Math.PI) * (item.arc || 0);
       y -= arc;
-      alpha *= t < 0.16 ? t / 0.16 : 1 - Math.max(0, t - 0.76) / 0.24;
+      alpha *= t < 0.16 ? t / 0.16 : 1 - Math.max(0, t - 0.88) / 0.12;
       radius *= 1 + Math.sin(t * Math.PI) * 0.45;
     }
 
@@ -2391,7 +2392,7 @@ function spawnCollectEnergy(cells) {
   const hostRect = host.getBoundingClientRect();
   const targetRect = target.getBoundingClientRect();
   const targetX = targetRect.left + targetRect.width * 0.5 - hostRect.left;
-  const targetY = targetRect.top + targetRect.height * 0.46 - hostRect.top;
+  const targetY = targetRect.top + targetRect.height * 0.68 - hostRect.top;
 
   const maxEnergy = window.innerWidth <= 520 ? 20 : 30;
   const points = Array.from(cells).slice(0, maxEnergy);
@@ -2871,6 +2872,15 @@ function renderHud() {
   betEl.textContent = currentBet().toLocaleString("en-US");
   fastButton.setAttribute("aria-pressed", String(state.fast));
   soundMenuButton.textContent = state.sound ? "音效開啟" : "音效關閉";
+}
+
+function triggerStageRollStep(stage) {
+  const slot = stageSlotEls[stage - 1];
+  const img = slot?.querySelector("img");
+  if (!img) return;
+  img.classList.remove("roll-step");
+  void img.offsetWidth;
+  img.classList.add("roll-step");
 }
 
 function findBoardEventCell({ allowMultiplierTarget = false, useMultiplierRows = false } = {}) {
@@ -3747,6 +3757,7 @@ async function processSpecialAwards() {
     for (let i = 0; i < EVENT_ROLL_STEPS; i += 1) {
       state.stagePreviews[stage - 1] = randomBoardEvent(stage);
       render();
+      triggerStageRollStep(stage);
       await wait(eventRollDelay(i));
     }
 

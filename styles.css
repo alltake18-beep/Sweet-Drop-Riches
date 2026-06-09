@@ -6446,7 +6446,11 @@ button {
 }
 
 .event-socket.rolling img {
-  animation: event-socket-roll 150ms steps(2, end) infinite;
+  animation: none;
+}
+
+.event-socket img.roll-step {
+  animation: event-socket-roll-step 180ms cubic-bezier(0.18, 0.86, 0.22, 1) both;
 }
 
 .event-socket.win img {
@@ -6529,13 +6533,17 @@ button {
   }
 }
 
-@keyframes event-socket-roll {
+@keyframes event-socket-roll-step {
   0% {
-    transform: translateY(-2px) scale(0.96);
-    opacity: 0.78;
+    transform: translateY(-3px) scale(0.96);
+    opacity: 0.76;
+  }
+  58% {
+    transform: translateY(2px) scale(1.04);
+    opacity: 1;
   }
   100% {
-    transform: translateY(2px) scale(1.02);
+    transform: translateY(0) scale(1);
     opacity: 1;
   }
 }
