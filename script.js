@@ -43,7 +43,7 @@ const COLLECTION_SLOT_ITEM_WEIGHTS = [
   { kind: "multiplier", value: 5, size: 1, weight: 8 },
   { kind: "multiplier", value: 10, size: 1, weight: 10 },
   { kind: "multiplier", value: 20, size: 1, weight: 10 },
-  { kind: "multiplier", value: 30, size: 1, weight: 10 },
+  { kind: "multiplier", value: 30, size: 2, weight: 10 },
   { kind: "multiplier", value: 50, size: 2, weight: 1.6 },
   { kind: "multiplier", value: 100, size: 2, weight: 0.32 },
   { kind: "multiplier", value: 200, size: 2, weight: 0.08 },
@@ -53,7 +53,7 @@ const STAGE_TWO_EVENT_WEIGHTS = [
   ...COLLECTION_SLOT_ITEM_WEIGHTS,
 ];
 const STAGE_THREE_EVENT_WEIGHTS = [
-  { kind: "multiplier", value: 30, size: 1, weight: 20 },
+  { kind: "multiplier", value: 30, size: 2, weight: 20 },
   { kind: "multiplier", value: 50, size: 2, weight: 15 },
   { kind: "multiplier", value: 100, size: 2, weight: 10 },
   { kind: "multiplier", value: 200, size: 2, weight: 5 },
@@ -88,33 +88,33 @@ const INITIAL_MULTIPLIER_VALUE_WEIGHTS_1X1 = [
   { value: 5, weight: 25 },
   { value: 10, weight: 25 },
   { value: 20, weight: 25 },
-  { value: 30, weight: 25 },
 ];
 const INITIAL_MULTIPLIER_VALUE_WEIGHTS_2X2 = [
-  { value: 50, weight: 80 },
+  { value: 30, weight: 25 },
+  { value: 50, weight: 55 },
   { value: 100, weight: 10 },
   { value: 200, weight: 10 },
 ];
 const MULTIPLIER_ANCHOR_ROW_WEIGHTS_1X1 = [
-  { row: 0, weight: 18 },
-  { row: 1, weight: 17 },
-  { row: 2, weight: 16 },
-  { row: 3, weight: 14 },
-  { row: 4, weight: 12 },
-  { row: 5, weight: 10 },
-  { row: 6, weight: 8 },
-  { row: 7, weight: 5 },
-  { row: 8, weight: 3 },
+  { row: 0, weight: 20 },
+  { row: 1, weight: 25 },
+  { row: 2, weight: 25 },
+  { row: 3, weight: 20 },
+  { row: 4, weight: 4 },
+  { row: 5, weight: 3 },
+  { row: 6, weight: 2 },
+  { row: 7, weight: 1 },
+  { row: 8, weight: 0 },
 ];
 const MULTIPLIER_ANCHOR_ROW_WEIGHTS_2X2 = [
-  { row: 0, weight: 18 },
-  { row: 1, weight: 17 },
-  { row: 2, weight: 16 },
-  { row: 3, weight: 14 },
-  { row: 4, weight: 12 },
-  { row: 5, weight: 10 },
-  { row: 6, weight: 8 },
-  { row: 7, weight: 5 },
+  { row: 0, weight: 20 },
+  { row: 1, weight: 25 },
+  { row: 2, weight: 25 },
+  { row: 3, weight: 20 },
+  { row: 4, weight: 7 },
+  { row: 5, weight: 3 },
+  { row: 6, weight: 0 },
+  { row: 7, weight: 0 },
 ];
 const WIN_TIERS = [
   { ratio: 100, label: "LEGENDARY WIN", art: "legendary", sound: "jackpot", className: "tier-legendary", duration: 2500, quick: 2500, particles: 86, countVolume: 0.055 },
@@ -617,7 +617,7 @@ function randomMultiplierSize() {
 }
 
 function multiplierSizeForValue(value, flags = {}) {
-  return value >= 50 ? 2 : 1;
+  return value >= 30 ? 2 : 1;
 }
 
 function multiplierAnchorRowWeights(size) {
@@ -2385,7 +2385,7 @@ function drawFx(now) {
 
 function spawnCollectEnergy(cells) {
   const host = document.querySelector(".play-area");
-  const target = document.querySelector(".special-meter");
+  const target = document.querySelector(".special-meter-track");
   if (!host || !target) return;
 
   const hostRect = host.getBoundingClientRect();
