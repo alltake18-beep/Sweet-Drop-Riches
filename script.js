@@ -1981,10 +1981,11 @@ async function attemptSwap(from, to) {
   state.currentWin = 0;
   state.slotFlash = Array(SLOT_COUNT).fill(null);
   tickCollectedSlotTurns();
-  resetSpecialMeterForAction();
   state.boardRescueLevel = movePressureLevel(moveCountBefore);
   playSound("move");
   await resolveMove(matches, specialPoint || (multiplierSwap ? multiplierSwap.multiplierPoint : to));
+  resetSpecialMeterForAction();
+  render();
 }
 
 function specialSwapPoint(from, to) {
@@ -2106,16 +2107,7 @@ async function resolveMove(initialMatches, preferredSpawn = null) {
     const collected = settleBoardBeforeFill();
     state.lastClearedCells = null;
     collectEnd();
-    if (collected.length > 0) {
-      setStatus(collected.map((item) => `第${item.col + 1}槽 ${formatScore(item.payout)}`).join("  "));
-      render();
-      spawnParticles(collected.length * 12);
-      const highCollect = Math.max(...collected.map((item) => item.value));
-      playMultiplierCollectSound(highCollect);
-      if (highCollect >= 100) triggerScreenFx("fx-jackpot", 780);
-      else if (highCollect >= 20) triggerScreenFx("fx-bump", 420);
-      await wait(resolveDelay(highCollect >= 100 ? 760 : highCollect >= 50 ? 640 : 540, 190));
-    }
+    await presentCollectedMultipliers(collected);
 
     const collapseEnd = startPerfSpan("move.collapse");
     setPerfPhase("drop");
@@ -3320,6 +3312,18 @@ function settleBoardBeforeFill() {
   return collected;
 }
 
+async function presentCollectedMultipliers(collected) {
+  if (collected.length === 0) return;
+  setStatus(collected.map((item) => `SLOT ${item.col + 1} ${formatScore(item.payout)}`).join("  "));
+  render();
+  spawnParticles(collected.length * 12);
+  const highCollect = Math.max(...collected.map((item) => item.value));
+  playMultiplierCollectSound(highCollect);
+  if (highCollect >= 100) triggerScreenFx("fx-jackpot", 780);
+  else if (highCollect >= 20) triggerScreenFx("fx-bump", 420);
+  await wait(resolveDelay(highCollect >= 100 ? 760 : highCollect >= 50 ? 640 : 540, 190));
+}
+
 function multiplierDropDistance(multiplier) {
   const size = multiplierSize(multiplier);
   if (multiplier.row >= ROWS - size) return 0;
@@ -3581,19 +3585,13 @@ async function playFlameEvent(stage = currentSpecialStageIndex()) {
   state.lastClearedCells = null;
   state.clearing = new Set();
 
+  await presentCollectedMultipliers(collected);
+
   fillEmptyCells();
   maybeSeedRescueCascade(0);
   render();
   playSound("drop");
   await wait(resolveDelay(430, 170));
-
-  if (collected.length > 0) {
-    const highCollect = Math.max(...collected.map((item) => item.value));
-    playMultiplierCollectSound(highCollect);
-    if (highCollect >= 100) triggerScreenFx("fx-jackpot", 780);
-    else if (highCollect >= 20) triggerScreenFx("fx-bump", 420);
-    await wait(resolveDelay(highCollect >= 100 ? 760 : highCollect >= 50 ? 640 : 540, 190));
-  }
 
   clearFlameMarks();
   clearFallMarks();
@@ -3646,18 +3644,12 @@ async function playCandyClearEvent(type) {
   state.lastClearedCells = null;
   state.clearing = new Set();
 
+  await presentCollectedMultipliers(collected);
+
   fillEmptyCells();
   render();
   playSound("drop");
   await wait(resolveDelay(430, 170));
-
-  if (collected.length > 0) {
-    const highCollect = Math.max(...collected.map((item) => item.value));
-    playMultiplierCollectSound(highCollect);
-    if (highCollect >= 100) triggerScreenFx("fx-jackpot", 780);
-    else if (highCollect >= 20) triggerScreenFx("fx-bump", 420);
-    await wait(resolveDelay(highCollect >= 100 ? 760 : highCollect >= 50 ? 640 : 540, 190));
-  }
 
   clearFallMarks();
   setEventPulse(false);

@@ -7074,6 +7074,27 @@ button {
   display: none !important;
 }
 
+/* Final override: board objects use the cell area without spilling past it. */
+.symbol-img {
+  max-width: 100% !important;
+  max-height: 100% !important;
+}
+
+.candy-img {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.special-img {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.event-socket[data-stage="2"],
+.stage-slot[data-stage="2"] {
+  left: 59.2% !important;
+}
+
 /* Final override: bottom controls live inside the cabinet slot art. */
 .hud {
   position: absolute !important;
