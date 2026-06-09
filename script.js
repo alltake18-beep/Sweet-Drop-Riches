@@ -1048,9 +1048,12 @@ function slotRingPath(startAngle, sweepAngle) {
 function slotCountdownMarkup(turns, col) {
   const maskId = `slot-ring-mask-${col}`;
   const filterId = `slot-ring-glow-${col}`;
+  const segmentAngle = 360 / SLOT_TURN_MAX;
+  const segmentGap = Math.min(6, segmentAngle * 0.34);
+  const segmentSweep = Math.max(6, segmentAngle - segmentGap);
   const segments = Array.from({ length: SLOT_TURN_MAX }, (_, index) => {
-    const start = -162 + index * 36;
-    const path = slotRingPath(start, 24);
+    const start = -90 + index * segmentAngle + segmentGap / 2;
+    const path = slotRingPath(start, segmentSweep);
     const stateClass = index < turns ? "on" : "off";
     return `<path class="ring-segment ${stateClass}" d="${path}" pathLength="1"></path>`;
   }).join("");

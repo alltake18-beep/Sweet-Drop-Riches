@@ -6669,27 +6669,31 @@ button {
   fill: none;
   vector-effect: non-scaling-stroke;
   stroke-linecap: round;
-  stroke-width: 7.4;
+  stroke-width: 8.2;
 }
 
 .slot-countdown .ring-track .ring-segment {
-  stroke: rgba(91, 52, 33, 0.72);
-  opacity: 0.5;
+  stroke: rgba(94, 46, 26, 0.82);
+  opacity: 0.78;
 }
 
 .slot-countdown .ring-track .ring-segment.on {
-  stroke: rgba(255, 229, 132, 0.82);
-  opacity: 0.9;
+  stroke: rgba(255, 222, 106, 0.95);
+  opacity: 1;
 }
 
 .slot-countdown .ring-glow .ring-segment {
-  stroke: rgba(104, 244, 255, 0.86);
-  stroke-width: 4.6;
+  stroke: rgba(91, 242, 255, 0.92);
+  stroke-width: 5;
   opacity: 0;
 }
 
 .slot-countdown .ring-glow .ring-segment.on {
   opacity: 1;
+}
+
+.slot-countdown .ring-glow .ring-segment.off {
+  opacity: 0;
 }
 
 .slot-symbol {
