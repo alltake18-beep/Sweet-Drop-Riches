@@ -10,21 +10,21 @@ const PERF_ENABLED = new URLSearchParams(window.location.search).has("perf");
 const SPECIAL_METER_TARGET = 9;
 const SPECIAL_METER_THRESHOLDS = [9, 21, 33];
 const SPECIAL_METER_MAX = SPECIAL_METER_THRESHOLDS[SPECIAL_METER_THRESHOLDS.length - 1];
-const AUDIO_MASTER_VOLUME = 0.5;
-const AUDIO_SFX_VOLUME = 0.68;
-const AUDIO_BGM_VOLUME = 0.34;
+const AUDIO_MASTER_VOLUME = 0.82;
+const AUDIO_SFX_VOLUME = 0.7;
+const AUDIO_BGM_VOLUME = 0.4;
 const AUDIO_LOWCUT_HZ = 85;
-const AUDIO_SFX_PEAK_LIMIT = 0.16;
-const AUDIO_BGM_PEAK_LIMIT = 0.045;
+const AUDIO_SFX_PEAK_LIMIT = 0.26;
+const AUDIO_BGM_PEAK_LIMIT = 0.07;
 const AUDIO_CATEGORY_GAINS = {
-  button: 0.74,
-  movement: 0.7,
-  match: 0.68,
-  coin: 0.64,
-  multiplier: 0.62,
-  payout: 0.66,
-  special: 0.58,
-  error: 0.55,
+  button: 0.9,
+  movement: 0.86,
+  match: 0.86,
+  coin: 0.84,
+  multiplier: 0.82,
+  payout: 0.84,
+  special: 0.78,
+  error: 0.76,
 };
 const BET_STEPS = [50, 100, 200, 300, 500, 1000];
 const MOVE_PRESSURE_SOFT_LIMIT = 5;
