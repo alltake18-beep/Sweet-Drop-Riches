@@ -7081,18 +7081,30 @@ button {
 }
 
 .candy-img {
-  width: 100% !important;
-  height: 100% !important;
+  width: 96% !important;
+  height: 96% !important;
+  transform: translateY(-2%);
 }
 
-.special-img {
+.tile.candy-purple .candy-img {
   width: 100% !important;
   height: 100% !important;
+  transform: none;
 }
 
 .event-socket[data-stage="2"],
 .stage-slot[data-stage="2"] {
-  left: 59.2% !important;
+  left: 50% !important;
+}
+
+.meter-mark-2 {
+  left: 43.3% !important;
+}
+
+.special-meter-track::after {
+  background:
+    linear-gradient(90deg, transparent calc(27.273% - 1px), rgba(255, 247, 205, 0.95) calc(27.273% - 1px) calc(27.273% + 1px), transparent calc(27.273% + 1px)),
+    linear-gradient(90deg, transparent calc(43.3% - 1px), rgba(255, 247, 205, 0.95) calc(43.3% - 1px) calc(43.3% + 1px), transparent calc(43.3% + 1px)) !important;
 }
 
 /* Final override: bottom controls live inside the cabinet slot art. */
