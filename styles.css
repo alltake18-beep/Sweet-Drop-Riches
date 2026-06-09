@@ -1572,11 +1572,11 @@ button {
 .multiplier-mark {
   position: absolute;
   left: 50%;
-  top: 53%;
+  top: 61%;
   z-index: 8;
   color: #fff8da;
   font-weight: 1000;
-  font-size: 31px;
+  font-size: 34px;
   line-height: 1;
   letter-spacing: 0;
   transform: translate(-50%, -50%) scale(var(--mark-scale));
@@ -1590,23 +1590,23 @@ button {
   white-space: nowrap;
 }
 
-.multiplier-mark.score-length-4 { font-size: 26px; }
-.multiplier-mark.score-length-5 { font-size: 22px; }
-.multiplier-mark.score-length-6 { font-size: 18px; }
+.multiplier-mark.score-length-4 { font-size: 30px; }
+.multiplier-mark.score-length-5 { font-size: 24px; }
+.multiplier-mark.score-length-6 { font-size: 20px; }
 
 .tile.multiplier-size-1 .multiplier-mark {
-  font-size: 20px;
+  font-size: 22px;
   -webkit-text-stroke-width: 1.25px;
 }
 
-.tile.multiplier-size-1 .multiplier-mark.score-length-4 { font-size: 16px; }
-.tile.multiplier-size-1 .multiplier-mark.score-length-5 { font-size: 13px; }
+.tile.multiplier-size-1 .multiplier-mark.score-length-4 { font-size: 18px; }
+.tile.multiplier-size-1 .multiplier-mark.score-length-5 { font-size: 14px; }
 .tile.multiplier-size-1 .multiplier-mark.score-length-6 { font-size: 11px; }
 
 .tile.multiplier.value-30 .multiplier-mark,
 .tile.multiplier.value-50 .multiplier-mark,
 .tile.multiplier.value-100 .multiplier-mark {
-  font-size: 34px;
+  font-size: 36px;
 }
 
 .tile.multiplier-size-1.value-30 .multiplier-mark,
@@ -1627,11 +1627,11 @@ button {
   font-size: 19px;
 }
 
-.tile.multiplier .multiplier-mark.score-length-4 { font-size: 26px; }
-.tile.multiplier .multiplier-mark.score-length-5 { font-size: 22px; }
-.tile.multiplier .multiplier-mark.score-length-6 { font-size: 18px; }
-.tile.multiplier-size-1 .multiplier-mark.score-length-4 { font-size: 16px; }
-.tile.multiplier-size-1 .multiplier-mark.score-length-5 { font-size: 13px; }
+.tile.multiplier .multiplier-mark.score-length-4 { font-size: 30px; }
+.tile.multiplier .multiplier-mark.score-length-5 { font-size: 24px; }
+.tile.multiplier .multiplier-mark.score-length-6 { font-size: 20px; }
+.tile.multiplier-size-1 .multiplier-mark.score-length-4 { font-size: 18px; }
+.tile.multiplier-size-1 .multiplier-mark.score-length-5 { font-size: 14px; }
 .tile.multiplier-size-1 .multiplier-mark.score-length-6 { font-size: 11px; }
 
 .multiplier-glint {
@@ -6462,6 +6462,18 @@ button {
   text-shadow: 0 1px 0 #21114b, 0 0 8px rgba(255, 225, 88, 0.78);
 }
 
+.event-socket.multiplier-preview[data-value="10,000"]::after,
+.event-socket.multiplier-preview[data-value="20,000"]::after,
+.event-socket.multiplier-preview[data-value="30,000"]::after,
+.event-socket.multiplier-preview[data-value="50,000"]::after {
+  font-size: clamp(10px, 2.45vw, 13px);
+}
+
+.event-socket.multiplier-preview[data-value="100,000"]::after,
+.event-socket.multiplier-preview[data-value="200,000"]::after {
+  font-size: clamp(8px, 2.05vw, 11px);
+}
+
 .event-socket.rolling img {
   animation: none;
 }
@@ -7108,7 +7120,7 @@ button {
   align-self: start !important;
   margin: -1px 0 0 !important;
   color: #ffe88e !important;
-  font-size: clamp(17px, 4.25vw, 28px) !important;
+  font-size: clamp(14px, 3.35vw, 22px) !important;
   line-height: 1 !important;
   letter-spacing: 0 !important;
   white-space: nowrap !important;
