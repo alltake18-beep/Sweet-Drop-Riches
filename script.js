@@ -128,6 +128,7 @@ const EVENT_ROLL_STEPS = 5;
 const EVENT_ROLL_TOTAL = 1398;
 const EVENT_ROLL_TOTAL_FAST = 489;
 const EVENT_ROLL_WEIGHTS = [0.72, 0.86, 1.02, 1.15, 1.25];
+const FULL_DROP_WHEEL_SPIN_MS = 5000;
 const DEFAULT_SOUND_PROFILE = { category: "movement", cooldown: 40, maxVoices: 2, attenuation: 0.4, release: 360, gain: 0.72 };
 const FULL_DROP_WHEEL_PRIZES = [
   { label: "0.1x", multiplier: 0.1, weight: 30 },
@@ -2223,7 +2224,7 @@ async function maybeFullDropBonus() {
 }
 
 function fullDropWheelGradient() {
-  const colors = ["#ff4fc4", "#32d7ff", "#ffe06a", "#82ff62", "#ff8b37", "#b86cff"];
+  const colors = ["#ffd96c", "#ff7fc4", "#7fdfff", "#ad75ff"];
   const slice = 100 / FULL_DROP_WHEEL_PRIZES.length;
   return `conic-gradient(${FULL_DROP_WHEEL_PRIZES.map((_, index) => {
     const start = +(index * slice).toFixed(3);
@@ -2249,7 +2250,7 @@ async function playFullDropWheel() {
   const prize = weightedPick(FULL_DROP_WHEEL_PRIZES);
   const prizeIndex = FULL_DROP_WHEEL_PRIZES.indexOf(prize);
   const sliceAngle = 360 / FULL_DROP_WHEEL_PRIZES.length;
-  const finalRotation = 360 * 7 + (360 - (prizeIndex * sliceAngle + sliceAngle * 0.5));
+  const finalRotation = 360 * 10 + (360 - (prizeIndex * sliceAngle + sliceAngle * 0.5));
   const award = Math.round(baseTotal * prize.multiplier);
 
   const overlay = document.createElement("div");
@@ -2265,7 +2266,7 @@ async function playFullDropWheel() {
     </div>
     <div class="full-drop-wheel-result" aria-live="polite">
       <span>DROP WHEEL</span>
-      <strong>${formatScore(baseTotal)}</strong>
+      <strong></strong>
     </div>
   `;
   host.appendChild(overlay);
@@ -2290,22 +2291,24 @@ async function playFullDropWheel() {
   await wait(resolveDelay(980, 620));
 
   const wheel = overlay.querySelector(".full-drop-wheel");
+  const resultLabel = overlay.querySelector(".full-drop-wheel-result span");
   const result = overlay.querySelector(".full-drop-wheel-result strong");
   overlay.classList.add("is-spinning");
   let spinElapsed = 0;
   const spinTimer = window.setInterval(() => {
     spinElapsed += 180;
     playSound("wheelSpin");
-    if (spinElapsed >= 3000) window.clearInterval(spinTimer);
+    if (spinElapsed >= FULL_DROP_WHEEL_SPIN_MS) window.clearInterval(spinTimer);
   }, 180);
   await wait(40);
   wheel.style.transform = `translate(-50%, -50%) rotate(${finalRotation}deg)`;
-  await wait(3000);
+  await wait(FULL_DROP_WHEEL_SPIN_MS);
   window.clearInterval(spinTimer);
 
   playSound("wheelStop");
   addWin(award);
-  result.textContent = `${prize.label}  ${formatScore(award)}`;
+  resultLabel.textContent = `${prize.label} AWARD`;
+  result.textContent = formatScore(award);
   overlay.classList.remove("is-spinning");
   overlay.classList.add("is-complete");
   triggerScreenFx(prize.multiplier >= 5 ? "fx-jackpot" : prize.multiplier >= 1 ? "fx-blast" : "fx-bump", 820);

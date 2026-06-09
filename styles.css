@@ -6872,7 +6872,7 @@ button {
     0 0 28px rgba(255, 91, 205, 0.64),
     0 18px 38px rgba(0, 0, 0, 0.52);
   overflow: hidden;
-  transition: transform 3000ms cubic-bezier(0.09, 0.72, 0.08, 1);
+  transition: transform 5000ms cubic-bezier(0.08, 0.76, 0.06, 1);
 }
 
 .full-drop-wheel::before {
@@ -6887,33 +6887,36 @@ button {
 .full-drop-wheel-pointer {
   position: absolute;
   left: 50%;
-  top: calc(49% - min(33vw, 165px) - 8px);
-  z-index: 4;
+  top: calc(49% - min(33vw, 165px) - 13px);
+  z-index: 8;
   width: 0;
   height: 0;
   transform: translateX(-50%);
-  border-left: 15px solid transparent;
-  border-right: 15px solid transparent;
-  border-top: 30px solid #fff1a6;
+  border-left: 22px solid transparent;
+  border-right: 22px solid transparent;
+  border-top: 42px solid #fff1a6;
   filter:
-    drop-shadow(0 0 8px rgba(255, 225, 92, 0.95))
-    drop-shadow(0 3px 0 rgba(88, 24, 16, 0.68));
+    drop-shadow(0 0 12px rgba(255, 229, 90, 1))
+    drop-shadow(0 5px 0 rgba(88, 24, 16, 0.82));
 }
 
 .full-drop-wheel-labels span {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 42px;
-  margin-left: -21px;
-  margin-top: -10px;
-  color: #3b1237;
-  font-size: clamp(9px, 2.3vw, 13px);
+  width: 58px;
+  margin-left: -29px;
+  margin-top: -11px;
+  color: #290b30;
+  font-size: clamp(12px, 3.45vw, 18px);
   font-weight: 1000;
   line-height: 1;
   text-align: center;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.72);
-  transform: rotate(var(--angle)) translateY(calc(min(31vw, 150px) * -1)) rotate(calc(var(--angle) * -1));
+  -webkit-text-stroke: 0.65px rgba(255, 249, 198, 0.78);
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.82),
+    0 2px 4px rgba(58, 10, 45, 0.38);
+  transform: rotate(var(--angle)) translateY(calc(min(29.5vw, 145px) * -1)) rotate(calc(var(--angle) * -1));
 }
 
 .full-drop-wheel-core {
@@ -6972,7 +6975,7 @@ button {
   border: 2px solid rgba(255, 223, 111, 0.9);
   box-shadow: 0 0 18px rgba(255, 89, 204, 0.72);
   transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.78);
-  animation: full-drop-chip-fly 760ms cubic-bezier(0.16, 0.84, 0.18, 1) var(--delay, 0ms) both;
+  animation: full-drop-chip-fly 920ms cubic-bezier(0.16, 0.84, 0.18, 1) var(--delay, 0ms) both;
 }
 
 .full-drop-wheel-result {
@@ -6990,6 +6993,8 @@ button {
   background: rgba(38, 7, 28, 0.82);
   border: 1px solid rgba(255, 216, 111, 0.58);
   box-shadow: 0 0 18px rgba(255, 88, 205, 0.34);
+  opacity: 0;
+  transform: translateX(-50%) translateY(10px) scale(0.94);
 }
 
 .full-drop-wheel-overlay.is-spinning .full-drop-wheel {
@@ -7003,6 +7008,7 @@ button {
 }
 
 .full-drop-wheel-overlay.is-complete .full-drop-wheel-result {
+  opacity: 1;
   animation: full-drop-result-pop 520ms cubic-bezier(0.16, 1.12, 0.2, 1) both;
 }
 
@@ -7014,9 +7020,13 @@ button {
   18% {
     opacity: 1;
   }
-  100% {
+  82% {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.56);
   }
 }
 
