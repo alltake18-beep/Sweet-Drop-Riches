@@ -6,26 +6,26 @@ const path = require("path");
 const ROWS = 9;
 const COLS = 6;
 const SLOT_COUNT = 3;
-const SLOT_TURN_MAX = 10;
-const SPECIAL_METER_THRESHOLDS = [9, 21, 33];
-const SPECIAL_METER_MAX = 33;
+const SLOT_TURN_MAX = 20;
+const SPECIAL_METER_THRESHOLDS = [9, 21, 40];
+const SPECIAL_METER_MAX = SPECIAL_METER_THRESHOLDS[SPECIAL_METER_THRESHOLDS.length - 1];
 const CANDIES = ["red", "blue", "green", "orange", "purple"];
 const MULTIPLIER_COLS = [0, 2, 4];
 
 const INITIAL_MULTIPLIER_SIZE_WEIGHTS = [
-  { size: 1, weight: 90 },
-  { size: 2, weight: 10 },
+  { size: 1, weight: 94 },
+  { size: 2, weight: 6 },
 ];
 const INITIAL_MULTIPLIER_VALUE_WEIGHTS_1X1 = [
-  { value: 5, weight: 70 },
+  { value: 5, weight: 76 },
   { value: 10, weight: 20 },
-  { value: 20, weight: 10 },
+  { value: 20, weight: 4 },
 ];
 const INITIAL_MULTIPLIER_VALUE_WEIGHTS_2X2 = [
-  { value: 30, weight: 95 },
-  { value: 50, weight: 4 },
-  { value: 100, weight: 0.8 },
-  { value: 200, weight: 0.2 },
+  { value: 30, weight: 97.5 },
+  { value: 50, weight: 1.8 },
+  { value: 100, weight: 0.45 },
+  { value: 200, weight: 0.25 },
 ];
 const MULTIPLIER_ANCHOR_ROW_WEIGHTS_1X1 = [
   { row: 0, weight: 20 },
@@ -49,27 +49,27 @@ const MULTIPLIER_ANCHOR_ROW_WEIGHTS_2X2 = [
   { row: 7, weight: 0 },
 ];
 const COLLECTION_SLOT_ITEM_WEIGHTS = [
-  { kind: "candyClear", type: "red", weight: 6 },
-  { kind: "candyClear", type: "blue", weight: 6 },
-  { kind: "candyClear", type: "green", weight: 6 },
-  { kind: "candyClear", type: "orange", weight: 6 },
-  { kind: "candyClear", type: "purple", weight: 6 },
-  { kind: "multiplier", value: 5, size: 1, weight: 12 },
-  { kind: "multiplier", value: 10, size: 1, weight: 8 },
-  { kind: "multiplier", value: 20, size: 1, weight: 5 },
-  { kind: "multiplier", value: 30, size: 2, weight: 3 },
-  { kind: "multiplier", value: 50, size: 2, weight: 1 },
-  { kind: "multiplier", value: 100, size: 2, weight: 0.9 },
-  { kind: "multiplier", value: 200, size: 2, weight: 0.1 },
-  { kind: "flame", weight: 40 },
+  { kind: "candyClear", type: "red", weight: 5 },
+  { kind: "candyClear", type: "blue", weight: 5 },
+  { kind: "candyClear", type: "green", weight: 5 },
+  { kind: "candyClear", type: "orange", weight: 5 },
+  { kind: "candyClear", type: "purple", weight: 5 },
+  { kind: "multiplier", value: 5, size: 1, weight: 20 },
+  { kind: "multiplier", value: 10, size: 1, weight: 13.2 },
+  { kind: "multiplier", value: 20, size: 1, weight: 2.4 },
+  { kind: "multiplier", value: 30, size: 2, weight: 1 },
+  { kind: "multiplier", value: 50, size: 2, weight: 0.25 },
+  { kind: "multiplier", value: 100, size: 2, weight: 0.08 },
+  { kind: "multiplier", value: 200, size: 2, weight: 0.02 },
+  { kind: "flame", weight: 37.45 },
 ];
 const STAGE_THREE_EVENT_WEIGHTS = [
-  { kind: "multiplier", value: 20, size: 1, weight: 35 },
-  { kind: "multiplier", value: 30, size: 2, weight: 25 },
-  { kind: "multiplier", value: 50, size: 2, weight: 8 },
+  { kind: "multiplier", value: 20, size: 1, weight: 27 },
+  { kind: "multiplier", value: 30, size: 2, weight: 22 },
+  { kind: "multiplier", value: 50, size: 2, weight: 7 },
   { kind: "multiplier", value: 100, size: 2, weight: 1.5 },
   { kind: "multiplier", value: 200, size: 2, weight: 0.5 },
-  { kind: "flame", weight: 30 },
+  { kind: "flame", weight: 42 },
 ];
 const FLAME_PATTERN_WEIGHTS = [
   { kind: "col1", weight: 10 },
@@ -80,18 +80,18 @@ const FLAME_PATTERN_WEIGHTS = [
   { kind: "cross2", weight: 20 },
 ];
 const FULL_DROP_WHEEL_PRIZES = [
-  { label: "0.1x", multiplier: 0.1, weight: 30 },
-  { label: "0.2x", multiplier: 0.2, weight: 30 },
-  { label: "0.5x", multiplier: 0.5, weight: 30 },
-  { label: "1x", multiplier: 1, weight: 6 },
-  { label: "1.5x", multiplier: 1.5, weight: 2 },
-  { label: "2x", multiplier: 2, weight: 1 },
-  { label: "5x", multiplier: 5, weight: 0.8 },
-  { label: "10x", multiplier: 10, weight: 0.1 },
-  { label: "20x", multiplier: 20, weight: 0.08 },
-  { label: "30x", multiplier: 30, weight: 0.01 },
-  { label: "50x", multiplier: 50, weight: 0.005 },
-  { label: "100x", multiplier: 100, weight: 0.005 },
+  { label: "0.1x", multiplier: 0.1, weight: 26 },
+  { label: "0.2x", multiplier: 0.2, weight: 26 },
+  { label: "0.5x", multiplier: 0.5, weight: 31 },
+  { label: "1x", multiplier: 1, weight: 9 },
+  { label: "1.5x", multiplier: 1.5, weight: 3.5 },
+  { label: "2x", multiplier: 2, weight: 2.2 },
+  { label: "5x", multiplier: 5, weight: 1 },
+  { label: "10x", multiplier: 10, weight: 0.45 },
+  { label: "20x", multiplier: 20, weight: 0.25 },
+  { label: "30x", multiplier: 30, weight: 0.1 },
+  { label: "50x", multiplier: 50, weight: 0.05 },
+  { label: "100x", multiplier: 100, weight: 0 },
 ];
 
 const args = parseArgs(process.argv.slice(2));
@@ -244,7 +244,7 @@ function makeCandyBoard() {
 }
 
 function addInitialMultipliers(state) {
-  const count = random() < 0.75 ? 2 : 3;
+  const count = random() < 0.65 ? 2 : 3;
   const multipliers = [];
   while (multipliers.length < count) {
     const size = weightedPick(INITIAL_MULTIPLIER_SIZE_WEIGHTS).size;
@@ -290,7 +290,9 @@ function randomItem(items) {
 }
 
 function pickMultiplierSpawnCell(state, multipliers, size) {
-  const cols = multiplierColsForSize(size);
+  const allCols = multiplierColsForSize(size);
+  const preferredCols = preferredMultiplierCols(state, multipliers, size);
+  const cols = preferredCols.length ? preferredCols : allCols;
   const rowWeights = (size === 1 ? MULTIPLIER_ANCHOR_ROW_WEIGHTS_1X1 : MULTIPLIER_ANCHOR_ROW_WEIGHTS_2X2)
     .filter((item) => item.weight > 0 && item.row <= ROWS - size)
     .map((item) => ({ ...item }));
@@ -303,6 +305,28 @@ function pickMultiplierSpawnCell(state, multipliers, size) {
     rowWeights.splice(rowWeights.indexOf(picked), 1);
   }
   return null;
+}
+
+function preferredMultiplierCols(state, multipliers, size) {
+  const occupied = occupiedMultiplierReels(state, multipliers);
+  return multiplierColsForSize(size).filter((col) => !occupied.has(reelIndexFromCol(col)));
+}
+
+function occupiedMultiplierReels(state, multipliers = state.multipliers) {
+  const reels = new Set();
+  for (const multiplier of multipliers) reels.add(slotIndexFromMultiplier(multiplier));
+  for (let col = 0; col < SLOT_COUNT; col += 1) {
+    if (state.filledSlots.has(col) || state.slotValues[col]) reels.add(col);
+  }
+  return reels;
+}
+
+function reelIndexFromCol(col) {
+  return Math.max(0, Math.min(SLOT_COUNT - 1, Math.floor(col / 2)));
+}
+
+function slotIndexFromMultiplier(multiplier) {
+  return reelIndexFromCol(multiplier.col);
 }
 
 function multiplierColsForSize(size) {
@@ -711,7 +735,7 @@ function collectMultipliers(state) {
         changed = true;
       }
       if (multiplier.row >= ROWS - multiplier.size) {
-        collected.push({ col: Math.max(0, Math.min(SLOT_COUNT - 1, Math.floor(multiplier.col / 2))), value: multiplier.value, payout: multiplier.payout });
+        collected.push({ col: slotIndexFromMultiplier(multiplier), value: multiplier.value, payout: multiplier.payout });
         state.multipliers = state.multipliers.filter((item) => item.id !== multiplier.id);
         changed = true;
       }
@@ -852,7 +876,8 @@ function buildReport(runStats) {
   lines.push(`資產不足 ${fmt(runStats.bet)} 離場人數：${fmt(runStats.bustPlayers)}`);
   lines.push(`未結束玩家人數：${fmt(runStats.unfinishedPlayers)}`);
   lines.push("");
-  lines.push("## 倍數糖RTP統計");
+  const multiplierWin = Object.values(runStats.multiplier).reduce((sum, item) => sum + item.win, 0);
+  lines.push(`## 倍數糖RTP：${pct(multiplierWin / runStats.totalBet)}`);
   for (const value of [5, 10, 20, 30, 50, 100, 200]) {
     const item = runStats.multiplier[value];
     lines.push(`- ${value}x：次數 ${fmt(item.count)} / 贏分 ${fmt(item.win)} / RTP ${pct(item.win / runStats.totalBet)}`);
@@ -865,13 +890,15 @@ function buildReport(runStats) {
     lines.push(`- 第${stage}槽平均幾轉出現：${count ? fmt(avg, 2) : "未觸發"}（次數 ${fmt(count)}）`);
   }
   lines.push("");
-  lines.push("## 轉輪觸發統計");
+  const wheelWin = Object.values(runStats.wheel).reduce((sum, item) => sum + item.win, 0);
+  const wheelBase = Object.values(runStats.wheel).reduce((sum, item) => sum + item.base, 0);
+  lines.push(`## 轉輪觸發RTP：${pct(wheelWin / runStats.totalBet)}`);
   lines.push(`觸發次數：${fmt(runStats.wheelTriggers)}`);
-  lines.push(`平均每 100 步觸發：${fmt((runStats.wheelTriggers / runStats.totalMoves) * 100, 2)}`);
+  lines.push(`平均幾轉觸發：${runStats.wheelTriggers ? fmt(runStats.totalMoves / runStats.wheelTriggers, 2) : "未觸發"}`);
+  lines.push(`平均倍數：${wheelBase ? fmt(wheelWin / wheelBase, 3) : "0.000"}x`);
   for (const prize of FULL_DROP_WHEEL_PRIZES) {
     const item = runStats.wheel[prize.label];
-    const avgMultiplier = item.base ? item.win / item.base : 0;
-    lines.push(`- ${prize.label}：次數 ${fmt(item.count)} / 平均倍數 ${fmt(avgMultiplier, 3)}x / 佔總RTP ${pct(item.win / runStats.totalBet)}`);
+    lines.push(`- ${prize.label}：次數 ${fmt(item.count)} / 佔總RTP ${pct(item.win / runStats.totalBet)}`);
   }
   if (config.seed) {
     lines.push("");

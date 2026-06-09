@@ -5,10 +5,10 @@ const MULTIPLIER_SIZE = 2;
 const MULTIPLIER_SIZES = [1, 2];
 const MULTIPLIER_COLS = [0, 2, 4];
 const SYMBOL_VERSION = "event-energy-slot-scale";
-const SLOT_TURN_MAX = 10;
+const SLOT_TURN_MAX = 20;
 const PERF_ENABLED = new URLSearchParams(window.location.search).has("perf");
 const SPECIAL_METER_TARGET = 9;
-const SPECIAL_METER_THRESHOLDS = [9, 21, 33];
+const SPECIAL_METER_THRESHOLDS = [9, 21, 40];
 const SPECIAL_METER_MAX = SPECIAL_METER_THRESHOLDS[SPECIAL_METER_THRESHOLDS.length - 1];
 const AUDIO_MASTER_VOLUME = 0.82;
 const AUDIO_SFX_VOLUME = 0.7;
@@ -35,30 +35,30 @@ const RESCUE_CASCADE_CHANCE_HARD = 0.84;
 const CANDIES = ["red", "blue", "green", "orange", "purple"];
 const MULTIPLIER_VALUES = [5, 10, 20, 30, 50, 100, 200];
 const COLLECTION_SLOT_ITEM_WEIGHTS = [
-  { kind: "candyClear", type: "red", weight: 6 },
-  { kind: "candyClear", type: "blue", weight: 6 },
-  { kind: "candyClear", type: "green", weight: 6 },
-  { kind: "candyClear", type: "orange", weight: 6 },
-  { kind: "candyClear", type: "purple", weight: 6 },
-  { kind: "multiplier", value: 5, size: 1, weight: 12 },
-  { kind: "multiplier", value: 10, size: 1, weight: 8 },
-  { kind: "multiplier", value: 20, size: 1, weight: 5 },
-  { kind: "multiplier", value: 30, size: 2, weight: 3 },
-  { kind: "multiplier", value: 50, size: 2, weight: 1 },
-  { kind: "multiplier", value: 100, size: 2, weight: 0.9 },
-  { kind: "multiplier", value: 200, size: 2, weight: 0.1 },
-  { kind: "flame", weight: 40 },
+  { kind: "candyClear", type: "red", weight: 5 },
+  { kind: "candyClear", type: "blue", weight: 5 },
+  { kind: "candyClear", type: "green", weight: 5 },
+  { kind: "candyClear", type: "orange", weight: 5 },
+  { kind: "candyClear", type: "purple", weight: 5 },
+  { kind: "multiplier", value: 5, size: 1, weight: 20 },
+  { kind: "multiplier", value: 10, size: 1, weight: 13.2 },
+  { kind: "multiplier", value: 20, size: 1, weight: 2.4 },
+  { kind: "multiplier", value: 30, size: 2, weight: 1 },
+  { kind: "multiplier", value: 50, size: 2, weight: 0.25 },
+  { kind: "multiplier", value: 100, size: 2, weight: 0.08 },
+  { kind: "multiplier", value: 200, size: 2, weight: 0.02 },
+  { kind: "flame", weight: 37.45 },
 ];
 const STAGE_TWO_EVENT_WEIGHTS = [
   ...COLLECTION_SLOT_ITEM_WEIGHTS,
 ];
 const STAGE_THREE_EVENT_WEIGHTS = [
-  { kind: "multiplier", value: 20, size: 1, weight: 35 },
-  { kind: "multiplier", value: 30, size: 2, weight: 25 },
-  { kind: "multiplier", value: 50, size: 2, weight: 8 },
+  { kind: "multiplier", value: 20, size: 1, weight: 27 },
+  { kind: "multiplier", value: 30, size: 2, weight: 22 },
+  { kind: "multiplier", value: 50, size: 2, weight: 7 },
   { kind: "multiplier", value: 100, size: 2, weight: 1.5 },
   { kind: "multiplier", value: 200, size: 2, weight: 0.5 },
-  { kind: "flame", weight: 30 },
+  { kind: "flame", weight: 42 },
 ];
 const FLAME_PATTERN_WEIGHTS = [
   { kind: "col1", weight: 10 },
@@ -82,19 +82,19 @@ const MULTIPLIER_SIZE_WEIGHTS = [
   { size: 2, weight: 50 },
 ];
 const INITIAL_MULTIPLIER_SIZE_WEIGHTS = [
-  { size: 1, weight: 90 },
-  { size: 2, weight: 10 },
+  { size: 1, weight: 94 },
+  { size: 2, weight: 6 },
 ];
 const INITIAL_MULTIPLIER_VALUE_WEIGHTS_1X1 = [
-  { value: 5, weight: 70 },
+  { value: 5, weight: 76 },
   { value: 10, weight: 20 },
-  { value: 20, weight: 10 },
+  { value: 20, weight: 4 },
 ];
 const INITIAL_MULTIPLIER_VALUE_WEIGHTS_2X2 = [
-  { value: 30, weight: 95 },
-  { value: 50, weight: 4 },
-  { value: 100, weight: 0.8 },
-  { value: 200, weight: 0.2 },
+  { value: 30, weight: 97.5 },
+  { value: 50, weight: 1.8 },
+  { value: 100, weight: 0.45 },
+  { value: 200, weight: 0.25 },
 ];
 const MULTIPLIER_ANCHOR_ROW_WEIGHTS_1X1 = [
   { row: 0, weight: 20 },
@@ -131,18 +131,18 @@ const EVENT_ROLL_WEIGHTS = [0.72, 0.86, 1.02, 1.15, 1.25];
 const FULL_DROP_WHEEL_SPIN_MS = 5000;
 const DEFAULT_SOUND_PROFILE = { category: "movement", cooldown: 40, maxVoices: 2, attenuation: 0.4, release: 360, gain: 0.72 };
 const FULL_DROP_WHEEL_PRIZES = [
-  { label: "0.1x", multiplier: 0.1, weight: 30 },
-  { label: "0.2x", multiplier: 0.2, weight: 30 },
-  { label: "0.5x", multiplier: 0.5, weight: 30 },
-  { label: "1x", multiplier: 1, weight: 6 },
-  { label: "1.5x", multiplier: 1.5, weight: 2 },
-  { label: "2x", multiplier: 2, weight: 1 },
-  { label: "5x", multiplier: 5, weight: 0.8 },
-  { label: "10x", multiplier: 10, weight: 0.1 },
-  { label: "20x", multiplier: 20, weight: 0.08 },
-  { label: "30x", multiplier: 30, weight: 0.01 },
-  { label: "50x", multiplier: 50, weight: 0.005 },
-  { label: "100x", multiplier: 100, weight: 0.005 },
+  { label: "0.1x", multiplier: 0.1, weight: 26 },
+  { label: "0.2x", multiplier: 0.2, weight: 26 },
+  { label: "0.5x", multiplier: 0.5, weight: 31 },
+  { label: "1x", multiplier: 1, weight: 9 },
+  { label: "1.5x", multiplier: 1.5, weight: 3.5 },
+  { label: "2x", multiplier: 2, weight: 2.2 },
+  { label: "5x", multiplier: 5, weight: 1 },
+  { label: "10x", multiplier: 10, weight: 0.45 },
+  { label: "20x", multiplier: 20, weight: 0.25 },
+  { label: "30x", multiplier: 30, weight: 0.1 },
+  { label: "50x", multiplier: 50, weight: 0.05 },
+  { label: "100x", multiplier: 100, weight: 0 },
 ];
 const SOUND_PROFILES = {
   button: { category: "button", cooldown: 80, maxVoices: 1, attenuation: 0.5, release: 180, gain: 0.78 },
@@ -647,6 +647,10 @@ function slotIndexFromMultiplier(multiplier) {
   return Math.max(0, Math.min(SLOT_COUNT - 1, Math.floor(multiplier.col / MULTIPLIER_SIZE)));
 }
 
+function reelIndexFromCol(col) {
+  return Math.max(0, Math.min(SLOT_COUNT - 1, Math.floor(col / MULTIPLIER_SIZE)));
+}
+
 function multiplierColsForSize(size) {
   return size === 1 ? Array.from({ length: COLS }, (_, col) => col) : MULTIPLIER_COLS;
 }
@@ -663,8 +667,20 @@ function multiplierAnchorRowWeights(size) {
   return size === 1 ? MULTIPLIER_ANCHOR_ROW_WEIGHTS_1X1 : MULTIPLIER_ANCHOR_ROW_WEIGHTS_2X2;
 }
 
-function multiplierSpawnOptions(size) {
-  return { rowLimit: ROWS - size, cols: multiplierColsForSize(size) };
+function occupiedMultiplierReels(multipliers = state.multipliers) {
+  const reels = new Set();
+  for (const multiplier of multipliers) reels.add(slotIndexFromMultiplier(multiplier));
+  for (let col = 0; col < SLOT_COUNT; col += 1) {
+    if (state.filledSlots.has(col) || state.slotValues[col]) reels.add(col);
+  }
+  return reels;
+}
+
+function multiplierSpawnOptions(size, multipliers = state.multipliers) {
+  const allCols = multiplierColsForSize(size);
+  const occupied = occupiedMultiplierReels(multipliers);
+  const preferred = allCols.filter((col) => !occupied.has(reelIndexFromCol(col)));
+  return { rowLimit: ROWS - size, cols: preferred.length ? preferred : allCols };
 }
 
 function canPlaceMultiplierAt(row, col, multipliers = state.multipliers, ignore = null, board = state.board, size = MULTIPLIER_SIZE) {
@@ -724,7 +740,7 @@ function makeCandyBoard() {
 function addMultipliers(board) {
   if (state.specialOdds) return addSpecialOddsMultipliers(board);
 
-  const count = Math.random() < 0.75 ? 2 : 3;
+  const count = Math.random() < 0.65 ? 2 : 3;
   const multipliers = [];
 
   while (multipliers.length < count) {
@@ -759,8 +775,8 @@ function addSpecialOddsMultipliers(board) {
   return multipliers;
 }
 
-function pickMultiplierSpawnCell(board, predicate = () => true, size = MULTIPLIER_SIZE) {
-  const options = multiplierSpawnOptions(size);
+function pickMultiplierSpawnCell(board, predicate = () => true, size = MULTIPLIER_SIZE, multipliers = state.multipliers) {
+  const options = multiplierSpawnOptions(size, multipliers);
   const rowOrder = multiplierAnchorRowWeights(size)
     .filter((item) => item.row <= options.rowLimit)
     .map((item) => ({ ...item }));
