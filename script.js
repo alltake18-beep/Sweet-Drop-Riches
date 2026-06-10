@@ -139,6 +139,7 @@ const FULL_DROP_WHEEL_SPIN_MAX_MS = 7000;
 const FULL_DROP_WHEEL_TURNS_MIN = 2;
 const FULL_DROP_WHEEL_TURNS_MAX = 4;
 const FULL_DROP_WHEEL_FALLBACK_POINTER_Y = 7.5;
+const CLIMAX_IDLE_SLICE_MS = 1000;
 const DEFAULT_SOUND_PROFILE = { category: "movement", cooldown: 40, maxVoices: 2, attenuation: 0.4, release: 360, gain: 0.72 };
 const FULL_DROP_WHEEL_PRIZES = [
   { label: "0.1x", multiplier: 0.1, weight: 26 },
@@ -290,6 +291,9 @@ const state = {
   lastSoundAt: {},
   soundVoiceState: {},
   soundScope: null,
+  climaxIdleFrame: null,
+  climaxIdleLastAt: 0,
+  climaxIdleLastTickIndex: null,
   fx: {
     context: null,
     dpr: 1,
@@ -1101,7 +1105,7 @@ function renderSlots() {
 }
 
 function isMultiplierClimaxActive() {
-  return state.filledSlots.size > 0 || state.climaxSpinning;
+  return state.filledSlots.size > 0 || state.climaxSpinning || Boolean(state.climaxIntroPhase);
 }
 
 function wheelLabelIndexByKey(key) {
@@ -1196,6 +1200,45 @@ function currentClimaxHighlightIndex(sliceAngle = wheelLabelSliceAngle()) {
   return Math.floor(normalizeAngle(climaxPointerAngle() - state.climaxWheelRotation) / sliceAngle) % FULL_DROP_WHEEL_LABEL_ORDER.length;
 }
 
+function stopClimaxIdleSpin() {
+  if (state.climaxIdleFrame) cancelAnimationFrame(state.climaxIdleFrame);
+  state.climaxIdleFrame = null;
+  state.climaxIdleLastAt = 0;
+  state.climaxIdleLastTickIndex = null;
+}
+
+function startClimaxIdleSpin() {
+  if (state.climaxIdleFrame || state.climaxSpinning || !isMultiplierClimaxActive()) return;
+  const sliceAngle = wheelLabelSliceAngle();
+  const degreesPerMs = sliceAngle / CLIMAX_IDLE_SLICE_MS;
+  const pointerAngle = climaxPointerAngle();
+
+  const tick = (now) => {
+    if (!isMultiplierClimaxActive() || state.climaxSpinning || document.hidden) {
+      stopClimaxIdleSpin();
+      return;
+    }
+    if (!state.climaxIdleLastAt) state.climaxIdleLastAt = now;
+    const delta = Math.min(34, now - state.climaxIdleLastAt);
+    state.climaxIdleLastAt = now;
+    state.climaxWheelRotation += delta * degreesPerMs;
+    if (climaxWheelRotorEl) {
+      climaxWheelRotorEl.style.setProperty("--wheel-rotation", `${state.climaxWheelRotation || 0}deg`);
+    }
+    if (climaxWheelHighlightEl) {
+      const index = Math.floor(normalizeAngle(pointerAngle - state.climaxWheelRotation) / sliceAngle) % FULL_DROP_WHEEL_LABEL_ORDER.length;
+      climaxWheelHighlightEl.style.setProperty("--highlight-angle", `${index * sliceAngle + sliceAngle * 0.5}deg`);
+      if (state.climaxIntroPhase === "wheel" && index !== state.climaxIdleLastTickIndex) {
+        playSound("wheelSpin");
+      }
+      state.climaxIdleLastTickIndex = index;
+    }
+    state.climaxIdleFrame = requestAnimationFrame(tick);
+  };
+
+  state.climaxIdleFrame = requestAnimationFrame(tick);
+}
+
 function createWheelSpinProfile() {
   const duration = randomInt(FULL_DROP_WHEEL_SPIN_MIN_MS, FULL_DROP_WHEEL_SPIN_MAX_MS);
   const turns = randomInt(FULL_DROP_WHEEL_TURNS_MIN, FULL_DROP_WHEEL_TURNS_MAX);
@@ -1215,6 +1258,7 @@ function wheelSpinProgress(t, profile) {
 
 function animateClimaxWheel(finalRotation, profile) {
   return new Promise((resolve) => {
+    stopClimaxIdleSpin();
     const started = performance.now();
     const startRotation = state.climaxWheelRotation || 0;
     const sliceAngle = wheelLabelSliceAngle();
@@ -1254,6 +1298,7 @@ function renderClimaxStage() {
   if (!climaxStageEl) return;
   const active = isMultiplierClimaxActive();
   climaxStageEl.setAttribute("aria-hidden", String(!active));
+  if (!active || state.climaxSpinning) stopClimaxIdleSpin();
   if (climaxWheelRotorEl) {
     climaxWheelRotorEl.style.setProperty("--wheel-rotation", `${state.climaxWheelRotation || 0}deg`);
   }
@@ -1278,6 +1323,7 @@ function renderClimaxStage() {
     const index = currentClimaxHighlightIndex(sliceAngle);
     climaxWheelHighlightEl.style.setProperty("--highlight-angle", `${index * sliceAngle + sliceAngle * 0.5}deg`);
   }
+  if (active && !state.climaxSpinning) startClimaxIdleSpin();
 }
 
 function render() {
@@ -2992,7 +3038,7 @@ function playNoise(duration = 0.06, options = {}) {
 }
 
 function isSlotHypeActive() {
-  return state.filledSlots.size >= 2;
+  return state.filledSlots.size > 0 || state.climaxIntroPhase || state.climaxSpinning;
 }
 
 function hz(note, octave) {
@@ -3145,30 +3191,37 @@ function playNormalMusicBeat(beat) {
 }
 
 function playHypeMusicBeat(beat) {
-  playNormalMusicBeat(beat);
   const step = beat % MUSIC_LOOP_STEPS;
   const bar = Math.floor(step / 8);
   const eighth = step % 8;
-  if (eighth === 2 || eighth === 6) {
-    const chord = MUSIC_CHORDS[bar % MUSIC_CHORDS.length];
-    playChord([chord[1] * 2, chord[2] * 2, chord[3] * 2], 0.085, {
-      delay: 0.036,
-      type: "triangle",
-      volume: 0.014,
-      filter: { type: "highpass", from: 900, q: 0.7 },
+  const chord = MUSIC_CHORDS[bar % MUSIC_CHORDS.length];
+  const bass = MUSIC_BASS[bar % MUSIC_BASS.length][eighth];
+
+  playMusicHat(eighth);
+  if ([0, 3, 5].includes(eighth)) playMusicKick(eighth === 0 ? 1.24 : 0.88);
+  if (eighth === 2 || eighth === 6) playMusicSnare(eighth === 2 ? 1.05 : 0.88);
+  if ([0, 2, 4, 7].includes(eighth)) {
+    playTone(bass, eighth === 0 ? 0.18 : 0.105, {
+      type: "sawtooth",
+      volume: eighth === 0 ? 0.052 : 0.039,
+      filter: { type: "lowpass", from: 840, to: 300, q: 1.35 },
       music: true,
     });
   }
-  if (eighth === 7) {
-    playTone(MUSIC_HOOK[(bar * 3) % MUSIC_HOOK.length] * 1.5, 0.11, {
-      type: "square",
-      volume: 0.018,
-      filter: { type: "lowpass", from: 2500, to: 1500, q: 1.2 },
-      music: true,
-    });
+  if (eighth === 0) playRhodesVoicing(chord, bar, eighth);
+  if (eighth === 1 || eighth === 3 || eighth === 5 || eighth === 7) {
+    playWahGuitar(chord, eighth);
+    if (eighth === 7) {
+      playTone(chord[3] * 2, 0.08, {
+        type: "square",
+        volume: 0.016,
+        filter: { type: "lowpass", from: 2400, to: 1300, q: 1.3 },
+        music: true,
+      });
+    }
   }
-  if (eighth === 0 || eighth === 4) {
-    playMusicBrassStab(MUSIC_CHORDS[bar % MUSIC_CHORDS.length], 0.03);
+  if (eighth === 0 || eighth === 4 || (bar % 4 === 3 && eighth === 6)) {
+    playMusicBrassStab(chord, eighth === 4 ? 0.02 : 0.03);
   }
 }
 
@@ -3315,6 +3368,41 @@ function playMachineRumble(options = {}) {
   });
 }
 
+function playFireCrackle(options = {}) {
+  const count = options.count || 5;
+  for (let i = 0; i < count; i += 1) {
+    playNoise(0.026 + Math.random() * 0.025, {
+      delay: (options.delay || 0) + i * (options.spacing || 0.045),
+      frequency: (options.frequency || 2300) + Math.random() * 2200,
+      filterType: "bandpass",
+      q: 4.2,
+      volume: options.volume || 0.018,
+    });
+  }
+}
+
+function playFlameWhoosh(options = {}) {
+  playRiser(options.start || hz("Bb", 2), options.end || hz("F", 5), options.duration || 0.28, {
+    delay: options.delay || 0,
+    volume: options.volume || 0.042,
+    q: 2.8,
+    noiseFreq: options.noiseFreq || 2600,
+  });
+  playFireCrackle({
+    delay: (options.delay || 0) + 0.06,
+    count: options.crackle || 4,
+    spacing: 0.038,
+    volume: (options.volume || 0.042) * 0.42,
+  });
+}
+
+function playHydraulicClank(options = {}) {
+  const delay = options.delay || 0;
+  playBassThump(options.root || hz("Bb", 1), { delay, duration: 0.16, volume: options.low || 0.058, toRatio: 0.48 });
+  playNoise(0.08, { delay: delay + 0.018, frequency: options.noiseFreq || 980, filterType: "bandpass", q: 3.2, volume: options.noise || 0.024 });
+  playBrassStab(options.chord || "shadow", { delay: delay + 0.045, volume: options.stab || 0.024, duration: 0.08, transpose: 1 });
+}
+
 function playVoiceFallback(pattern, options = {}) {
   playMachineRumble({
     duration: options.duration || 0.52,
@@ -3445,15 +3533,17 @@ function playSound(kind) {
       playSparkleRun(hz("Ab", 5), 3, { delay: 0.058, spacing: 0.044, volume: 0.032 });
     },
     flameSweep: () => {
-      playRiser(hz("Bb", 2), hz("F", 4), 0.13, { volume: 0.028, q: 2.6, noiseFreq: 2200 });
+      playFlameWhoosh({ start: hz("F", 2), end: hz("Bb", 4), duration: 0.18, volume: 0.034, crackle: 3, noiseFreq: 2800 });
+      playTone(hz("Bb", 1), 0.13, { delay: 0.015, to: hz("F", 1), type: "sawtooth", volume: 0.026, filter: { type: "lowpass", from: 420, to: 180, q: 1.1 } });
     },
     flameBurn: () => {
-      playImpact(hz("F", 1), { low: 0.076, mid: 0.034, noise: 0.028, noiseFreq: 860 });
-      playMachineRumble({ delay: 0.035, duration: 0.34, root: hz("Bb", 1), to: hz("F", 1), volume: 0.034, noiseFreq: 720 });
+      playFlameWhoosh({ start: hz("Bb", 1), end: hz("Db", 5), duration: 0.34, volume: 0.052, crackle: 7, noiseFreq: 3200 });
+      playImpact(hz("F", 1), { delay: 0.12, low: 0.086, mid: 0.036, noise: 0.03, noiseFreq: 760 });
+      playMachineRumble({ delay: 0.04, duration: 0.42, root: hz("Bb", 1), to: hz("F", 1), volume: 0.038, noiseFreq: 620 });
     },
     flameResist: () => {
-      playBassThump(hz("Ab", 1), { duration: 0.1, volume: 0.045, toRatio: 0.58 });
-      playWahFlick(hz("Eb", 4), { delay: 0.035, duration: 0.06, volume: 0.026, toRatio: 0.82 });
+      playHydraulicClank({ root: hz("Ab", 1), low: 0.046, noise: 0.024, chord: "dominant" });
+      playFireCrackle({ delay: 0.07, count: 4, spacing: 0.035, volume: 0.016, frequency: 1800 });
     },
     multiplierMerge: () => {
       playBassThump(hz("Bb", 1), { volume: 0.052 });
@@ -3574,14 +3664,17 @@ function playSound(kind) {
       playBrassStab("resolve", { delay: 0.09, volume: 0.048, duration: 0.16, voices: 4 });
     },
     climaxIntro: () => {
-      playMachineRumble({ duration: 1.28, root: hz("Bb", 1), to: hz("F", 1), volume: 0.058, from: 480, lowTo: 140, noiseFreq: 520 });
-      playBrassStab("shadow", { delay: 0.22, volume: 0.032, duration: 0.1, transpose: 1 });
-      playBrassStab("dominant", { delay: 0.7, volume: 0.034, duration: 0.12, transpose: 1 });
+      playMachineRumble({ duration: 1.36, root: hz("Bb", 1), to: hz("F", 1), volume: 0.06, from: 460, lowTo: 120, noiseFreq: 500 });
+      playTone(hz("Bb", 3), 0.42, { delay: 0.08, to: hz("F", 3), type: "square", volume: 0.024, filter: { type: "bandpass", from: 520, to: 1200, q: 3.4 } });
+      playHydraulicClank({ delay: 0.46, root: hz("F", 1), low: 0.052, noise: 0.022, chord: "shadow" });
+      playBrassStab("dominant", { delay: 1.08, volume: 0.038, duration: 0.12, transpose: 1 });
     },
     climaxLift: () => {
-      playRiser(hz("Bb", 1), hz("Bb", 3), 1.02, { volume: 0.052, q: 2.2, noiseFreq: 1500 });
-      playMachineRumble({ delay: 0.06, duration: 0.82, root: hz("F", 1), to: hz("Db", 2), volume: 0.03, noiseFreq: 840 });
-      playBrassStab("tonic", { delay: 0.66, volume: 0.044, duration: 0.16, transpose: 1 });
+      playRiser(hz("Bb", 1), hz("Bb", 3), 1.2, { volume: 0.058, q: 2.3, noiseFreq: 1500 });
+      playMachineRumble({ delay: 0.05, duration: 1.1, root: hz("F", 1), to: hz("Db", 2), volume: 0.034, noiseFreq: 820 });
+      playHydraulicClank({ delay: 0.42, root: hz("Bb", 1), low: 0.046, noise: 0.02, chord: "shadow" });
+      playHydraulicClank({ delay: 1.1, root: hz("F", 1), low: 0.056, noise: 0.026, chord: "tonic" });
+      playBrassStab("tonic", { delay: 1.24, volume: 0.046, duration: 0.16, transpose: 1 });
     },
     logoReturn: () => {
       playSfxChord("resolve", 0.11, { volume: 0.036, transpose: 2, voices: 3 });
@@ -3752,6 +3845,7 @@ function renderHud() {
   phoneEl?.classList.toggle("low-balance", !hasEnoughBalanceForMove());
   phoneEl?.classList.toggle("slot-hype", isSlotHypeActive());
   phoneEl?.classList.toggle("multiplier-climax", isMultiplierClimaxActive());
+  phoneEl?.classList.toggle("flame-active", Boolean(state.flameCells?.size));
   phoneEl?.classList.toggle("climax-spinning", state.climaxSpinning);
   phoneEl?.classList.toggle("climax-intro-logo", state.climaxIntroPhase === "logo");
   phoneEl?.classList.toggle("climax-intro-wheel", state.climaxIntroPhase === "wheel");
@@ -4276,7 +4370,7 @@ async function playFlameEvent(stage = currentSpecialStageIndex()) {
   state.flameFinal = true;
   setEventPulse(true);
   render();
-  triggerScreenFx("fx-bump", 420);
+  triggerScreenFx("fx-blast", 360);
   playSound("flameBurn");
   await wait(resolveDelay(260, 120));
 

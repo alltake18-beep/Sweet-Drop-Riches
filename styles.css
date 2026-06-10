@@ -823,11 +823,46 @@ button {
 .tile.flame-warning {
   z-index: 18;
   background:
-    radial-gradient(circle at 50% 50%, rgba(255, 215, 160, 0.18), transparent 54%),
+    radial-gradient(circle at 50% 42%, rgba(255, 238, 132, 0.28), transparent 32%),
+    radial-gradient(ellipse at 50% 100%, rgba(255, 77, 21, 0.42), transparent 58%),
     linear-gradient(180deg, rgba(255, 72, 54, 0.34), rgba(95, 12, 22, 0.48));
   box-shadow:
     inset 0 0 0 2px rgba(255, 108, 74, 0.58),
     0 0 14px rgba(255, 58, 47, 0.28);
+}
+
+.tile.flame-warning::before,
+.tile.flame-final::before {
+  content: "";
+  position: absolute;
+  z-index: 4;
+  inset: -9%;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 50% 18%, rgba(255, 252, 184, 0.72), transparent 18%),
+    radial-gradient(ellipse at 36% 54%, rgba(255, 93, 24, 0.72), transparent 27%),
+    radial-gradient(ellipse at 66% 58%, rgba(255, 182, 39, 0.62), transparent 25%);
+  mix-blend-mode: screen;
+  opacity: 0.72;
+  transform-origin: 50% 92%;
+  animation: flame-tongue 380ms ease-in-out infinite alternate;
+}
+
+.tile.flame-warning::after,
+.tile.flame-final::after {
+  content: "";
+  position: absolute;
+  z-index: 3;
+  inset: -16%;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    linear-gradient(94deg, transparent 0 24%, rgba(255, 229, 126, 0.22) 28% 31%, transparent 35% 56%, rgba(255, 74, 26, 0.24) 60% 63%, transparent 67%),
+    radial-gradient(ellipse at 50% 74%, rgba(255, 66, 14, 0.42), transparent 58%);
+  mix-blend-mode: screen;
+  opacity: 0.6;
+  animation: flame-heat-sway 520ms ease-in-out infinite alternate;
 }
 
 .tile.flame-final {
@@ -3195,6 +3230,39 @@ button {
   to {
     transform: scale(1.04);
     filter: brightness(1.32) saturate(1.36);
+  }
+}
+
+@keyframes flame-tongue {
+  from {
+    opacity: 0.58;
+    transform: translateY(4%) scale(0.92, 0.88) skewX(-2deg);
+  }
+  to {
+    opacity: 0.9;
+    transform: translateY(-5%) scale(1.08, 1.16) skewX(3deg);
+  }
+}
+
+@keyframes flame-heat-sway {
+  from {
+    opacity: 0.42;
+    transform: translateX(-2%) scaleX(0.96);
+  }
+  to {
+    opacity: 0.78;
+    transform: translateX(2%) scaleX(1.04);
+  }
+}
+
+@keyframes flame-screen-heat {
+  from {
+    opacity: 0.42;
+    transform: translateX(-1px) scaleX(0.997);
+  }
+  to {
+    opacity: 0.78;
+    transform: translateX(1px) scaleX(1.003);
   }
 }
 
@@ -7517,6 +7585,21 @@ button {
   opacity: 0.5 !important;
 }
 
+.phone.flame-active .play-area::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, transparent 0 12%, rgba(255, 98, 28, 0.13) 20%, transparent 32% 66%, rgba(255, 220, 102, 0.1) 75%, transparent 88%),
+    radial-gradient(ellipse at 50% 38%, rgba(255, 83, 22, 0.12), transparent 62%);
+  mix-blend-mode: screen;
+  opacity: 0.78;
+  transform-origin: 50% 50%;
+  animation: flame-screen-heat 420ms ease-in-out infinite alternate;
+}
+
 /* Multiplier climax: cabinet background, rotating wheel, adjustable cabinet-mask layer. */
 .brand {
   position: relative;
@@ -7587,6 +7670,10 @@ button {
 
 .phone.climax-spinning .climax-wheel-rotor {
   transition: transform 5000ms cubic-bezier(0.08, 0.72, 0.05, 1);
+}
+
+.phone.multiplier-climax:not(.climax-spinning) .climax-wheel-rotor {
+  transition: none;
 }
 
 .climax-wheel-rotor img {
@@ -7707,7 +7794,7 @@ button {
 
 .phone.climax-intro-logo .brand-logo {
   opacity: 1;
-  animation: climax-logo-launch 1800ms cubic-bezier(0.18, 0.78, 0.16, 1) both;
+  animation: climax-logo-launch 1800ms cubic-bezier(0.16, 0.78, 0.14, 1) both;
   transform-origin: 50% 78%;
   will-change: transform, opacity;
 }
@@ -7729,7 +7816,7 @@ button {
 }
 
 .phone.climax-intro-wheel .climax-wheel-rotor {
-  animation: climax-wheel-rise 1800ms cubic-bezier(0.12, 0.72, 0.18, 1) both;
+  animation: climax-wheel-rise 1800ms cubic-bezier(0.1, 0.72, 0.16, 1) both;
   will-change: transform;
 }
 
@@ -7813,22 +7900,25 @@ button {
     opacity: 1;
     transform: translateY(0) scale(1);
   }
-  18% {
-    transform: translateY(-5px) scale(1.02, 0.98);
+  14% {
+    transform: translateY(-4px) scale(1.03, 0.96);
   }
-  38% {
-    transform: translateY(9px) scale(1.12, 0.78);
+  34% {
+    transform: translateY(11px) scale(1.16, 0.72);
   }
-  55% {
-    transform: translateY(15px) scale(1.22, 0.66);
+  50% {
+    transform: translateY(18px) scale(1.28, 0.58);
   }
-  72% {
+  64% {
+    transform: translateY(4px) scale(0.9, 1.22);
+  }
+  76% {
     opacity: 1;
-    transform: translateY(-64px) scale(0.9, 1.18);
+    transform: translateY(-88px) scale(0.82, 1.2);
   }
   100% {
     opacity: 0;
-    transform: translateY(-230px) scale(0.82, 1.05);
+    transform: translateY(-252px) scale(0.78, 1.06);
   }
 }
 
@@ -7840,15 +7930,19 @@ button {
 
 @keyframes climax-wheel-rise {
   0% {
-    transform: translate(-50%, calc(-50% + 43%)) rotate(var(--wheel-rotation, 0deg)) scale(0.98);
+    transform: translate(-50%, calc(-50% + 52%)) rotate(var(--wheel-rotation, 0deg)) scale(0.96);
+    opacity: 0.72;
+  }
+  18% {
+    transform: translate(-50%, calc(-50% + 44%)) rotate(var(--wheel-rotation, 0deg)) scale(0.97);
     opacity: 0.82;
   }
-  24% {
-    transform: translate(-50%, calc(-50% + 34%)) rotate(var(--wheel-rotation, 0deg)) scale(0.99);
+  42% {
+    transform: translate(-50%, calc(-50% + 28%)) rotate(var(--wheel-rotation, 0deg)) scale(0.99);
     opacity: 0.92;
   }
-  68% {
-    transform: translate(-50%, calc(-50% - 2%)) rotate(var(--wheel-rotation, 0deg)) scale(1.012);
+  74% {
+    transform: translate(-50%, calc(-50% - 3%)) rotate(var(--wheel-rotation, 0deg)) scale(1.016);
     opacity: 1;
   }
   100% {
