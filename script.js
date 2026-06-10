@@ -4013,7 +4013,7 @@ function initClimaxTunePanel() {
   const controls = [
     ["wheel left", "--climax-wheel-left", -200, 300, 0.5, "%"],
     ["wheel top", "--climax-wheel-top", -200, 500, 0.5, "%"],
-    ["wheel size", "--climax-wheel-size", 110, 500, 1, "%"],
+    ["wheel size", "--climax-wheel-size", 25, 500, 1, "%"],
   ];
 
   const panel = document.createElement("div");
