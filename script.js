@@ -147,6 +147,7 @@ const FULL_DROP_WHEEL_PRIZES = [
 const FULL_DROP_WHEEL_LABEL_ORDER = [
   { key: "x100", text: "x100", prizeLabel: "100x" },
   { key: "x0.1", text: "x0.1", prizeLabel: "0.1x" },
+  { key: "x10-2", text: "x10", prizeLabel: "10x" },
   { key: "x1", text: "x1", prizeLabel: "1x" },
   { key: "x0.2", text: "x0.2", prizeLabel: "0.2x" },
   { key: "x20", text: "x20", prizeLabel: "20x" },
@@ -157,7 +158,6 @@ const FULL_DROP_WHEEL_LABEL_ORDER = [
   { key: "x30", text: "x30", prizeLabel: "30x" },
   { key: "x10", text: "x10", prizeLabel: "10x" },
   { key: "x0.5", text: "x0.5", prizeLabel: "0.5x" },
-  { key: "x10-2", text: "x10", prizeLabel: "10x" },
 ];
 const WHEEL_LABEL_TUNE = {
   cx: 50,
