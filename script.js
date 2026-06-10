@@ -212,6 +212,9 @@ const SOUND_PROFILES = {
   jackpot: { category: "payout", cooldown: 560, maxVoices: 1, attenuation: 0.7, release: 1600, gain: 0.58 },
   wheelSpin: { category: "payout", cooldown: 20, maxVoices: 4, attenuation: 0.35, release: 90, gain: 0.58 },
   wheelStop: { category: "payout", cooldown: 320, maxVoices: 1, attenuation: 0.55, release: 760, gain: 0.7 },
+  climaxIntro: { category: "multiplier", cooldown: 900, maxVoices: 1, attenuation: 0.5, release: 1500, gain: 0.72 },
+  climaxLift: { category: "multiplier", cooldown: 900, maxVoices: 1, attenuation: 0.5, release: 1500, gain: 0.68 },
+  logoReturn: { category: "multiplier", cooldown: 500, maxVoices: 1, attenuation: 0.4, release: 720, gain: 0.62 },
 };
 
 const boardEl = document.getElementById("board");
@@ -312,6 +315,9 @@ const state = {
   flameFinal: false,
   climaxWheelRotation: 0,
   climaxSpinning: false,
+  climaxIntroPhase: null,
+  pendingClimaxIntro: false,
+  climaxLogoReturn: false,
 };
 
 function formatMoney(value, decimals = 0) {
@@ -903,6 +909,9 @@ function startNewBoard(keepScore = false) {
   state.rollingStage = null;
   state.miniSlotWin = false;
   state.resolving = false;
+  state.climaxIntroPhase = null;
+  state.pendingClimaxIntro = false;
+  state.climaxLogoReturn = false;
   if (!keepScore) {
     state.currentWin = 0;
     state.lastWin = 0;
@@ -2470,6 +2479,13 @@ async function maybeFullDropBonus() {
   state.slotSymbolValues = Array(SLOT_COUNT).fill(null);
   state.slotFlash = Array(SLOT_COUNT).fill(null);
   state.slotTurns = Array(SLOT_COUNT).fill(0);
+  state.pendingClimaxIntro = false;
+  state.climaxIntroPhase = null;
+  state.climaxLogoReturn = true;
+  render();
+  playSound("logoReturn");
+  await wait(960);
+  state.climaxLogoReturn = false;
   render();
 }
 
@@ -3080,6 +3096,21 @@ function playSound(kind) {
       playChord([660, 990, 1320], 0.18, { volume: 0.12 });
       playTone(220, 0.2, { delay: 0.08, to: 160, type: "square", volume: 0.05 });
     },
+    climaxIntro: () => {
+      playTone(78, 0.72, { to: 48, type: "sawtooth", volume: 0.07 });
+      playTone(132, 0.58, { delay: 0.08, to: 92, type: "square", volume: 0.04 });
+      [420, 520, 640].forEach((freq, i) => playTone(freq, 0.08, { delay: 0.18 + i * 0.16, type: "triangle", volume: 0.05 }));
+    },
+    climaxLift: () => {
+      playTone(64, 1.05, { to: 118, type: "sawtooth", volume: 0.075 });
+      playTone(180, 0.82, { delay: 0.08, to: 260, type: "square", volume: 0.036 });
+      playChord([392, 587, 784], 0.2, { delay: 0.58, type: "triangle", volume: 0.074 });
+    },
+    logoReturn: () => {
+      playTone(760, 0.13, { to: 420, type: "triangle", volume: 0.06 });
+      playChord([520, 780], 0.09, { delay: 0.14, volume: 0.048 });
+      playTone(220, 0.11, { delay: 0.26, to: 170, type: "square", volume: 0.035 });
+    },
     error: () => playTone(150, 0.09, { to: 92, type: "sawtooth", volume: 0.055 }),
   };
 
@@ -3243,6 +3274,9 @@ function renderHud() {
   phoneEl?.classList.toggle("slot-hype", isSlotHypeActive());
   phoneEl?.classList.toggle("multiplier-climax", isMultiplierClimaxActive());
   phoneEl?.classList.toggle("climax-spinning", state.climaxSpinning);
+  phoneEl?.classList.toggle("climax-intro-logo", state.climaxIntroPhase === "logo");
+  phoneEl?.classList.toggle("climax-intro-wheel", state.climaxIntroPhase === "wheel");
+  phoneEl?.classList.toggle("climax-logo-return", state.climaxLogoReturn);
   if (!state.stagePreviews.length) state.stagePreviews = initialStagePreviews();
   const currentStage = currentSpecialStageIndex();
   const focusedStage = state.rollingStage && (state.miniSlotRolling || state.miniSlotWin);
@@ -3496,12 +3530,16 @@ function collectMultipliers() {
 }
 
 function collectAndPayMultipliers() {
+  const hadCollectedSlots = state.filledSlots.size > 0;
   const collected = collectMultipliers();
   if (collected.length > 0) {
     state.slotFlash = Array(SLOT_COUNT).fill(null);
     for (const item of collected) {
       collectSlotMultiplier(item.col, item.value, item.payout);
       addWin(item.payout);
+    }
+    if (!hadCollectedSlots && state.filledSlots.size > 0) {
+      state.pendingClimaxIntro = true;
     }
   }
   return collected;
@@ -3527,6 +3565,12 @@ function settleBoardBeforeFill() {
 async function presentCollectedMultipliers(collected) {
   if (collected.length === 0) return;
   setStatus(collected.map((item) => `SLOT ${item.col + 1} ${formatScore(item.payout)}`).join("  "));
+  const shouldPlayClimaxIntro = state.pendingClimaxIntro;
+  if (shouldPlayClimaxIntro) {
+    state.pendingClimaxIntro = false;
+    state.climaxLogoReturn = false;
+    state.climaxIntroPhase = "logo";
+  }
   render();
   spawnParticles(collected.length * 12);
   collected.forEach((item, index) => spawnSlotClimaxEnergy(item.col, item.payout, index * 80));
@@ -3534,7 +3578,26 @@ async function presentCollectedMultipliers(collected) {
   playMultiplierCollectSound(highCollect);
   if (highCollect >= 100) triggerScreenFx("fx-jackpot", 780);
   else if (highCollect >= 20) triggerScreenFx("fx-bump", 420);
+  if (shouldPlayClimaxIntro) {
+    await playClimaxIntroSequence();
+    return;
+  }
   await wait(resolveDelay(highCollect >= 100 ? 760 : highCollect >= 50 ? 640 : 540, 190));
+}
+
+async function playClimaxIntroSequence() {
+  playSound("climaxIntro");
+  triggerScreenFx("fx-bump", 760);
+  await wait(900);
+
+  state.climaxIntroPhase = "wheel";
+  render();
+  playSound("climaxLift");
+  triggerScreenFx("fx-blast", 820);
+  await wait(900);
+
+  state.climaxIntroPhase = null;
+  render();
 }
 
 function multiplierDropDistance(multiplier) {
