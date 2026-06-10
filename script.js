@@ -3587,14 +3587,12 @@ async function presentCollectedMultipliers(collected) {
 
 async function playClimaxIntroSequence() {
   playSound("climaxIntro");
-  triggerScreenFx("fx-bump", 760);
-  await wait(900);
+  await wait(1800);
 
   state.climaxIntroPhase = "wheel";
   render();
   playSound("climaxLift");
-  triggerScreenFx("fx-blast", 820);
-  await wait(900);
+  await wait(1800);
 
   state.climaxIntroPhase = null;
   render();
