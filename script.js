@@ -1854,12 +1854,13 @@ function addSpecialMeter(count) {
   state.specialMeter = Math.min(SPECIAL_METER_MAX, state.specialMeter + count);
   if (state.specialMeter > before) {
     duckBackgroundMusic(220, BGM_DUCK_LIGHT);
+    playMeterGainPerformance(count, before, state.specialMeter);
     playSound("meterTick");
   }
   for (let index = 0; index < SPECIAL_METER_THRESHOLDS.length; index += 1) {
     const threshold = SPECIAL_METER_THRESHOLDS[index];
     if (before < threshold && state.specialMeter >= threshold) {
-      duckBackgroundMusic(520, BGM_DUCK_LIGHT);
+      playMeterThresholdPerformance(index + 1);
       state.pendingSpecialAwards.push(index + 1);
     }
   }
@@ -2407,6 +2408,7 @@ async function resolveMove(initialMatches, preferredSpawn = null) {
     setPerfPhase(hasSpecialBlast ? "special-clear" : "clear");
     setStatus(cascades === 0 ? "消除收集" : `連鎖 ${cascades + 1}`);
     render();
+    playMatchClearPerformance(expandedCells.size, cascades, hasSpecialBlast);
     playSound(hasSpecialBlast ? "specialBlast" : cascades === 0 ? "match" : "cascade");
     if (hasSpecialBlast) triggerScreenFx("fx-blast", 460);
     spawnClearBursts(expandedCells, hasSpecialBlast);
@@ -3346,6 +3348,58 @@ function playEventRollStepSound(stage, index, total) {
     playTone(base, 0.038, { type: "square", volume: 0.056, filter: { type: "bandpass", from: 1100, to: 2600, q: 4.8 } });
     playNoise(0.022, { delay: 0.006, frequency: 5200 + progress * 1800, filterType: "highpass", volume: 0.018 });
     if (index === 0 || index === total - 1) playBassThump(hz("Bb", 1), { delay: 0.014, duration: 0.07, volume: 0.046, toRatio: 0.68 });
+  });
+}
+
+function playEventRollStartPerformance(stage) {
+  duckBackgroundMusic(stage >= 3 ? 920 : 720, BGM_DUCK_MEDIUM);
+  withSoundScope("eventRoll", stage >= 3 ? 1.35 : 1.14, () => {
+    playBassThump(hz("Bb", 1), { duration: 0.12, volume: 0.062, toRatio: 0.58 });
+    playRiser(hz("Bb", 2), stage >= 3 ? hz("F", 5) : hz("Db", 5), 0.32, { delay: 0.03, volume: 0.052, q: 3.2, noiseFreq: 3800 });
+    playNoise(0.035, { delay: 0.07, frequency: 5200, filterType: "highpass", volume: 0.018 });
+  });
+}
+
+function playEventRollLockPerformance(stage, event) {
+  duckBackgroundMusic(stage >= 3 ? 820 : 620, stage >= 3 ? BGM_DUCK_DEEP : BGM_DUCK_MEDIUM);
+  withSoundScope("eventRoll", stage >= 3 ? 1.42 : 1.22, () => {
+    playImpact(hz("Bb", 1), { low: stage >= 3 ? 0.095 : 0.072, mid: 0.046, noise: 0.026, noiseFreq: 1300 });
+    playTone(event?.kind === "flame" ? hz("F", 5) : hz("Db", 5), 0.08, { delay: 0.08, type: "square", volume: 0.064, filter: { type: "bandpass", from: 1200, to: 2600, q: 3.6 } });
+    playBrassStab(stage >= 3 ? "tonic" : "resolve", { delay: 0.16, volume: stage >= 3 ? 0.058 : 0.046, duration: 0.12, voices: 3 });
+  });
+}
+
+function playMatchClearPerformance(cellCount, cascade = 0, hasSpecialBlast = false) {
+  const bigClear = cellCount >= 8 || hasSpecialBlast;
+  withSoundScope(hasSpecialBlast ? "special" : "match", bigClear ? 1.18 : 1.02, () => {
+    const base = cascade > 0 ? hz("Db", 5) : hz("Bb", 4);
+    playTone(base, 0.048, { type: "square", volume: 0.046, filter: { type: "bandpass", from: 900, to: 2400, q: 3.6 } });
+    playNoise(0.028, { delay: 0.012, frequency: 5600, filterType: "highpass", volume: 0.018 });
+    playSparkleRun(hz("F", 5), Math.min(5, Math.max(2, Math.round(cellCount / 3))), { delay: 0.045, spacing: 0.03, volume: 0.04 });
+    if (bigClear) {
+      playBassThump(hz("Bb", 1), { delay: 0.04, duration: 0.1, volume: 0.046, toRatio: 0.62 });
+      playBrassStab(hasSpecialBlast ? "dominant" : "bright", { delay: 0.13, volume: 0.044, duration: 0.09, voices: 3 });
+    }
+  });
+}
+
+function playMeterGainPerformance(count, before, after) {
+  const progress = SPECIAL_METER_MAX ? after / SPECIAL_METER_MAX : 0;
+  withSoundScope("meter", 0.96 + Math.min(0.24, count * 0.018), () => {
+    playTone(hz("Db", 5) * (1 + progress * 0.08), 0.042, { type: "triangle", volume: 0.036, filter: { type: "highpass", from: 900, q: 0.8 } });
+    playNoise(0.018, { delay: 0.018, frequency: 4400 + progress * 1800, filterType: "highpass", volume: 0.012 });
+    playTone(hz("Ab", 5) * (1 + progress * 0.05), 0.045, { delay: 0.046, type: "sine", volume: 0.026 });
+    if (count >= 5) playBassThump(hz("Bb", 2), { delay: 0.035, duration: 0.07, volume: 0.028, toRatio: 0.72 });
+  });
+}
+
+function playMeterThresholdPerformance(stage) {
+  duckBackgroundMusic(760, BGM_DUCK_MEDIUM);
+  withSoundScope("meter", stage >= 3 ? 1.36 : 1.16, () => {
+    playRiser(hz("Bb", 3), stage >= 3 ? hz("F", 6) : hz("Db", 6), 0.28, { volume: 0.058, q: 3.2, noiseFreq: 5200 });
+    playImpact(hz("Bb", 1), { delay: 0.2, low: stage >= 3 ? 0.08 : 0.06, mid: 0.04, noise: 0.026, noiseFreq: 1600 });
+    playSparkleRun(stage >= 3 ? hz("Bb", 5) : hz("F", 5), stage >= 3 ? 6 : 4, { delay: 0.24, spacing: 0.038, volume: stage >= 3 ? 0.058 : 0.046 });
+    playBrassStab(stage >= 3 ? "tonic" : "bright", { delay: 0.36, volume: stage >= 3 ? 0.058 : 0.044, duration: 0.12, voices: 3 });
   });
 }
 
@@ -4998,6 +5052,7 @@ async function processSpecialAwards() {
 
     const rollDelays = eventRollDelays(randomInt(1, EVENT_ROLL_EXTRA_MAX));
     duckBackgroundMusic(rollDelays.reduce((sum, delay) => sum + delay, 0) + 1200, BGM_DUCK_MEDIUM);
+    playEventRollStartPerformance(stage);
     for (let i = 0; i < rollDelays.length; i += 1) {
       state.stagePreviews[stage - 1] = randomBoardEvent(stage);
       render();
@@ -5013,6 +5068,7 @@ async function processSpecialAwards() {
     state.miniSlotWin = true;
     setEventPulse(true);
     render();
+    playEventRollLockPerformance(stage, event);
     playSound("specialReady");
     await wait(resolveDelay(stage === 3 ? 620 : 460, 180));
 
