@@ -129,6 +129,7 @@ const EVENT_ROLL_TOTAL = 1398;
 const EVENT_ROLL_TOTAL_FAST = 489;
 const EVENT_ROLL_WEIGHTS = [0.72, 0.86, 1.02, 1.15, 1.25];
 const FULL_DROP_WHEEL_SPIN_MS = 5000;
+const FULL_DROP_WHEEL_FALLBACK_POINTER_Y = 7.5;
 const DEFAULT_SOUND_PROFILE = { category: "movement", cooldown: 40, maxVoices: 2, attenuation: 0.4, release: 360, gain: 0.72 };
 const FULL_DROP_WHEEL_PRIZES = [
   { label: "0.1x", multiplier: 0.1, weight: 26 },
@@ -163,23 +164,23 @@ const WHEEL_LABEL_TUNE = {
   cx: 50,
   cy: 50,
   radius: 35.5,
-  angleOffset: -90,
+  angleOffset: -88.5,
   rotateOffset: 90,
   fontSize: 28,
   items: {
     x100: { angle: -2, radius: 0, rotate: 0, font: 2 },
-    "x0.1": { angle: -4.5, radius: -4, rotate: 0, font: -7 },
-    x5: { angle: 13.5, radius: -2, rotate: 0, font: -1 },
-    "x0.5": { angle: 1, radius: -4, rotate: 0, font: -6 },
-    x50: { angle: 10.5, radius: 0, rotate: 0, font: 2 },
-    x10: { angle: 3, radius: 0, rotate: 0, font: 0 },
-    x30: { angle: 6, radius: 0, rotate: 0, font: 2 },
-    "x1.5": { angle: 8.5, radius: -4, rotate: 0, font: -7 },
-    x2: { angle: 14.5, radius: -2, rotate: 0, font: -2 },
-    x20: { angle: 16, radius: 0, rotate: 0, font: 0 },
-    "x0.2": { angle: 18, radius: -4, rotate: 0, font: -7 },
-    x1: { angle: 19.5, radius: -2, rotate: 0, font: -2 },
-    "x10-2": { angle: 0, radius: 0, rotate: 0, font: 0 },
+    "x0.1": { angle: -1, radius: -4, rotate: 0, font: -7 },
+    x5: { angle: 0, radius: -2, rotate: 0, font: -1 },
+    "x0.5": { angle: -1, radius: -4, rotate: 0, font: -6 },
+    x50: { angle: -0.5, radius: 0, rotate: 0, font: 2 },
+    x10: { angle: -1, radius: 0, rotate: 0, font: 0 },
+    x30: { angle: -1, radius: 0, rotate: 0, font: 2 },
+    "x1.5": { angle: 0, radius: -4, rotate: 0, font: -7 },
+    x2: { angle: -1.5, radius: -2, rotate: 0, font: -2 },
+    x20: { angle: -2, radius: 0, rotate: 0, font: 0 },
+    "x0.2": { angle: -2.5, radius: -4, rotate: 0, font: -7 },
+    x1: { angle: -2, radius: -2, rotate: 0, font: -2 },
+    "x10-2": { angle: -1.5, radius: 0, rotate: 0, font: 0 },
   },
 };
 const SOUND_PROFILES = {
@@ -1085,6 +1086,77 @@ function wheelLabelSliceAngle() {
   return 360 / FULL_DROP_WHEEL_LABEL_ORDER.length;
 }
 
+function normalizeAngle(degrees) {
+  return ((degrees % 360) + 360) % 360;
+}
+
+function climaxMaskPoints(phoneEl) {
+  const raw = getComputedStyle(phoneEl).getPropertyValue("--climax-mask-path").trim();
+  const points = [];
+  const pattern = /(-?\d+(?:\.\d+)?)%\s+(-?\d+(?:\.\d+)?)%/g;
+  let match = pattern.exec(raw);
+  while (match) {
+    points.push({ x: parseFloat(match[1]), y: parseFloat(match[2]) });
+    match = pattern.exec(raw);
+  }
+  return points;
+}
+
+function climaxPointerYPercent(phoneEl, linePercent) {
+  const points = climaxMaskPoints(phoneEl);
+  if (points.length < 3) return FULL_DROP_WHEEL_FALLBACK_POINTER_Y;
+
+  const ys = [];
+  points.forEach((point, index) => {
+    const next = points[(index + 1) % points.length];
+    const minX = Math.min(point.x, next.x);
+    const maxX = Math.max(point.x, next.x);
+    if (linePercent < minX || linePercent > maxX) return;
+    if (point.x === next.x) {
+      if (Math.abs(linePercent - point.x) < 0.001) ys.push(point.y, next.y);
+      return;
+    }
+    const t = (linePercent - point.x) / (next.x - point.x);
+    if (t >= 0 && t <= 1) ys.push(point.y + (next.y - point.y) * t);
+  });
+
+  if (!ys.length) return FULL_DROP_WHEEL_FALLBACK_POINTER_Y;
+  return Math.max(0, Math.min(100, Math.min(...ys) + 1.4));
+}
+
+function climaxPointerAngle() {
+  const phoneEl = document.querySelector(".phone");
+  const phoneRect = phoneEl?.getBoundingClientRect();
+  const wheelRect = climaxWheelRotorEl?.getBoundingClientRect();
+  if (!phoneEl || !phoneRect || !wheelRect) return 0;
+
+  const linePercent = parseFloat(getComputedStyle(phoneEl).getPropertyValue("--climax-center-line-x")) || 50;
+  const pointerY = climaxPointerYPercent(phoneEl, linePercent);
+  const px = phoneRect.left + phoneRect.width * (linePercent / 100);
+  const py = phoneRect.top + phoneRect.height * (pointerY / 100);
+  const wx = wheelRect.left + wheelRect.width * 0.5;
+  const wy = wheelRect.top + wheelRect.height * 0.5;
+  return normalizeAngle((Math.atan2(py - wy, px - wx) * 180) / Math.PI + 90);
+}
+
+function wheelEdgeLandingOffset(sliceAngle, multiplier) {
+  const isMajor = multiplier >= 20;
+  const edgePadding = sliceAngle * (isMajor ? 0.16 : 0.12);
+  const edgeBand = sliceAngle * (isMajor ? 0.14 : 0.18);
+  const side = Math.random() < 0.5 ? -1 : 1;
+  return side * (sliceAngle * 0.5 - edgePadding - Math.random() * edgeBand);
+}
+
+function wheelLandingAngle(prizeIndex, sliceAngle, multiplier) {
+  return normalizeAngle(prizeIndex * sliceAngle + sliceAngle * 0.5 + wheelEdgeLandingOffset(sliceAngle, multiplier));
+}
+
+function wheelRotationDeltaToLand(landingAngle, pointerAngle) {
+  const desiredRotation = normalizeAngle(pointerAngle - landingAngle);
+  const currentRotation = normalizeAngle(state.climaxWheelRotation || 0);
+  return 360 * 10 + normalizeAngle(desiredRotation - currentRotation);
+}
+
 function renderClimaxStage() {
   if (!climaxStageEl) return;
   const active = isMultiplierClimaxActive();
@@ -1110,19 +1182,7 @@ function renderClimaxStage() {
   }
   if (climaxWheelHighlightEl) {
     const sliceAngle = wheelLabelSliceAngle();
-    const phoneEl = document.querySelector(".phone");
-    const phoneRect = phoneEl?.getBoundingClientRect();
-    const wheelRect = climaxWheelRotorEl?.getBoundingClientRect();
-    let centerAngle = -90;
-    if (phoneRect && wheelRect) {
-      const linePercent = parseFloat(getComputedStyle(phoneEl).getPropertyValue("--climax-center-line-x")) || 50;
-      const px = phoneRect.left + phoneRect.width * (linePercent / 100);
-      const py = phoneRect.top + phoneRect.height * 0.5;
-      const wx = wheelRect.left + wheelRect.width * 0.5;
-      const wy = wheelRect.top + wheelRect.height * 0.5;
-      centerAngle = (Math.atan2(py - wy, px - wx) * 180) / Math.PI + 90;
-    }
-    const normalized = ((centerAngle - state.climaxWheelRotation) % 360 + 360) % 360;
+    const normalized = normalizeAngle(climaxPointerAngle() - state.climaxWheelRotation);
     const index = Math.floor(normalized / sliceAngle) % FULL_DROP_WHEEL_LABEL_ORDER.length;
     climaxWheelHighlightEl.style.setProperty("--highlight-angle", `${index * sliceAngle + sliceAngle * 0.5}deg`);
   }
@@ -2349,10 +2409,11 @@ async function playFullDropWheel() {
   const prize = weightedPick(FULL_DROP_WHEEL_PRIZES);
   const prizeIndex = wheelLabelIndexByPrize(prize.label);
   const sliceAngle = wheelLabelSliceAngle();
-  const finalRotation = 360 * 10 + (360 - (prizeIndex * sliceAngle + sliceAngle * 0.5));
   const award = Math.round(baseTotal * prize.multiplier);
 
   render();
+  const landingAngle = wheelLandingAngle(prizeIndex, sliceAngle, prize.multiplier);
+  const finalRotation = wheelRotationDeltaToLand(landingAngle, climaxPointerAngle());
   slotTotals.forEach((value, index) => spawnSlotClimaxEnergy(index, value, 12 + index * 85));
   playSound("slotProgress");
   await wait(resolveDelay(980, 520));
@@ -2362,8 +2423,6 @@ async function playFullDropWheel() {
   let spinElapsed = 0;
   const spinTimer = window.setInterval(() => {
     spinElapsed += 180;
-    state.climaxWheelRotation += sliceAngle;
-    renderClimaxStage();
     playSound("wheelSpin");
     if (spinElapsed >= FULL_DROP_WHEEL_SPIN_MS) window.clearInterval(spinTimer);
   }, 180);
