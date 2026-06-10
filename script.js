@@ -4098,18 +4098,31 @@ function initClimaxTunePanel() {
     const row = document.createElement("label");
     row.className = "climax-tune-row";
     const value = numericValue(name);
+    const hasStepper = name === "--climax-wheel-left" || name === "--climax-wheel-top" || name === "--climax-wheel-size";
     row.innerHTML = `
       <span>${label}</span>
-      <input type="range" min="${min}" max="${max}" step="${step}" value="${value}">
+      <div class="climax-tune-control">
+        ${hasStepper ? `<button type="button" data-step="-1" aria-label="${label} minus">-</button>` : ""}
+        <input type="range" min="${min}" max="${max}" step="${step}" value="${value}">
+        ${hasStepper ? `<button type="button" data-step="1" aria-label="${label} plus">+</button>` : ""}
+      </div>
       <span class="climax-tune-value">${value}${unit}</span>
     `;
     const input = row.querySelector("input");
     const valueEl = row.querySelector(".climax-tune-value");
-    input.addEventListener("input", () => {
-      const next = `${input.value}${unit}`;
+    const setControlValue = (raw) => {
+      const numeric = Math.max(min, Math.min(max, raw));
+      input.value = String(numeric);
+      const next = `${numeric}${unit}`;
       phone.style.setProperty(name, next);
       valueEl.textContent = next;
       refreshOutput();
+    };
+    input.addEventListener("input", () => {
+      setControlValue(Number(input.value));
+    });
+    row.querySelectorAll("[data-step]").forEach((button) => {
+      button.addEventListener("click", () => setControlValue(Number(input.value) + Number(button.dataset.step)));
     });
     controlsEl.appendChild(row);
   }

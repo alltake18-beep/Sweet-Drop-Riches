@@ -7704,6 +7704,24 @@ button {
   width: 100%;
 }
 
+.climax-tune-control {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 5px;
+  align-items: center;
+}
+
+.climax-tune-control button {
+  width: 26px;
+  height: 24px;
+  padding: 0;
+  color: #301006;
+  font-weight: 900;
+  line-height: 1;
+  background: linear-gradient(180deg, #fff4b0, #d49136);
+  border: 0;
+}
+
 .climax-tune-value {
   color: #8ff7ff;
   text-align: right;
