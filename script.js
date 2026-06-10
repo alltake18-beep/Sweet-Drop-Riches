@@ -25,6 +25,7 @@ const AUDIO_CATEGORY_GAINS = {
   payout: 0.92,
   special: 0.84,
   wheel: 0.9,
+  voice: 0.86,
   error: 0.7,
 };
 const MUSIC_BPM = 128;
@@ -123,11 +124,11 @@ const MULTIPLIER_ANCHOR_ROW_WEIGHTS_2X2 = [
   { row: 7, weight: 0 },
 ];
 const WIN_TIERS = [
-  { ratio: 100, label: "LEGENDARY WIN", art: "legendary", sound: "jackpot", className: "tier-legendary", duration: 2500, quick: 2500, particles: 86, countVolume: 0.055 },
-  { ratio: 50, label: "EPIC WIN", art: "epic", sound: "jackpot", className: "tier-epic", duration: 2500, quick: 2500, particles: 72, countVolume: 0.05 },
-  { ratio: 30, label: "SUPER MEGA WIN", art: "super-mega", sound: "superWin", className: "tier-super", duration: 2500, quick: 2500, particles: 58, countVolume: 0.045 },
-  { ratio: 20, label: "MEGA WIN", art: "mega", sound: "superWin", className: "tier-mega", duration: 2500, quick: 2500, particles: 46, countVolume: 0.04 },
-  { ratio: 5, label: "BIG WIN", art: "big", sound: "win", className: "tier-big", duration: 2500, quick: 2500, particles: 34, countVolume: 0.035 },
+  { ratio: 100, label: "LEGENDARY WIN", art: "legendary", sound: "jackpot", voice: "voiceLegendaryWin", className: "tier-legendary", duration: 2500, quick: 2500, particles: 86, countVolume: 0.055 },
+  { ratio: 50, label: "EPIC WIN", art: "epic", sound: "jackpot", voice: "voiceEpicWin", className: "tier-epic", duration: 2500, quick: 2500, particles: 72, countVolume: 0.05 },
+  { ratio: 30, label: "SUPER MEGA WIN", art: "super-mega", sound: "superWin", voice: "voiceSuperMegaWin", className: "tier-super", duration: 2500, quick: 2500, particles: 58, countVolume: 0.045 },
+  { ratio: 20, label: "MEGA WIN", art: "mega", sound: "superWin", voice: "voiceMegaWin", className: "tier-mega", duration: 2500, quick: 2500, particles: 46, countVolume: 0.04 },
+  { ratio: 5, label: "BIG WIN", art: "big", sound: "win", voice: "voiceBigWin", className: "tier-big", duration: 2500, quick: 2500, particles: 34, countVolume: 0.035 },
 ];
 const EVENT_ROLL_STEPS = 5;
 const EVENT_ROLL_TOTAL = 1398;
@@ -215,6 +216,11 @@ const SOUND_PROFILES = {
   win: { category: "payout", cooldown: 300, maxVoices: 1, attenuation: 0.6, release: 920, gain: 0.68 },
   superWin: { category: "payout", cooldown: 420, maxVoices: 1, attenuation: 0.65, release: 1250, gain: 0.64 },
   jackpot: { category: "payout", cooldown: 560, maxVoices: 1, attenuation: 0.7, release: 1700, gain: 0.62 },
+  voiceBigWin: { category: "voice", cooldown: 700, maxVoices: 1, attenuation: 0.4, release: 1200, gain: 0.78 },
+  voiceMegaWin: { category: "voice", cooldown: 800, maxVoices: 1, attenuation: 0.4, release: 1300, gain: 0.82 },
+  voiceSuperMegaWin: { category: "voice", cooldown: 900, maxVoices: 1, attenuation: 0.4, release: 1500, gain: 0.84 },
+  voiceEpicWin: { category: "voice", cooldown: 900, maxVoices: 1, attenuation: 0.4, release: 1400, gain: 0.84 },
+  voiceLegendaryWin: { category: "voice", cooldown: 1000, maxVoices: 1, attenuation: 0.4, release: 1700, gain: 0.86 },
   wheelSpin: { category: "wheel", cooldown: 18, maxVoices: 4, attenuation: 0.35, release: 90, gain: 0.6 },
   wheelStop: { category: "wheel", cooldown: 320, maxVoices: 1, attenuation: 0.55, release: 800, gain: 0.72 },
   climaxIntro: { category: "multiplier", cooldown: 900, maxVoices: 1, attenuation: 0.5, release: 1800, gain: 0.74 },
@@ -2433,7 +2439,8 @@ async function maybeShowWinCard() {
   playWinCountLoop(2000, tier.countVolume || 0.04);
   spawnParticles(tier.particles);
   triggerScreenFx(ratio >= 50 ? "fx-jackpot" : ratio >= 20 ? "fx-blast" : "fx-bump", ratio >= 50 ? 980 : 640);
-  playSound(tier.sound || "win");
+  playSound(tier.voice || "voiceBigWin");
+  window.setTimeout(() => playSound(tier.sound || "win"), 140);
   await wait(resolveDelay(tier.duration, tier.quick));
   winOverlay.classList.add("hidden");
   setPerfPhase("resolve");
@@ -3308,6 +3315,67 @@ function playMachineRumble(options = {}) {
   });
 }
 
+function playVoiceFallback(pattern, options = {}) {
+  playMachineRumble({
+    duration: options.duration || 0.52,
+    root: hz("Bb", 1),
+    to: hz("Ab", 1),
+    volume: options.rumble || 0.028,
+    noiseFreq: 540,
+  });
+  pattern.forEach((freq, index) => {
+    const delay = 0.04 + index * (options.spacing || 0.095);
+    playTone(freq, options.noteDuration || 0.085, {
+      delay,
+      to: freq * 0.94,
+      type: "sawtooth",
+      volume: options.volume || 0.04,
+      filter: { type: "bandpass", from: 420, to: 1450, q: 3.4 },
+    });
+    playTone(freq * 1.5, options.noteDuration || 0.085, {
+      delay: delay + 0.012,
+      to: freq * 1.38,
+      type: "triangle",
+      volume: (options.volume || 0.04) * 0.46,
+      filter: { type: "bandpass", from: 760, to: 2100, q: 2.8 },
+    });
+  });
+}
+
+function speakAnnouncer(text, options = {}) {
+  if (!("speechSynthesis" in window) || typeof SpeechSynthesisUtterance === "undefined") return false;
+  const utterance = new SpeechSynthesisUtterance(text);
+  const voices = window.speechSynthesis.getVoices?.() || [];
+  const preferred = voices.find((voice) => /english|en-/i.test(`${voice.lang} ${voice.name}`) && /male|guy|david|mark|daniel|george/i.test(voice.name))
+    || voices.find((voice) => /english|en-/i.test(`${voice.lang} ${voice.name}`));
+  if (preferred) utterance.voice = preferred;
+  utterance.lang = preferred?.lang || "en-US";
+  utterance.rate = options.rate || 0.9;
+  utterance.pitch = options.pitch || 0.72;
+  utterance.volume = options.volume || 0.74;
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(utterance);
+  return true;
+}
+
+function playAnnouncerVoice(text, options = {}) {
+  playBrassStab(options.chord || "shadow", {
+    volume: options.stabVolume || 0.024,
+    duration: 0.08,
+    transpose: options.stabTranspose || 1,
+  });
+  playVoiceFallback(options.pattern || [hz("Bb", 2), hz("Db", 3), hz("F", 3)], options);
+  const spoke = speakAnnouncer(text, options);
+  if (spoke) {
+    playNoise(0.12, {
+      delay: 0.04,
+      frequency: 1600,
+      filterType: "bandpass",
+      volume: 0.008,
+    });
+  }
+}
+
 function reserveSoundVoice(kind, profile, now) {
   const voice = state.soundVoiceState[kind] || { active: 0, lastAt: 0 };
   const elapsed = now - voice.lastAt;
@@ -3431,6 +3499,72 @@ function playSound(kind) {
       playImpact(hz("F", 1), { delay: 0.4, low: 0.095, mid: 0.045, noise: 0.028, noiseFreq: 1100 });
       playSparkleRun(hz("Bb", 4), 7, { delay: 0.12, spacing: 0.055, volume: 0.066 });
       playBrassStab("tonic", { delay: 0.56, volume: 0.056, duration: 0.24, voices: 4 });
+    },
+    voiceBigWin: () => {
+      playAnnouncerVoice("Big win", {
+        chord: "tonic",
+        pattern: [hz("Bb", 2), hz("Db", 3), hz("F", 3)],
+        rate: 0.92,
+        pitch: 0.74,
+        volume: 0.62,
+        duration: 0.44,
+        noteDuration: 0.075,
+        spacing: 0.088,
+        stabVolume: 0.022,
+      });
+    },
+    voiceMegaWin: () => {
+      playAnnouncerVoice("Mega win", {
+        chord: "dominant",
+        pattern: [hz("Db", 3), hz("F", 3), hz("Ab", 3), hz("Bb", 3)],
+        rate: 0.88,
+        pitch: 0.72,
+        volume: 0.68,
+        duration: 0.56,
+        noteDuration: 0.082,
+        spacing: 0.086,
+        stabVolume: 0.026,
+      });
+    },
+    voiceSuperMegaWin: () => {
+      playAnnouncerVoice("Super mega win", {
+        chord: "bright",
+        pattern: [hz("Bb", 2), hz("Db", 3), hz("F", 3), hz("Ab", 3), hz("Bb", 3)],
+        rate: 0.82,
+        pitch: 0.7,
+        volume: 0.72,
+        duration: 0.72,
+        noteDuration: 0.086,
+        spacing: 0.088,
+        stabVolume: 0.028,
+      });
+    },
+    voiceEpicWin: () => {
+      playAnnouncerVoice("Epic win", {
+        chord: "shadow",
+        pattern: [hz("F", 2), hz("Bb", 2), hz("Db", 3), hz("F", 3), hz("Ab", 3)],
+        rate: 0.84,
+        pitch: 0.68,
+        volume: 0.72,
+        duration: 0.64,
+        noteDuration: 0.085,
+        spacing: 0.086,
+        stabVolume: 0.03,
+      });
+    },
+    voiceLegendaryWin: () => {
+      playAnnouncerVoice("Legendary win", {
+        chord: "tonic",
+        pattern: [hz("Bb", 1), hz("F", 2), hz("Bb", 2), hz("Db", 3), hz("F", 3), hz("Bb", 3)],
+        rate: 0.78,
+        pitch: 0.66,
+        volume: 0.76,
+        duration: 0.84,
+        noteDuration: 0.09,
+        spacing: 0.09,
+        rumble: 0.036,
+        stabVolume: 0.034,
+      });
     },
     wheelSpin: () => {
       playWahFlick(hz("Bb", 4), { duration: 0.032, volume: 0.026, from: 900, to: 1600, q: 5.2 });
