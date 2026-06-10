@@ -197,10 +197,10 @@ const winTitleArtEl = document.getElementById("winTitleArt");
 const winMultiplierEl = document.getElementById("winMultiplier");
 const winAmountEl = document.getElementById("winAmount");
 const climaxStageEl = document.getElementById("climaxStage");
-const climaxPrizesEl = document.getElementById("climaxPrizes");
-const climaxOrbsEl = document.getElementById("climaxOrbs");
-const climaxOrbEls = Array.from(document.querySelectorAll(".climax-orb"));
+const climaxWheelRotorEl = document.getElementById("climaxWheelRotor");
+const climaxWheelLabelsEl = document.getElementById("climaxWheelLabels");
 const climaxResultEl = document.getElementById("climaxResult");
+const climaxOrbEls = Array.from(document.querySelectorAll(".climax-orb"));
 
 const state = {
   board: [],
@@ -264,12 +264,13 @@ const state = {
   rollingStage: null,
   miniSlotWin: false,
   eventPulse: false,
-  climaxSpinning: false,
-  climaxResult: null,
   boardRescueLevel: 0,
   sniperTarget: null,
   flameCells: new Set(),
   flameFinal: false,
+  climaxWheelRotation: 0,
+  climaxSpinning: false,
+  climaxResult: "",
 };
 
 function formatMoney(value, decimals = 0) {
@@ -285,19 +286,6 @@ function formatBalance(value) {
 
 function formatScore(value) {
   return formatMoney(Math.round(value || 0), 0);
-}
-
-function slotTotal() {
-  return state.slotValues.reduce((sum, value) => sum + Math.round(value || 0), 0);
-}
-
-function isMultiplierClimaxActive() {
-  return state.filledSlots.size > 0 || state.climaxSpinning || Boolean(state.climaxResult);
-}
-
-function climaxPrizeScores(baseTotal = slotTotal()) {
-  const total = Math.max(1, Math.round(baseTotal || currentBet()));
-  return [0.5, 1, 1.5, 2, 3].map((multiplier) => formatScore(Math.max(1, Math.round(total * multiplier))));
 }
 
 function multiplierPayout(multiplierOrValue) {
@@ -1043,25 +1031,32 @@ function renderSlots() {
   if (hasFlash) state.slotFlash = Array(SLOT_COUNT).fill(null);
 }
 
+function slotTotal(col) {
+  return Math.round(state.slotValues[col] || 0);
+}
+
+function isMultiplierClimaxActive() {
+  return state.filledSlots.size > 0 || state.climaxSpinning || Boolean(state.climaxResult);
+}
+
 function renderClimaxStage() {
-  if (!climaxStageEl || !climaxPrizesEl || !climaxOrbsEl) return;
-
-  const scores = climaxPrizeScores(slotTotal());
-  climaxPrizesEl.innerHTML = scores
-    .map((score, index) => `<span class="climax-prize prize-${index + 1}">${score}</span>`)
-    .join("");
-
-  climaxOrbEls.forEach((orb, index) => {
-    const value = state.slotValues[index] || 0;
-    const filled = state.filledSlots.has(index) && value > 0;
-    orb.classList.toggle("filled", filled);
-    orb.classList.toggle("empty", !filled);
-    orb.querySelector("strong").textContent = filled ? formatScore(value) : "";
-  });
-
-  if (climaxResultEl) {
-    climaxResultEl.textContent = state.climaxResult ? formatScore(state.climaxResult.award) : "";
+  if (!climaxStageEl) return;
+  const active = isMultiplierClimaxActive();
+  climaxStageEl.setAttribute("aria-hidden", String(!active));
+  if (climaxWheelLabelsEl && !climaxWheelLabelsEl.childElementCount) {
+    climaxWheelLabelsEl.innerHTML = fullDropWheelLabels();
   }
+  if (climaxWheelRotorEl) {
+    climaxWheelRotorEl.style.setProperty("--wheel-rotation", `${state.climaxWheelRotation || 0}deg`);
+  }
+  climaxOrbEls.forEach((orb, index) => {
+    const total = slotTotal(index);
+    const label = orb.querySelector("strong");
+    orb.classList.toggle("filled", total > 0);
+    orb.classList.toggle("hot", state.climaxSpinning && total > 0);
+    if (label) label.textContent = total > 0 ? formatScore(total) : "";
+  });
+  if (climaxResultEl) climaxResultEl.textContent = state.climaxResult || "";
 }
 
 function render() {
@@ -2274,6 +2269,8 @@ async function maybeFullDropBonus() {
   state.slotSymbolValues = Array(SLOT_COUNT).fill(null);
   state.slotFlash = Array(SLOT_COUNT).fill(null);
   state.slotTurns = Array(SLOT_COUNT).fill(0);
+  state.climaxResult = "";
+  render();
 }
 
 function fullDropWheelGradient() {
@@ -2294,8 +2291,6 @@ function fullDropWheelLabels() {
 }
 
 async function playFullDropWheel() {
-  const host = document.querySelector(".play-area");
-  if (!host) return;
   const slotTotals = state.slotValues.map((value) => Math.round(value || 0));
   const baseTotal = slotTotals.reduce((sum, value) => sum + value, 0);
   if (baseTotal <= 0) return;
@@ -2306,68 +2301,34 @@ async function playFullDropWheel() {
   const finalRotation = 360 * 10 + (360 - (prizeIndex * sliceAngle + sliceAngle * 0.5));
   const award = Math.round(baseTotal * prize.multiplier);
 
-  const overlay = document.createElement("div");
-  overlay.className = "full-drop-wheel-overlay";
-  overlay.innerHTML = `
-    <div class="full-drop-wheel-pointer"></div>
-    <div class="full-drop-wheel" style="background:${fullDropWheelGradient()}">
-      <div class="full-drop-wheel-labels">${fullDropWheelLabels()}</div>
-      <div class="full-drop-wheel-core">
-        <span>TOTAL</span>
-        <strong>${formatScore(baseTotal)}</strong>
-      </div>
-    </div>
-    <div class="full-drop-wheel-result" aria-live="polite">
-      <span>DROP WHEEL</span>
-      <strong></strong>
-    </div>
-  `;
-  host.appendChild(overlay);
-
-  const overlayRect = overlay.getBoundingClientRect();
-  const centerX = overlayRect.width * 0.5;
-  const centerY = overlayRect.height * 0.5;
-  slotTotals.forEach((value, index) => {
-    const slotRect = slotsEl.children[index]?.getBoundingClientRect();
-    const chip = document.createElement("div");
-    chip.className = "full-drop-fly-chip";
-    chip.textContent = formatScore(value);
-    const startX = slotRect ? slotRect.left + slotRect.width * 0.5 - overlayRect.left : centerX;
-    const startY = slotRect ? slotRect.top + slotRect.height * 0.5 - overlayRect.top : centerY + 260;
-    chip.style.setProperty("--dx", `${startX - centerX}px`);
-    chip.style.setProperty("--dy", `${startY - centerY}px`);
-    chip.style.setProperty("--delay", `${index * 120}ms`);
-    overlay.appendChild(chip);
-  });
-
+  state.climaxResult = `TOTAL ${formatScore(baseTotal)}`;
+  render();
+  slotTotals.forEach((value, index) => spawnSlotClimaxEnergy(index, value, 12 + index * 85));
   playSound("slotProgress");
-  await wait(resolveDelay(980, 620));
+  await wait(resolveDelay(980, 520));
 
-  const wheel = overlay.querySelector(".full-drop-wheel");
-  const resultLabel = overlay.querySelector(".full-drop-wheel-result span");
-  const result = overlay.querySelector(".full-drop-wheel-result strong");
-  overlay.classList.add("is-spinning");
+  state.climaxSpinning = true;
+  state.climaxResult = "";
+  render();
   let spinElapsed = 0;
   const spinTimer = window.setInterval(() => {
     spinElapsed += 180;
     playSound("wheelSpin");
     if (spinElapsed >= FULL_DROP_WHEEL_SPIN_MS) window.clearInterval(spinTimer);
   }, 180);
-  await wait(40);
-  wheel.style.transform = `translate(-50%, -50%) rotate(${finalRotation}deg)`;
+  await wait(60);
+  state.climaxWheelRotation += finalRotation;
+  renderClimaxStage();
   await wait(FULL_DROP_WHEEL_SPIN_MS);
   window.clearInterval(spinTimer);
 
   playSound("wheelStop");
   addWin(award);
-  resultLabel.textContent = `${prize.label} AWARD`;
-  result.textContent = formatScore(award);
-  overlay.classList.remove("is-spinning");
-  overlay.classList.add("is-complete");
+  state.climaxSpinning = false;
+  state.climaxResult = `${prize.label} ${formatScore(award)}`;
   triggerScreenFx(prize.multiplier >= 5 ? "fx-jackpot" : prize.multiplier >= 1 ? "fx-blast" : "fx-bump", 820);
   render();
   await wait(resolveDelay(1500, 900));
-  overlay.remove();
 }
 
 async function ensureLegalMove() {
@@ -2482,36 +2443,6 @@ function triggerScreenFx(className, duration = 420) {
   void phone.offsetWidth;
   phone.classList.add(className);
   window.setTimeout(() => phone.classList.remove(className), duration);
-}
-
-function spawnSlotClimaxEnergy(col) {
-  const phone = document.querySelector(".phone");
-  const source = slotsEl?.children[col];
-  const target = climaxOrbEls[col];
-  if (!phone || !source || !target) return;
-
-  const phoneRect = phone.getBoundingClientRect();
-  const sourceRect = source.getBoundingClientRect();
-  const targetRect = target.getBoundingClientRect();
-  const startX = sourceRect.left + sourceRect.width * 0.5 - phoneRect.left;
-  const startY = sourceRect.top + sourceRect.height * 0.5 - phoneRect.top;
-  const endX = targetRect.left + targetRect.width * 0.5 - phoneRect.left;
-  const endY = targetRect.top + targetRect.height * 0.5 - phoneRect.top;
-
-  for (let i = 0; i < 8; i += 1) {
-    const spark = document.createElement("i");
-    spark.className = "slot-climax-energy";
-    spark.style.setProperty("--sx", `${startX}px`);
-    spark.style.setProperty("--sy", `${startY}px`);
-    spark.style.setProperty("--tx", `${endX - startX}px`);
-    spark.style.setProperty("--ty", `${endY - startY}px`);
-    spark.style.setProperty("--mx", `${(endX - startX) * 0.72}px`);
-    spark.style.setProperty("--my", `${(endY - startY) * 0.72}px`);
-    spark.style.setProperty("--delay", `${i * 48}ms`);
-    spark.style.setProperty("--drift", `${(i % 2 ? 1 : -1) * (6 + i)}px`);
-    phone.appendChild(spark);
-    window.setTimeout(() => spark.remove(), 1100 + i * 48);
-  }
 }
 
 function resizeFxCanvas() {
@@ -2696,6 +2627,35 @@ function spawnSlotEnergy(col, value) {
   enqueueFx(items);
 }
 
+function spawnSlotClimaxEnergy(col, value, baseDelay = 0) {
+  const host = document.querySelector(".phone");
+  const target = climaxOrbEls[col] || climaxStageEl;
+  const source = slotsEl?.children[col];
+  if (!host || !target || !source) return;
+
+  const hostRect = host.getBoundingClientRect();
+  const sourceRect = source.getBoundingClientRect();
+  const targetRect = target.getBoundingClientRect();
+  const startX = sourceRect.left + sourceRect.width * 0.5 - hostRect.left;
+  const startY = sourceRect.top + sourceRect.height * 0.5 - hostRect.top;
+  const endX = targetRect.left + targetRect.width * 0.5 - hostRect.left;
+  const endY = targetRect.top + targetRect.height * 0.5 - hostRect.top;
+  const count = Math.max(9, Math.min(24, Math.round((value || 0) / currentBet() * 3) + 8));
+
+  for (let index = 0; index < count; index += 1) {
+    const spark = document.createElement("i");
+    spark.className = "slot-climax-energy";
+    spark.style.setProperty("--sx", `${startX + Math.random() * 28 - 14}px`);
+    spark.style.setProperty("--sy", `${startY + Math.random() * 20 - 10}px`);
+    spark.style.setProperty("--tx", `${endX + Math.random() * 16 - 8}px`);
+    spark.style.setProperty("--ty", `${endY + Math.random() * 10 - 5}px`);
+    spark.style.setProperty("--delay", `${baseDelay + index * 22}ms`);
+    spark.style.setProperty("--arc", `${80 + Math.random() * 42}px`);
+    host.appendChild(spark);
+    window.setTimeout(() => spark.remove(), 1240 + baseDelay + index * 22);
+  }
+}
+
 function keyToPoint(key) {
   const [row, col] = key.split(",").map(Number);
   return { row, col };
@@ -2779,7 +2739,7 @@ function playChord(freqs, duration, options = {}) {
 }
 
 function isSlotHypeActive() {
-  return isMultiplierClimaxActive();
+  return state.filledSlots.size >= 2;
 }
 
 function playNormalMusicBeat(beat) {
@@ -3110,7 +3070,6 @@ function renderHud() {
   phoneEl?.classList.toggle("low-balance", !hasEnoughBalanceForMove());
   phoneEl?.classList.toggle("slot-hype", isSlotHypeActive());
   phoneEl?.classList.toggle("multiplier-climax", isMultiplierClimaxActive());
-  phoneEl?.classList.toggle("climax-ready", state.filledSlots.size >= SLOT_COUNT);
   phoneEl?.classList.toggle("climax-spinning", state.climaxSpinning);
   if (!state.stagePreviews.length) state.stagePreviews = initialStagePreviews();
   const currentStage = currentSpecialStageIndex();
@@ -3397,8 +3356,8 @@ async function presentCollectedMultipliers(collected) {
   if (collected.length === 0) return;
   setStatus(collected.map((item) => `SLOT ${item.col + 1} ${formatScore(item.payout)}`).join("  "));
   render();
-  collected.forEach((item) => spawnSlotClimaxEnergy(item.col));
   spawnParticles(collected.length * 12);
+  collected.forEach((item, index) => spawnSlotClimaxEnergy(item.col, item.payout, index * 80));
   const highCollect = Math.max(...collected.map((item) => item.value));
   playMultiplierCollectSound(highCollect);
   if (highCollect >= 100) triggerScreenFx("fx-jackpot", 780);
