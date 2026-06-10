@@ -7626,29 +7626,41 @@ button {
 
 .climax-wheel-label {
   position: absolute;
-  left: 50%;
-  top: 50%;
+  left: var(--label-x);
+  top: var(--label-y);
   min-width: 16%;
   color: #fff6be;
-  font: 900 clamp(13px, 5.2vw, 38px) / 1 "Arial Black", Impact, sans-serif;
+  font: 900 var(--label-font) / 1 "Arial Black", Impact, sans-serif;
   letter-spacing: 0;
   text-align: center;
   white-space: nowrap;
+  background: transparent;
+  border: 0;
+  padding: 0;
   -webkit-text-stroke: 1.1px rgba(69, 12, 0, 0.95);
   text-shadow:
     0 2px 0 rgba(52, 8, 0, 0.95),
     0 0 7px rgba(255, 76, 168, 0.84),
     0 0 12px rgba(255, 224, 88, 0.82);
-  transform: translate(-50%, -50%) rotate(var(--angle)) translateY(-43%) rotate(90deg);
+  transform: translate(-50%, -50%) rotate(var(--label-rotate));
   transform-origin: 50% 50%;
+  pointer-events: auto;
 }
 
 .climax-wheel-label.score-length-3 {
-  font-size: clamp(11px, 4.5vw, 32px);
+  font-size: calc(var(--label-font) * 0.9);
 }
 
 .climax-wheel-label.score-length-4 {
-  font-size: clamp(10px, 4vw, 28px);
+  font-size: calc(var(--label-font) * 0.78);
+}
+
+.phone.tune-climax .climax-wheel-label.is-selected {
+  color: #ffffff;
+  text-shadow:
+    0 2px 0 rgba(52, 8, 0, 0.95),
+    0 0 8px rgba(118, 248, 255, 0.92),
+    0 0 14px rgba(255, 238, 115, 0.86);
 }
 
 .phone.multiplier-climax .play-area::before {
@@ -7754,6 +7766,14 @@ button {
 
 .climax-tune-row input {
   width: 100%;
+}
+
+.climax-tune-row select {
+  width: 100%;
+  min-height: 26px;
+  color: #ffeec2;
+  background: rgba(0, 0, 0, 0.38);
+  border: 1px solid rgba(255, 231, 140, 0.38);
 }
 
 .climax-tune-control {

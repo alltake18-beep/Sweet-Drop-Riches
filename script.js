@@ -144,6 +144,17 @@ const FULL_DROP_WHEEL_PRIZES = [
   { label: "50x", multiplier: 50, weight: 0.05 },
   { label: "100x", multiplier: 100, weight: 0 },
 ];
+const FULL_DROP_WHEEL_LABEL_ORDER = ["100x", "0.1x", "1x", "0.2x", "20x", "2x", "5x", "50x", "1.5x", "30x", "10x", "0.5x"];
+const WHEEL_LABEL_TUNE = {
+  cx: 50,
+  cy: 50,
+  radius: 36.5,
+  angleOffset: -90,
+  rotateOffset: 90,
+  fontSize: 46,
+  items: {
+  },
+};
 const SOUND_PROFILES = {
   button: { category: "button", cooldown: 80, maxVoices: 1, attenuation: 0.5, release: 180, gain: 0.78 },
   move: { category: "movement", cooldown: 70, maxVoices: 1, attenuation: 0.45, release: 180, gain: 0.74 },
@@ -1042,10 +1053,18 @@ function renderClimaxStage() {
   }
   if (climaxWheelLabelsEl && !climaxWheelLabelsEl.childElementCount) {
     const sliceAngle = 360 / FULL_DROP_WHEEL_PRIZES.length;
-    climaxWheelLabelsEl.innerHTML = FULL_DROP_WHEEL_PRIZES.map((prize, index) => {
-      const angle = index * sliceAngle + sliceAngle * 0.5;
-      const digits = prize.label.replace(/[^0-9]/g, "").length;
-      return `<span class="climax-wheel-label score-length-${Math.min(4, digits)}" style="--angle:${angle}deg">${prize.label}</span>`;
+    climaxWheelLabelsEl.innerHTML = FULL_DROP_WHEEL_LABEL_ORDER.map((label, index) => {
+      const angle = WHEEL_LABEL_TUNE.angleOffset + index * sliceAngle + sliceAngle * 0.5;
+      const item = WHEEL_LABEL_TUNE.items[label] || {};
+      const finalAngle = angle + (item.angle || 0);
+      const finalRadius = WHEEL_LABEL_TUNE.radius + (item.radius || 0);
+      const radians = (finalAngle * Math.PI) / 180;
+      const x = WHEEL_LABEL_TUNE.cx + Math.cos(radians) * finalRadius;
+      const y = WHEEL_LABEL_TUNE.cy + Math.sin(radians) * finalRadius;
+      const rotate = finalAngle + WHEEL_LABEL_TUNE.rotateOffset + (item.rotate || 0);
+      const fontSize = WHEEL_LABEL_TUNE.fontSize + (item.font || 0);
+      const digits = label.replace(/[^0-9]/g, "").length;
+      return `<button type="button" class="climax-wheel-label score-length-${Math.min(4, digits)}" data-label="${label}" style="--label-x:${x}%; --label-y:${y}%; --label-rotate:${rotate}deg; --label-font:${fontSize}px">${label}</button>`;
     }).join("");
   }
   if (climaxWheelHighlightEl) {
@@ -4043,12 +4062,16 @@ function initClimaxTunePanel() {
     ["wheel top", "--climax-wheel-top", -200, 500, 0.5, "%"],
     ["wheel size", "--climax-wheel-size", 25, 500, 1, "%"],
   ];
+  const labelTune = JSON.parse(JSON.stringify(WHEEL_LABEL_TUNE));
+  let selectedLabel = FULL_DROP_WHEEL_LABEL_ORDER[0];
 
   const panel = document.createElement("div");
   panel.className = "climax-tune-panel";
   panel.innerHTML = `
     <strong>Climax Tune</strong>
     <div class="climax-tune-controls"></div>
+    <strong>Label Tune</strong>
+    <div class="climax-label-tune"></div>
     <div class="climax-tune-actions">
       <button type="button" data-action="copy">Copy CSS</button>
       <button type="button" data-action="toggle-points">Hide Points</button>
@@ -4059,6 +4082,7 @@ function initClimaxTunePanel() {
   document.body.appendChild(panel);
 
   const controlsEl = panel.querySelector(".climax-tune-controls");
+  const labelTuneEl = panel.querySelector(".climax-label-tune");
   const output = panel.querySelector(".climax-tune-output");
   const handleLayer = document.createElement("div");
   handleLayer.className = "climax-mask-handle-layer";
@@ -4115,11 +4139,90 @@ function initClimaxTunePanel() {
       return `  ${name}: ${value || `0${unit}`};`;
     });
     lines.splice(3, 0, `  --climax-mask-path: ${maskPath()};`);
-    return `.phone {\n${lines.join("\n")}\n}`;
+    return `.phone {\n${lines.join("\n")}\n}\n\nWHEEL_LABEL_TUNE = ${JSON.stringify(labelTune, null, 2)};`;
   }
 
   function refreshOutput() {
     output.value = cssText();
+  }
+
+  function applyLabelTune() {
+    const sliceAngle = 360 / FULL_DROP_WHEEL_LABEL_ORDER.length;
+    document.querySelectorAll(".climax-wheel-label").forEach((el) => {
+      const label = el.dataset.label;
+      const index = FULL_DROP_WHEEL_LABEL_ORDER.indexOf(label);
+      if (index < 0) return;
+      const item = labelTune.items[label] || {};
+      const angle = labelTune.angleOffset + index * sliceAngle + sliceAngle * 0.5 + (item.angle || 0);
+      const radius = labelTune.radius + (item.radius || 0);
+      const radians = (angle * Math.PI) / 180;
+      const x = labelTune.cx + Math.cos(radians) * radius;
+      const y = labelTune.cy + Math.sin(radians) * radius;
+      el.style.setProperty("--label-x", `${x}%`);
+      el.style.setProperty("--label-y", `${y}%`);
+      el.style.setProperty("--label-rotate", `${angle + labelTune.rotateOffset + (item.rotate || 0)}deg`);
+      el.style.setProperty("--label-font", `${labelTune.fontSize + (item.font || 0)}px`);
+      el.classList.toggle("is-selected", label === selectedLabel);
+    });
+    refreshOutput();
+  }
+
+  function tuneRow(parent, label, value, onMinus, onPlus) {
+    const row = document.createElement("div");
+    row.className = "climax-tune-row";
+    row.innerHTML = `
+      <span>${label}</span>
+      <div class="climax-tune-control">
+        <button type="button" data-action="minus">-</button>
+        <button type="button" data-action="plus">+</button>
+      </div>
+      <span class="climax-tune-value">${value}</span>
+    `;
+    const valueEl = row.querySelector(".climax-tune-value");
+    const update = (next) => {
+      valueEl.textContent = next;
+      applyLabelTune();
+    };
+    row.querySelector('[data-action="minus"]').addEventListener("click", () => update(onMinus()));
+    row.querySelector('[data-action="plus"]').addEventListener("click", () => update(onPlus()));
+    parent.appendChild(row);
+  }
+
+  function renderLabelTuneControls() {
+    labelTuneEl.innerHTML = "";
+    const selectRow = document.createElement("label");
+    selectRow.className = "climax-tune-row";
+    selectRow.innerHTML = `
+      <span>selected</span>
+      <select class="climax-label-select">${FULL_DROP_WHEEL_LABEL_ORDER.map((label) => `<option value="${label}">${label}</option>`).join("")}</select>
+      <span></span>
+    `;
+    const select = selectRow.querySelector("select");
+    select.value = selectedLabel;
+    select.addEventListener("change", () => {
+      selectedLabel = select.value;
+      renderLabelTuneControls();
+      applyLabelTune();
+    });
+    labelTuneEl.appendChild(selectRow);
+
+    tuneRow(labelTuneEl, "center x", labelTune.cx.toFixed(1), () => (labelTune.cx -= 0.5).toFixed(1), () => (labelTune.cx += 0.5).toFixed(1));
+    tuneRow(labelTuneEl, "center y", labelTune.cy.toFixed(1), () => (labelTune.cy -= 0.5).toFixed(1), () => (labelTune.cy += 0.5).toFixed(1));
+    tuneRow(labelTuneEl, "radius", labelTune.radius.toFixed(1), () => (labelTune.radius -= 0.5).toFixed(1), () => (labelTune.radius += 0.5).toFixed(1));
+    tuneRow(labelTuneEl, "angle all", labelTune.angleOffset.toFixed(1), () => (labelTune.angleOffset -= 0.5).toFixed(1), () => (labelTune.angleOffset += 0.5).toFixed(1));
+    tuneRow(labelTuneEl, "rotate all", labelTune.rotateOffset.toFixed(1), () => (labelTune.rotateOffset -= 1).toFixed(1), () => (labelTune.rotateOffset += 1).toFixed(1));
+    tuneRow(labelTuneEl, "font all", labelTune.fontSize.toFixed(0), () => (labelTune.fontSize -= 1).toFixed(0), () => (labelTune.fontSize += 1).toFixed(0));
+
+    if (!labelTune.items[selectedLabel]) labelTune.items[selectedLabel] = {};
+    const item = labelTune.items[selectedLabel];
+    item.angle ||= 0;
+    item.radius ||= 0;
+    item.rotate ||= 0;
+    item.font ||= 0;
+    tuneRow(labelTuneEl, "item angle", item.angle.toFixed(1), () => (item.angle -= 0.5).toFixed(1), () => (item.angle += 0.5).toFixed(1));
+    tuneRow(labelTuneEl, "item radius", item.radius.toFixed(1), () => (item.radius -= 0.5).toFixed(1), () => (item.radius += 0.5).toFixed(1));
+    tuneRow(labelTuneEl, "item rotate", item.rotate.toFixed(1), () => (item.rotate -= 1).toFixed(1), () => (item.rotate += 1).toFixed(1));
+    tuneRow(labelTuneEl, "item font", item.font.toFixed(0), () => (item.font -= 1).toFixed(0), () => (item.font += 1).toFixed(0));
   }
 
   for (const [label, name, min, max, step, unit] of controls) {
@@ -4200,6 +4303,16 @@ function initClimaxTunePanel() {
     handleLayer.appendChild(handle);
   });
 
+  renderClimaxStage();
+  document.querySelectorAll(".climax-wheel-label").forEach((labelEl) => {
+    labelEl.addEventListener("click", (event) => {
+      event.stopPropagation();
+      selectedLabel = labelEl.dataset.label || selectedLabel;
+      renderLabelTuneControls();
+      applyLabelTune();
+    });
+  });
+
   climaxStageEl.addEventListener("pointerdown", (event) => {
     if (!params.has("tune") || draggingPoint || event.target.closest(".climax-mask-handle") || event.target.closest(".climax-tune-panel")) return;
     event.preventDefault();
@@ -4251,6 +4364,8 @@ function initClimaxTunePanel() {
 
   refreshOutput();
   applyMaskPath();
+  renderLabelTuneControls();
+  applyLabelTune();
   placeHandleLayer();
   window.addEventListener("resize", placeHandleLayer);
   window.visualViewport?.addEventListener("resize", placeHandleLayer);
