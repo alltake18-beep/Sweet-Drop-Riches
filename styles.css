@@ -7740,8 +7740,11 @@ button {
   left: 10px;
   bottom: 10px;
   width: min(360px, calc(100vw - 20px));
-  max-height: min(78vh, 760px);
+  height: min(25vh, 260px);
+  max-height: 25vh;
   overflow: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   padding: 10px;
   color: #ffeec2;
   font: 12px/1.25 Arial, sans-serif;
