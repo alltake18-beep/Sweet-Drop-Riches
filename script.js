@@ -10,12 +10,12 @@ const PERF_ENABLED = new URLSearchParams(window.location.search).has("perf");
 const SPECIAL_METER_TARGET = 9;
 const SPECIAL_METER_THRESHOLDS = [9, 21, 40];
 const SPECIAL_METER_MAX = SPECIAL_METER_THRESHOLDS[SPECIAL_METER_THRESHOLDS.length - 1];
-const AUDIO_MASTER_VOLUME = 0.82;
-const AUDIO_SFX_VOLUME = 0.7;
-const AUDIO_BGM_VOLUME = 0.4;
-const AUDIO_LOWCUT_HZ = 85;
-const AUDIO_SFX_PEAK_LIMIT = 0.26;
-const AUDIO_BGM_PEAK_LIMIT = 0.07;
+const AUDIO_MASTER_VOLUME = 0.86;
+const AUDIO_SFX_VOLUME = 0.74;
+const AUDIO_BGM_VOLUME = 0.52;
+const AUDIO_LOWCUT_HZ = 45;
+const AUDIO_SFX_PEAK_LIMIT = 0.24;
+const AUDIO_BGM_PEAK_LIMIT = 0.085;
 const AUDIO_CATEGORY_GAINS = {
   button: 0.9,
   movement: 0.86,
@@ -26,6 +26,10 @@ const AUDIO_CATEGORY_GAINS = {
   special: 0.78,
   error: 0.76,
 };
+const MUSIC_BPM = 128;
+const MUSIC_STEP_MS = 60000 / MUSIC_BPM / 2;
+const MUSIC_SWING = 0.62;
+const MUSIC_LOOP_STEPS = 128;
 const BET_STEPS = [50, 100, 200, 300, 500, 1000];
 const MOVE_PRESSURE_SOFT_LIMIT = 5;
 const MOVE_PRESSURE_HARD_LIMIT = 3;
@@ -2860,11 +2864,11 @@ function ensureAudio() {
     state.lowCutFilter.Q.value = 0.7;
 
     state.limiter = state.audioContext.createDynamicsCompressor();
-    state.limiter.threshold.value = -6;
-    state.limiter.knee.value = 4;
-    state.limiter.ratio.value = 16;
-    state.limiter.attack.value = 0.004;
-    state.limiter.release.value = 0.18;
+    state.limiter.threshold.value = -10;
+    state.limiter.knee.value = 6;
+    state.limiter.ratio.value = 4;
+    state.limiter.attack.value = 0.006;
+    state.limiter.release.value = 0.22;
 
     state.sfxGain = state.audioContext.createGain();
     state.sfxGain.gain.value = AUDIO_SFX_VOLUME;
@@ -2894,7 +2898,7 @@ function normalizeToneVolume(volume, group, category) {
 function playTone(freq, duration = 0.08, options = {}) {
   const context = ensureAudio();
   if (!context || !state.masterGain || !state.sfxGain || !state.bgmGain) return;
-  const maxTones = window.innerWidth <= 520 ? 10 : 16;
+  const maxTones = window.innerWidth <= 520 ? 18 : 26;
   if (state.activeTones >= maxTones) return;
   state.activeTones += 1;
   const now = context.currentTime + (options.delay || 0);
@@ -2913,7 +2917,17 @@ function playTone(freq, duration = 0.08, options = {}) {
   gain.gain.setValueAtTime(0.0001, now);
   gain.gain.exponentialRampToValueAtTime(volume, now + 0.012);
   gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
-  osc.connect(gain);
+  if (options.filter) {
+    const filter = context.createBiquadFilter();
+    filter.type = options.filter.type || "lowpass";
+    filter.frequency.setValueAtTime(options.filter.from || options.filter.frequency || 1200, now);
+    if (options.filter.to) filter.frequency.exponentialRampToValueAtTime(Math.max(40, options.filter.to), now + duration);
+    filter.Q.value = options.filter.q || 1;
+    osc.connect(filter);
+    filter.connect(gain);
+  } else {
+    osc.connect(gain);
+  }
   gain.connect(options.music ? state.bgmGain : state.sfxGain);
   osc.start(now);
   osc.stop(now + duration + 0.03);
@@ -2926,53 +2940,227 @@ function playChord(freqs, duration, options = {}) {
   freqs.forEach((freq, index) => playTone(freq, duration, { ...options, delay: (options.delay || 0) + index * 0.012 }));
 }
 
+function playNoise(duration = 0.06, options = {}) {
+  const context = ensureAudio();
+  if (!context || !state.sfxGain || !state.bgmGain) return;
+  const bufferSize = Math.max(1, Math.floor(context.sampleRate * duration));
+  const buffer = context.createBuffer(1, bufferSize, context.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i += 1) {
+    data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+  }
+
+  const now = context.currentTime + (options.delay || 0);
+  const source = context.createBufferSource();
+  const filter = context.createBiquadFilter();
+  const gain = context.createGain();
+  source.buffer = buffer;
+  filter.type = options.filterType || "bandpass";
+  filter.frequency.setValueAtTime(options.frequency || 2200, now);
+  filter.Q.value = options.q || 0.8;
+  const group = options.music ? "bgm" : "sfx";
+  const category = options.category || state.soundScope?.category || "movement";
+  const scopeGain = options.music ? 1 : (options.soundGain ?? state.soundScope?.gain ?? 1);
+  const requestedVolume = (options.volume || 0.04) * scopeGain;
+  const volume = options.music && performance.now() < state.musicDuckingUntil
+    ? normalizeToneVolume(requestedVolume * 0.42, group, category)
+    : normalizeToneVolume(requestedVolume, group, category);
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.exponentialRampToValueAtTime(volume, now + 0.006);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+  source.connect(filter);
+  filter.connect(gain);
+  gain.connect(options.music ? state.bgmGain : state.sfxGain);
+  source.start(now);
+  source.stop(now + duration + 0.02);
+}
+
 function isSlotHypeActive() {
   return state.filledSlots.size >= 2;
 }
 
+function hz(note, octave) {
+  const semitones = {
+    C: 0,
+    "C#": 1,
+    Db: 1,
+    D: 2,
+    "D#": 3,
+    Eb: 3,
+    E: 4,
+    F: 5,
+    "F#": 6,
+    Gb: 6,
+    G: 7,
+    "G#": 8,
+    Ab: 8,
+    A: 9,
+    "A#": 10,
+    Bb: 10,
+    B: 11,
+  };
+  const midi = (octave + 1) * 12 + semitones[note];
+  return 440 * 2 ** ((midi - 69) / 12);
+}
+
+const MUSIC_CHORDS = [
+  [hz("Ab", 3), hz("C", 4), hz("Db", 4), hz("F", 4)],
+  [hz("G", 3), hz("Db", 4), hz("F", 4), hz("Ab", 4)],
+  [hz("Gb", 3), hz("B", 3), hz("Db", 4), hz("F", 4)],
+  [hz("F", 3), hz("B", 3), hz("Eb", 4), hz("Ab", 4)],
+];
+const MUSIC_BASS = [
+  [hz("Bb", 1), hz("Db", 2), hz("F", 2), hz("Ab", 1), hz("Bb", 1), hz("F", 2), hz("Ab", 1), hz("Db", 2)],
+  [hz("Eb", 2), hz("G", 2), hz("Db", 2), hz("Bb", 1), hz("Eb", 2), hz("Db", 2), hz("G", 1), hz("Bb", 1)],
+  [hz("Ab", 1), hz("B", 1), hz("Eb", 2), hz("Gb", 1), hz("Ab", 1), hz("Eb", 2), hz("Gb", 1), hz("B", 1)],
+  [hz("Db", 2), hz("F", 2), hz("B", 1), hz("Ab", 1), hz("Db", 2), hz("B", 1), hz("F", 1), hz("Ab", 1)],
+];
+const MUSIC_HOOK = [
+  hz("F", 4), hz("Ab", 4), hz("Bb", 4), hz("Db", 5),
+  hz("C", 5), hz("Bb", 4), hz("Ab", 4), hz("F", 4),
+  hz("Eb", 4), hz("F", 4), hz("Ab", 4), hz("Bb", 4),
+  hz("Db", 5), hz("Bb", 4), hz("Ab", 4), hz("F", 4),
+];
+
+function playMusicKick(accent = 1) {
+  playTone(74, 0.12, { to: 44, type: "sine", volume: 0.07 * accent, music: true });
+  playNoise(0.026, { frequency: 120, filterType: "lowpass", q: 0.7, volume: 0.018 * accent, music: true });
+}
+
+function playMusicSnare(accent = 1) {
+  playNoise(0.075, { frequency: 1750, filterType: "bandpass", q: 0.9, volume: 0.036 * accent, music: true });
+  playTone(190, 0.055, { to: 145, type: "triangle", volume: 0.024 * accent, music: true });
+}
+
+function playMusicHat(step) {
+  const isOff = step % 2 === 1;
+  playNoise(isOff ? 0.05 : 0.026, {
+    frequency: isOff ? 7200 : 5600,
+    filterType: "highpass",
+    q: 0.65,
+    volume: isOff ? 0.018 : 0.011,
+    music: true,
+  });
+}
+
+function playRhodesVoicing(chord, bar, step) {
+  const top = bar % 4 === 1 ? 1.012 : bar % 4 === 3 ? 0.996 : 1;
+  chord.forEach((freq, index) => {
+    playTone(freq * top, 0.34, {
+      delay: index * 0.018,
+      type: "triangle",
+      volume: index === chord.length - 1 ? 0.024 : 0.019,
+      filter: { type: "lowpass", from: 1600, to: 950, q: 0.8 },
+      music: true,
+    });
+    playTone(freq * 2 * top, 0.16, {
+      delay: 0.012 + index * 0.014,
+      type: "sine",
+      volume: 0.008,
+      music: true,
+    });
+  });
+  if (step === 6) {
+    playTone(chord[2] * 1.5, 0.12, { type: "triangle", volume: 0.015, filter: { type: "lowpass", from: 1500, to: 700, q: 1.1 }, music: true });
+  }
+}
+
+function playWahGuitar(chord, step) {
+  const tone = chord[(step + 1) % chord.length] * 2;
+  playTone(tone, 0.075, {
+    type: "sawtooth",
+    volume: 0.014,
+    filter: { type: "bandpass", from: 520, to: 1900, q: 5.5 },
+    music: true,
+  });
+}
+
 function playNormalMusicBeat(beat) {
-  const melody = [659, 784, 880, 784, 698, 784, 988, 880, 659, 740, 880, 740, 587, 659, 784, 880];
-  const bounce = [262, 330, 392, 330, 294, 370, 440, 370];
-  const sparkle = [1319, 1568, 1760, 1568];
-  playTone(melody[beat % melody.length], 0.105, { type: "triangle", volume: 0.036, music: true });
-  if (beat % 2 === 0) playTone(bounce[(beat / 2) % bounce.length], 0.09, { type: "sine", volume: 0.03, music: true });
-  if (beat % 4 === 1) playTone(sparkle[(beat / 4) % sparkle.length], 0.055, { type: "sine", volume: 0.022, music: true });
-  if (beat % 8 === 7) playChord([988, 1319], 0.07, { type: "triangle", volume: 0.018, music: true });
+  const step = beat % MUSIC_LOOP_STEPS;
+  const bar = Math.floor(step / 8);
+  const eighth = step % 8;
+  const chord = MUSIC_CHORDS[bar % MUSIC_CHORDS.length];
+  const bass = MUSIC_BASS[bar % MUSIC_BASS.length][eighth];
+
+  playMusicHat(eighth);
+  if (eighth === 0 || eighth === 5) playMusicKick(eighth === 0 ? 1.12 : 0.82);
+  if (eighth === 2 || eighth === 6) playMusicSnare(eighth === 2 ? 0.92 : 0.72);
+  if ([0, 3, 4, 7].includes(eighth)) {
+    playTone(bass, eighth === 0 ? 0.2 : 0.13, {
+      type: "sawtooth",
+      volume: eighth === 0 ? 0.048 : 0.038,
+      filter: { type: "lowpass", from: 720, to: 330, q: 1.2 },
+      music: true,
+    });
+  }
+  if (eighth === 0 || eighth === 4) playRhodesVoicing(chord, bar, eighth);
+  if (eighth === 1 || eighth === 3 || eighth === 5 || eighth === 7) playWahGuitar(chord, eighth);
+
+  const hookWindow = bar % 4 === 0 || bar % 4 === 3;
+  if (hookWindow && [1, 2, 4, 6].includes(eighth)) {
+    const hookIndex = ((bar % 4) * 4 + [1, 2, 4, 6].indexOf(eighth)) % MUSIC_HOOK.length;
+    playTone(MUSIC_HOOK[hookIndex], 0.17, {
+      type: bar % 8 >= 4 ? "square" : "triangle",
+      volume: 0.026,
+      filter: { type: "lowpass", from: 2300, to: 1300, q: 1.6 },
+      music: true,
+    });
+  }
 }
 
 function playHypeMusicBeat(beat) {
-  const lead = [880, 988, 1175, 1319, 1175, 988, 1568, 1319];
-  const bass = [330, 392, 494, 392, 370, 440, 523, 440];
-  const arps = [
-    [880, 1175, 1568],
-    [988, 1319, 1760],
-    [784, 1175, 1568],
-    [1047, 1397, 2093],
-  ];
-  playTone(lead[beat % lead.length], 0.11, { type: "triangle", volume: 0.04, music: true });
-  playTone(bass[beat % bass.length], 0.085, { type: "square", volume: 0.024, music: true });
-  arps[beat % arps.length].forEach((freq, index) => {
-    playTone(freq, 0.065, { delay: 0.045 + index * 0.045, type: index === 2 ? "square" : "triangle", volume: 0.023, music: true });
-  });
-  if (beat % 4 === 3) playChord([1319, 1568, 2093], 0.08, { delay: 0.18, type: "triangle", volume: 0.018, music: true });
+  playNormalMusicBeat(beat);
+  const step = beat % MUSIC_LOOP_STEPS;
+  const bar = Math.floor(step / 8);
+  const eighth = step % 8;
+  if (eighth === 2 || eighth === 6) {
+    const chord = MUSIC_CHORDS[bar % MUSIC_CHORDS.length];
+    playChord([chord[1] * 2, chord[2] * 2, chord[3] * 2], 0.085, {
+      delay: 0.036,
+      type: "triangle",
+      volume: 0.014,
+      filter: { type: "highpass", from: 900, q: 0.7 },
+      music: true,
+    });
+  }
+  if (eighth === 7) {
+    playTone(MUSIC_HOOK[(bar * 3) % MUSIC_HOOK.length] * 1.5, 0.11, {
+      type: "square",
+      volume: 0.018,
+      filter: { type: "lowpass", from: 2500, to: 1500, q: 1.2 },
+      music: true,
+    });
+  }
 }
 
 function startBackgroundMusic() {
   if (!state.sound || state.musicTimer) return;
   const context = ensureAudio();
   if (!context) return;
-  state.musicTimer = window.setInterval(() => {
-    if (!state.sound || document.hidden) return;
+  const tick = () => {
+    if (!state.sound) {
+      state.musicTimer = null;
+      return;
+    }
+    if (document.hidden) {
+      state.musicTimer = window.setTimeout(tick, 500);
+      return;
+    }
     const beat = state.musicStep;
-    state.musicStep += 1;
+    state.musicStep = (state.musicStep + 1) % MUSIC_LOOP_STEPS;
     if (isSlotHypeActive()) playHypeMusicBeat(beat);
     else playNormalMusicBeat(beat);
-  }, 330);
+    const swingDelay = beat % 2 === 0
+      ? MUSIC_STEP_MS * 2 * MUSIC_SWING
+      : MUSIC_STEP_MS * 2 * (1 - MUSIC_SWING);
+    state.musicTimer = window.setTimeout(tick, swingDelay);
+  };
+  tick();
 }
 
 function stopBackgroundMusic() {
   if (!state.musicTimer) return;
-  window.clearInterval(state.musicTimer);
+  window.clearTimeout(state.musicTimer);
   state.musicTimer = null;
 }
 
@@ -3025,15 +3213,28 @@ function playSound(kind) {
   };
 
   const soundMap = {
-    button: () => playChord([420, 630], 0.045, { volume: 0.04 }),
-    move: () => playTone(420, 0.065, { to: 720, volume: 0.055 }),
-    match: () => playChord([720, 920, 1120], 0.105, { volume: 0.064 }),
-    cascade: () => {
-      playTone(620, 0.07, { to: 380, type: "square", volume: 0.041 });
-      playTone(880, 0.06, { delay: 0.07, volume: 0.041 });
+    button: () => {
+      playTone(820, 0.035, { to: 1180, type: "triangle", volume: 0.032, filter: { type: "highpass", from: 520, q: 0.7 } });
+      playTone(410, 0.028, { delay: 0.018, to: 520, type: "sine", volume: 0.018 });
     },
-    drop: () => playTone(260, 0.08, { to: 170, type: "sine", volume: 0.045 }),
-    specialReady: () => playChord([660, 990, 1320], 0.16, { volume: 0.105 }),
+    move: () => {
+      playTone(390, 0.052, { to: 640, type: "triangle", volume: 0.04, filter: { type: "bandpass", from: 720, to: 1100, q: 2.2 } });
+      playNoise(0.028, { delay: 0.012, frequency: 3400, filterType: "highpass", volume: 0.012 });
+    },
+    match: () => {
+      playChord([698, 932, 1175], 0.082, { volume: 0.052, filter: { type: "lowpass", from: 2100, to: 1400, q: 0.9 } });
+      playNoise(0.045, { delay: 0.03, frequency: 5600, filterType: "highpass", volume: 0.018 });
+    },
+    cascade: () => {
+      playTone(520, 0.075, { to: 390, type: "square", volume: 0.034, filter: { type: "lowpass", from: 1200, to: 650, q: 1 } });
+      playTone(880, 0.065, { delay: 0.055, to: 1180, type: "triangle", volume: 0.038 });
+      playNoise(0.04, { delay: 0.025, frequency: 4800, filterType: "highpass", volume: 0.014 });
+    },
+    drop: () => {
+      playTone(210, 0.09, { to: 132, type: "sine", volume: 0.038 });
+      playNoise(0.038, { delay: 0.012, frequency: 900, filterType: "bandpass", volume: 0.014 });
+    },
+    specialReady: () => playChord([659, 988, 1319], 0.16, { volume: 0.088, filter: { type: "lowpass", from: 2400, to: 1600, q: 1 } }),
     specialSpawn: () => {
       playTone(780, 0.08, { to: 1320, volume: 0.105 });
       playChord([990, 1485], 0.11, { delay: 0.09, volume: 0.09 });
@@ -3064,8 +3265,9 @@ function playSound(kind) {
       [620, 780, 980, 1240].forEach((freq, i) => playTone(freq, 0.09, { delay: i * 0.055, volume: 0.1 }));
     },
     multiplierCollect: () => {
-      playTone(420, 0.07, { to: 760, volume: 0.08 });
-      playChord([760, 1040], 0.08, { delay: 0.07, volume: 0.07 });
+      playTone(392, 0.07, { to: 784, type: "triangle", volume: 0.066, filter: { type: "bandpass", from: 620, to: 1700, q: 2.4 } });
+      playChord([784, 1047], 0.082, { delay: 0.062, volume: 0.054 });
+      playNoise(0.04, { delay: 0.025, frequency: 6200, filterType: "highpass", volume: 0.012 });
     },
     multiplierCollectHigh: () => {
       [520, 760, 1040, 1360].forEach((freq, i) => playTone(freq, 0.09, { delay: i * 0.055, volume: 0.095 }));
@@ -3079,8 +3281,11 @@ function playSound(kind) {
       [392, 523, 659, 784, 1047, 1568, 2093].forEach((freq, i) => playTone(freq, 0.13, { delay: i * 0.055, type: i > 3 ? "square" : "triangle", volume: 0.115 }));
       playChord([196, 262, 392], 0.24, { delay: 0.32, type: "sawtooth", volume: 0.06 });
     },
-    slotProgress: () => playChord([520, 690], 0.075, { volume: 0.085 }),
-    win: () => [660, 880, 1100, 1320].forEach((freq, i) => playTone(freq, 0.11, { delay: i * 0.075, volume: 0.105 })),
+    slotProgress: () => {
+      playChord([523, 698], 0.07, { volume: 0.065 });
+      playTone(196, 0.085, { delay: 0.02, to: 160, type: "sine", volume: 0.025 });
+    },
+    win: () => [659, 880, 1109, 1319].forEach((freq, i) => playTone(freq, 0.11, { delay: i * 0.075, volume: 0.09, filter: { type: "lowpass", from: 2400, to: 1600, q: 0.8 } })),
     superWin: () => {
       [520, 660, 880, 1100, 1320, 1760].forEach((freq, i) => playTone(freq, 0.12, { delay: i * 0.065, type: i > 3 ? "square" : "triangle", volume: 0.11 }));
     },
@@ -3089,12 +3294,13 @@ function playSound(kind) {
       playChord([262, 330, 392, 523], 0.42, { delay: 0.48, type: "sawtooth", volume: 0.085 });
     },
     wheelSpin: () => {
-      playTone(520, 0.045, { to: 860, type: "triangle", volume: 0.056 });
-      playTone(1180, 0.035, { delay: 0.018, to: 1460, type: "sine", volume: 0.034 });
+      playTone(520, 0.042, { to: 860, type: "triangle", volume: 0.045, filter: { type: "bandpass", from: 700, to: 1450, q: 3.2 } });
+      playNoise(0.024, { delay: 0.012, frequency: 5200, filterType: "highpass", volume: 0.011 });
     },
     wheelStop: () => {
-      playChord([660, 990, 1320], 0.18, { volume: 0.12 });
-      playTone(220, 0.2, { delay: 0.08, to: 160, type: "square", volume: 0.05 });
+      playChord([659, 988, 1319], 0.18, { volume: 0.104, filter: { type: "lowpass", from: 2600, to: 1200, q: 1.1 } });
+      playTone(220, 0.22, { delay: 0.08, to: 145, type: "square", volume: 0.044 });
+      playNoise(0.08, { delay: 0.04, frequency: 1500, filterType: "bandpass", volume: 0.02 });
     },
     climaxIntro: () => {
       playTone(78, 0.72, { to: 48, type: "sawtooth", volume: 0.07 });
