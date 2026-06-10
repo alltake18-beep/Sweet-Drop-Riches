@@ -198,9 +198,6 @@ const winMultiplierEl = document.getElementById("winMultiplier");
 const winAmountEl = document.getElementById("winAmount");
 const climaxStageEl = document.getElementById("climaxStage");
 const climaxWheelRotorEl = document.getElementById("climaxWheelRotor");
-const climaxWheelLabelsEl = document.getElementById("climaxWheelLabels");
-const climaxResultEl = document.getElementById("climaxResult");
-const climaxOrbEls = Array.from(document.querySelectorAll(".climax-orb"));
 
 const state = {
   board: [],
@@ -270,7 +267,6 @@ const state = {
   flameFinal: false,
   climaxWheelRotation: 0,
   climaxSpinning: false,
-  climaxResult: "",
 };
 
 function formatMoney(value, decimals = 0) {
@@ -1031,32 +1027,17 @@ function renderSlots() {
   if (hasFlash) state.slotFlash = Array(SLOT_COUNT).fill(null);
 }
 
-function slotTotal(col) {
-  return Math.round(state.slotValues[col] || 0);
-}
-
 function isMultiplierClimaxActive() {
-  return state.filledSlots.size > 0 || state.climaxSpinning || Boolean(state.climaxResult);
+  return state.filledSlots.size > 0 || state.climaxSpinning;
 }
 
 function renderClimaxStage() {
   if (!climaxStageEl) return;
   const active = isMultiplierClimaxActive();
   climaxStageEl.setAttribute("aria-hidden", String(!active));
-  if (climaxWheelLabelsEl && !climaxWheelLabelsEl.childElementCount) {
-    climaxWheelLabelsEl.innerHTML = fullDropWheelLabels();
-  }
   if (climaxWheelRotorEl) {
     climaxWheelRotorEl.style.setProperty("--wheel-rotation", `${state.climaxWheelRotation || 0}deg`);
   }
-  climaxOrbEls.forEach((orb, index) => {
-    const total = slotTotal(index);
-    const label = orb.querySelector("strong");
-    orb.classList.toggle("filled", total > 0);
-    orb.classList.toggle("hot", state.climaxSpinning && total > 0);
-    if (label) label.textContent = total > 0 ? formatScore(total) : "";
-  });
-  if (climaxResultEl) climaxResultEl.textContent = state.climaxResult || "";
 }
 
 function render() {
@@ -2269,25 +2250,7 @@ async function maybeFullDropBonus() {
   state.slotSymbolValues = Array(SLOT_COUNT).fill(null);
   state.slotFlash = Array(SLOT_COUNT).fill(null);
   state.slotTurns = Array(SLOT_COUNT).fill(0);
-  state.climaxResult = "";
   render();
-}
-
-function fullDropWheelGradient() {
-  const colors = ["#ffd96c", "#ff7fc4", "#7fdfff", "#ad75ff"];
-  const slice = 100 / FULL_DROP_WHEEL_PRIZES.length;
-  return `conic-gradient(${FULL_DROP_WHEEL_PRIZES.map((_, index) => {
-    const start = +(index * slice).toFixed(3);
-    const end = +((index + 1) * slice).toFixed(3);
-    return `${colors[index % colors.length]} ${start}% ${end}%`;
-  }).join(", ")})`;
-}
-
-function fullDropWheelLabels() {
-  return FULL_DROP_WHEEL_PRIZES.map((prize, index) => {
-    const angle = (index + 0.5) * (360 / FULL_DROP_WHEEL_PRIZES.length);
-    return `<span style="--angle:${angle}deg">${prize.label}</span>`;
-  }).join("");
 }
 
 async function playFullDropWheel() {
@@ -2301,14 +2264,12 @@ async function playFullDropWheel() {
   const finalRotation = 360 * 10 + (360 - (prizeIndex * sliceAngle + sliceAngle * 0.5));
   const award = Math.round(baseTotal * prize.multiplier);
 
-  state.climaxResult = `TOTAL ${formatScore(baseTotal)}`;
   render();
   slotTotals.forEach((value, index) => spawnSlotClimaxEnergy(index, value, 12 + index * 85));
   playSound("slotProgress");
   await wait(resolveDelay(980, 520));
 
   state.climaxSpinning = true;
-  state.climaxResult = "";
   render();
   let spinElapsed = 0;
   const spinTimer = window.setInterval(() => {
@@ -2325,7 +2286,6 @@ async function playFullDropWheel() {
   playSound("wheelStop");
   addWin(award);
   state.climaxSpinning = false;
-  state.climaxResult = `${prize.label} ${formatScore(award)}`;
   triggerScreenFx(prize.multiplier >= 5 ? "fx-jackpot" : prize.multiplier >= 1 ? "fx-blast" : "fx-bump", 820);
   render();
   await wait(resolveDelay(1500, 900));
@@ -2629,17 +2589,17 @@ function spawnSlotEnergy(col, value) {
 
 function spawnSlotClimaxEnergy(col, value, baseDelay = 0) {
   const host = document.querySelector(".phone");
-  const target = climaxOrbEls[col] || climaxStageEl;
   const source = slotsEl?.children[col];
-  if (!host || !target || !source) return;
+  if (!host || !climaxStageEl || !source) return;
 
   const hostRect = host.getBoundingClientRect();
   const sourceRect = source.getBoundingClientRect();
-  const targetRect = target.getBoundingClientRect();
+  const targetRect = climaxStageEl.getBoundingClientRect();
   const startX = sourceRect.left + sourceRect.width * 0.5 - hostRect.left;
   const startY = sourceRect.top + sourceRect.height * 0.5 - hostRect.top;
-  const endX = targetRect.left + targetRect.width * 0.5 - hostRect.left;
-  const endY = targetRect.top + targetRect.height * 0.5 - hostRect.top;
+  const targetRatioX = [0.36, 0.5, 0.64][Math.max(0, Math.min(2, col))];
+  const endX = targetRect.left + targetRect.width * targetRatioX - hostRect.left;
+  const endY = targetRect.top + targetRect.height * 0.68 - hostRect.top;
   const count = Math.max(9, Math.min(24, Math.round((value || 0) / currentBet() * 3) + 8));
 
   for (let index = 0; index < count; index += 1) {
@@ -4042,6 +4002,221 @@ window.setInterval(() => {
   renderHud();
 }, 1300);
 
+function initClimaxTunePanel() {
+  const params = new URLSearchParams(window.location.search);
+  if (!params.has("tune")) return;
+
+  const phone = document.querySelector(".phone");
+  if (!phone) return;
+  phone.classList.add("tune-climax");
+
+  const controls = [
+    ["wheel left", "--climax-wheel-left", -200, 300, 0.5, "%"],
+    ["wheel top", "--climax-wheel-top", -200, 500, 0.5, "%"],
+    ["wheel size", "--climax-wheel-size", 110, 500, 1, "%"],
+  ];
+
+  const panel = document.createElement("div");
+  panel.className = "climax-tune-panel";
+  panel.innerHTML = `
+    <strong>Climax Tune</strong>
+    <div class="climax-tune-controls"></div>
+    <div class="climax-tune-actions">
+      <button type="button" data-action="copy">Copy CSS</button>
+      <button type="button" data-action="toggle-points">Hide Points</button>
+      <button type="button" data-action="spin">Spin</button>
+    </div>
+    <textarea class="climax-tune-output" spellcheck="false"></textarea>
+  `;
+  document.body.appendChild(panel);
+
+  const controlsEl = panel.querySelector(".climax-tune-controls");
+  const output = panel.querySelector(".climax-tune-output");
+  const handleLayer = document.createElement("div");
+  handleLayer.className = "climax-mask-handle-layer";
+  document.body.appendChild(handleLayer);
+  let draggingPoint = false;
+
+  function numericValue(name) {
+    const raw = getComputedStyle(phone).getPropertyValue(name).trim();
+    return parseFloat(raw) || 0;
+  }
+
+  function defaultMaskPoints() {
+    return [
+      { x: 9, y: 2 },
+      { x: 50, y: 1 },
+      { x: 91, y: 2 },
+      { x: 98, y: 5 },
+      { x: 98, y: 12 },
+      { x: 92, y: 16 },
+      { x: 88, y: 17 },
+      { x: 50, y: 17.5 },
+      { x: 12, y: 17 },
+      { x: 8, y: 16 },
+      { x: 2, y: 12 },
+      { x: 2, y: 5 },
+    ];
+  }
+
+  function readMaskPoints() {
+    const raw = getComputedStyle(phone).getPropertyValue("--climax-mask-path").trim();
+    const points = [];
+    const pattern = /(-?\d+(?:\.\d+)?)%\s+(-?\d+(?:\.\d+)?)%/g;
+    let match = pattern.exec(raw);
+    while (match) {
+      points.push({ x: parseFloat(match[1]), y: parseFloat(match[2]) });
+      match = pattern.exec(raw);
+    }
+    return points.length === 12 ? points : defaultMaskPoints();
+  }
+
+  const maskPoints = readMaskPoints();
+
+  function maskPath() {
+    return `polygon(${maskPoints.map((point) => `${+point.x.toFixed(2)}% ${+point.y.toFixed(2)}%`).join(", ")})`;
+  }
+
+  function applyMaskPath() {
+    phone.style.setProperty("--climax-mask-path", maskPath());
+  }
+
+  function cssText() {
+    const lines = controls.map(([, name,, , , unit]) => {
+      const value = phone.style.getPropertyValue(name) || getComputedStyle(phone).getPropertyValue(name).trim();
+      return `  ${name}: ${value || `0${unit}`};`;
+    });
+    lines.splice(3, 0, `  --climax-mask-path: ${maskPath()};`);
+    return `.phone {\n${lines.join("\n")}\n}`;
+  }
+
+  function refreshOutput() {
+    output.value = cssText();
+  }
+
+  for (const [label, name, min, max, step, unit] of controls) {
+    const row = document.createElement("label");
+    row.className = "climax-tune-row";
+    const value = numericValue(name);
+    row.innerHTML = `
+      <span>${label}</span>
+      <input type="range" min="${min}" max="${max}" step="${step}" value="${value}">
+      <span class="climax-tune-value">${value}${unit}</span>
+    `;
+    const input = row.querySelector("input");
+    const valueEl = row.querySelector(".climax-tune-value");
+    input.addEventListener("input", () => {
+      const next = `${input.value}${unit}`;
+      phone.style.setProperty(name, next);
+      valueEl.textContent = next;
+      refreshOutput();
+    });
+    controlsEl.appendChild(row);
+  }
+
+  function placeHandleLayer() {
+    const rect = climaxStageEl.getBoundingClientRect();
+    handleLayer.style.left = `${rect.left}px`;
+    handleLayer.style.top = `${rect.top}px`;
+    handleLayer.style.width = `${rect.width}px`;
+    handleLayer.style.height = `${rect.height}px`;
+    handleLayer.querySelectorAll(".climax-mask-handle").forEach((handle, index) => {
+      const point = maskPoints[index];
+      handle.style.left = `${point.x}%`;
+      handle.style.top = `${point.y}%`;
+    });
+  }
+
+  maskPoints.forEach((point, index) => {
+    const handle = document.createElement("button");
+    handle.type = "button";
+    const kind = index <= 2 ? " is-top" : index >= 6 && index <= 8 ? " is-bottom" : " is-side";
+    handle.className = `climax-mask-handle${kind}`;
+    handle.title = `mask point ${index + 1}`;
+    handle.setAttribute("aria-label", `mask point ${index + 1}`);
+    handle.addEventListener("pointerdown", (event) => {
+      event.preventDefault();
+      handle.setPointerCapture(event.pointerId);
+      const move = (moveEvent) => {
+        const rect = climaxStageEl.getBoundingClientRect();
+        point.x = ((moveEvent.clientX - rect.left) / rect.width) * 100;
+        point.y = ((moveEvent.clientY - rect.top) / rect.height) * 100;
+        applyMaskPath();
+        placeHandleLayer();
+        refreshOutput();
+      };
+      const up = () => {
+        draggingPoint = false;
+        handle.removeEventListener("pointermove", move);
+        handle.removeEventListener("pointerup", up);
+        handle.removeEventListener("pointercancel", up);
+      };
+      draggingPoint = true;
+      handle.addEventListener("pointermove", move);
+      handle.addEventListener("pointerup", up);
+      handle.addEventListener("pointercancel", up);
+    });
+    handleLayer.appendChild(handle);
+  });
+
+  climaxStageEl.addEventListener("pointerdown", (event) => {
+    if (!params.has("tune") || draggingPoint || event.target.closest(".climax-mask-handle") || event.target.closest(".climax-tune-panel")) return;
+    event.preventDefault();
+    climaxStageEl.setPointerCapture(event.pointerId);
+    const rect = climaxStageEl.getBoundingClientRect();
+    const startX = event.clientX;
+    const startY = event.clientY;
+    const startPoints = maskPoints.map((point) => ({ ...point }));
+    const move = (moveEvent) => {
+      const dx = ((moveEvent.clientX - startX) / rect.width) * 100;
+      const dy = ((moveEvent.clientY - startY) / rect.height) * 100;
+      maskPoints.forEach((point, index) => {
+        point.x = startPoints[index].x + dx;
+        point.y = startPoints[index].y + dy;
+      });
+      applyMaskPath();
+      placeHandleLayer();
+      refreshOutput();
+    };
+    const up = () => {
+      climaxStageEl.removeEventListener("pointermove", move);
+      climaxStageEl.removeEventListener("pointerup", up);
+      climaxStageEl.removeEventListener("pointercancel", up);
+    };
+    climaxStageEl.addEventListener("pointermove", move);
+    climaxStageEl.addEventListener("pointerup", up);
+    climaxStageEl.addEventListener("pointercancel", up);
+  });
+
+  panel.querySelector('[data-action="copy"]').addEventListener("click", async () => {
+    refreshOutput();
+    output.select();
+    try {
+      await navigator.clipboard.writeText(output.value);
+    } catch {
+      document.execCommand("copy");
+    }
+  });
+
+  panel.querySelector('[data-action="toggle-points"]').addEventListener("click", (event) => {
+    handleLayer.classList.toggle("is-hidden");
+    event.currentTarget.textContent = handleLayer.classList.contains("is-hidden") ? "Show Points" : "Hide Points";
+  });
+
+  panel.querySelector('[data-action="spin"]').addEventListener("click", () => {
+    state.climaxWheelRotation += 720;
+    renderClimaxStage();
+  });
+
+  refreshOutput();
+  applyMaskPath();
+  placeHandleLayer();
+  window.addEventListener("resize", placeHandleLayer);
+  window.visualViewport?.addEventListener("resize", placeHandleLayer);
+  renderHud();
+}
+
 preloadSymbolAssets();
 initPerfMonitor();
+initClimaxTunePanel();
 startNewBoard();
