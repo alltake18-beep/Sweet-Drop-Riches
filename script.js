@@ -1050,8 +1050,18 @@ function renderClimaxStage() {
   }
   if (climaxWheelHighlightEl) {
     const sliceAngle = 360 / FULL_DROP_WHEEL_PRIZES.length;
-    const normalized = ((state.climaxWheelRotation % 360) + 360) % 360;
-    const index = Math.round((360 - normalized) / sliceAngle) % FULL_DROP_WHEEL_PRIZES.length;
+    const phoneRect = document.querySelector(".phone")?.getBoundingClientRect();
+    const wheelRect = climaxWheelRotorEl?.getBoundingClientRect();
+    let centerAngle = -90;
+    if (phoneRect && wheelRect) {
+      const px = phoneRect.left + phoneRect.width * 0.5;
+      const py = phoneRect.top + phoneRect.height * 0.5;
+      const wx = wheelRect.left + wheelRect.width * 0.5;
+      const wy = wheelRect.top + wheelRect.height * 0.5;
+      centerAngle = (Math.atan2(py - wy, px - wx) * 180) / Math.PI + 90;
+    }
+    const normalized = ((centerAngle - state.climaxWheelRotation) % 360 + 360) % 360;
+    const index = Math.floor(normalized / sliceAngle) % FULL_DROP_WHEEL_PRIZES.length;
     climaxWheelHighlightEl.style.setProperty("--highlight-angle", `${index * sliceAngle + sliceAngle * 0.5}deg`);
   }
 }
