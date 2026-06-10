@@ -14,7 +14,7 @@ const AUDIO_MASTER_VOLUME = 0.86;
 const AUDIO_SFX_VOLUME = 0.74;
 const AUDIO_BGM_VOLUME = 0.52;
 const AUDIO_LOWCUT_HZ = 45;
-const AUDIO_SFX_PEAK_LIMIT = 0.24;
+const AUDIO_SFX_PEAK_LIMIT = 0.26;
 const AUDIO_BGM_PEAK_LIMIT = 0.085;
 const AUDIO_CATEGORY_GAINS = {
   button: 0.9,
@@ -3075,6 +3075,18 @@ function playWahGuitar(chord, step) {
   });
 }
 
+function playMusicBrassStab(chord, delay = 0) {
+  [chord[1] * 2, chord[2] * 2, chord[3] * 2].forEach((freq, index) => {
+    playTone(freq, 0.11, {
+      delay: delay + index * 0.01,
+      type: "sawtooth",
+      volume: 0.011,
+      filter: { type: "bandpass", from: 760, to: 1800, q: 2.4 },
+      music: true,
+    });
+  });
+}
+
 function playNormalMusicBeat(beat) {
   const step = beat % MUSIC_LOOP_STEPS;
   const bar = Math.floor(step / 8);
@@ -3095,6 +3107,7 @@ function playNormalMusicBeat(beat) {
   }
   if (eighth === 0 || eighth === 4) playRhodesVoicing(chord, bar, eighth);
   if (eighth === 1 || eighth === 3 || eighth === 5 || eighth === 7) playWahGuitar(chord, eighth);
+  if ((bar % 4 === 3 && eighth === 6) || (bar % 8 === 7 && eighth === 2)) playMusicBrassStab(chord, 0.018);
 
   const hookWindow = bar % 4 === 0 || bar % 4 === 3;
   if (hookWindow && [1, 2, 4, 6].includes(eighth)) {
@@ -3130,6 +3143,9 @@ function playHypeMusicBeat(beat) {
       filter: { type: "lowpass", from: 2500, to: 1500, q: 1.2 },
       music: true,
     });
+  }
+  if (eighth === 0 || eighth === 4) {
+    playMusicBrassStab(MUSIC_CHORDS[bar % MUSIC_CHORDS.length], 0.03);
   }
 }
 
@@ -3178,6 +3194,40 @@ function playMultiplierCollectSound(value) {
     playSound("multiplierCollectHigh");
   } else {
     playSound("multiplierCollect");
+  }
+}
+
+function playRiser(start = 220, end = 1320, duration = 0.42, options = {}) {
+  playTone(start, duration, {
+    to: end,
+    type: options.type || "sawtooth",
+    volume: options.volume || 0.045,
+    delay: options.delay || 0,
+    filter: { type: "bandpass", from: start * 1.4, to: end * 0.9, q: options.q || 2.4 },
+  });
+  playNoise(duration * 0.8, {
+    delay: (options.delay || 0) + duration * 0.15,
+    frequency: options.noiseFreq || 4200,
+    filterType: "highpass",
+    volume: (options.volume || 0.045) * 0.22,
+  });
+}
+
+function playImpact(root = 98, options = {}) {
+  const delay = options.delay || 0;
+  playTone(root, 0.22, { delay, to: Math.max(40, root * 0.48), type: "sine", volume: options.low || 0.075 });
+  playTone(root * 2, 0.13, { delay: delay + 0.018, to: root * 1.18, type: "square", volume: options.mid || 0.04 });
+  playNoise(0.1, { delay: delay + 0.012, frequency: options.noiseFreq || 1600, filterType: "bandpass", volume: options.noise || 0.022 });
+}
+
+function playSparkleRun(base = 784, count = 5, options = {}) {
+  for (let i = 0; i < count; i += 1) {
+    playTone(base * 2 ** (i / 12), 0.055, {
+      delay: (options.delay || 0) + i * (options.spacing || 0.055),
+      type: i > 2 ? "square" : "triangle",
+      volume: options.volume || 0.055,
+      filter: { type: "highpass", from: 520, q: 0.8 },
+    });
   }
 }
 
@@ -3236,25 +3286,28 @@ function playSound(kind) {
     },
     specialReady: () => playChord([659, 988, 1319], 0.16, { volume: 0.088, filter: { type: "lowpass", from: 2400, to: 1600, q: 1 } }),
     specialSpawn: () => {
-      playTone(780, 0.08, { to: 1320, volume: 0.105 });
-      playChord([990, 1485], 0.11, { delay: 0.09, volume: 0.09 });
+      playRiser(520, 1480, 0.18, { volume: 0.052, q: 3.2 });
+      playChord([784, 1175, 1568], 0.12, { delay: 0.11, volume: 0.076, filter: { type: "lowpass", from: 2600, to: 1800, q: 1.2 } });
+      playNoise(0.075, { delay: 0.08, frequency: 6800, filterType: "highpass", volume: 0.016 });
     },
     specialBlast: () => {
-      playTone(140, 0.18, { to: 70, type: "sawtooth", volume: 0.13 });
-      playChord([720, 960, 1280], 0.13, { delay: 0.05, volume: 0.105 });
+      playImpact(128, { low: 0.105, mid: 0.058, noise: 0.032, noiseFreq: 1250 });
+      playChord([659, 988, 1319], 0.14, { delay: 0.055, volume: 0.088, filter: { type: "bandpass", from: 760, to: 2100, q: 1.8 } });
+      playNoise(0.18, { delay: 0.02, frequency: 4200, filterType: "highpass", volume: 0.018 });
     },
     candyClearEvent: () => {
-      playChord([760, 1040, 1480], 0.12, { volume: 0.105 });
-      playTone(1320, 0.08, { delay: 0.075, to: 1880, type: "triangle", volume: 0.08 });
+      playChord([740, 988, 1480], 0.105, { volume: 0.082, filter: { type: "lowpass", from: 2600, to: 1500, q: 1.1 } });
+      playSparkleRun(988, 4, { delay: 0.06, spacing: 0.042, volume: 0.038 });
+      playNoise(0.08, { frequency: 6400, filterType: "highpass", volume: 0.014 });
     },
     flameSweep: () => {
-      playTone(260, 0.12, { to: 520, type: "sawtooth", volume: 0.065 });
-      playChord([620, 880], 0.07, { delay: 0.045, volume: 0.052 });
+      playRiser(220, 740, 0.16, { volume: 0.036, q: 2.8, noiseFreq: 2800 });
+      playNoise(0.11, { delay: 0.02, frequency: 1800, filterType: "bandpass", volume: 0.026 });
     },
     flameBurn: () => {
-      playTone(180, 0.28, { to: 64, type: "sawtooth", volume: 0.095 });
-      playTone(92, 0.22, { delay: 0.035, to: 48, type: "square", volume: 0.05 });
-      [540, 620, 710].forEach((freq, i) => playTone(freq, 0.055, { delay: 0.05 + i * 0.052, type: "triangle", volume: 0.045 }));
+      playImpact(92, { low: 0.088, mid: 0.04, noise: 0.035, noiseFreq: 900 });
+      playTone(180, 0.32, { delay: 0.03, to: 64, type: "sawtooth", volume: 0.054, filter: { type: "lowpass", from: 720, to: 220, q: 1.4 } });
+      [540, 620, 710].forEach((freq, i) => playTone(freq, 0.06, { delay: 0.08 + i * 0.052, type: "triangle", volume: 0.034 }));
     },
     flameResist: () => {
       playTone(190, 0.11, { to: 92, type: "sawtooth", volume: 0.07 });
@@ -3270,28 +3323,37 @@ function playSound(kind) {
       playNoise(0.04, { delay: 0.025, frequency: 6200, filterType: "highpass", volume: 0.012 });
     },
     multiplierCollectHigh: () => {
-      [520, 760, 1040, 1360].forEach((freq, i) => playTone(freq, 0.09, { delay: i * 0.055, volume: 0.095 }));
-      playTone(180, 0.12, { delay: 0.04, to: 120, type: "square", volume: 0.04 });
+      playImpact(156, { low: 0.052, mid: 0.026, noise: 0.014, noiseFreq: 2100 });
+      [523, 784, 1047, 1397].forEach((freq, i) => playTone(freq, 0.092, { delay: i * 0.052, volume: 0.072, filter: { type: "lowpass", from: 2300, to: 1500, q: 0.9 } }));
     },
     multiplierEpicCollect: () => {
-      [440, 660, 880, 1320, 1760].forEach((freq, i) => playTone(freq, 0.105, { delay: i * 0.055, type: i > 2 ? "square" : "triangle", volume: 0.105 }));
-      playChord([220, 330], 0.16, { delay: 0.06, type: "square", volume: 0.04 });
+      playImpact(130, { low: 0.07, mid: 0.038, noise: 0.022, noiseFreq: 1800 });
+      playSparkleRun(523, 6, { delay: 0.05, spacing: 0.052, volume: 0.072 });
+      playChord([659, 988, 1319], 0.16, { delay: 0.22, type: "sawtooth", volume: 0.05, filter: { type: "bandpass", from: 820, to: 2200, q: 2 } });
     },
     multiplierJackpotCollect: () => {
-      [392, 523, 659, 784, 1047, 1568, 2093].forEach((freq, i) => playTone(freq, 0.13, { delay: i * 0.055, type: i > 3 ? "square" : "triangle", volume: 0.115 }));
-      playChord([196, 262, 392], 0.24, { delay: 0.32, type: "sawtooth", volume: 0.06 });
+      playImpact(98, { low: 0.09, mid: 0.05, noise: 0.03, noiseFreq: 1400 });
+      playSparkleRun(392, 8, { delay: 0.04, spacing: 0.05, volume: 0.08 });
+      playChord([523, 784, 1047, 1568], 0.22, { delay: 0.32, type: "sawtooth", volume: 0.058, filter: { type: "bandpass", from: 760, to: 2600, q: 1.8 } });
     },
     slotProgress: () => {
       playChord([523, 698], 0.07, { volume: 0.065 });
       playTone(196, 0.085, { delay: 0.02, to: 160, type: "sine", volume: 0.025 });
     },
-    win: () => [659, 880, 1109, 1319].forEach((freq, i) => playTone(freq, 0.11, { delay: i * 0.075, volume: 0.09, filter: { type: "lowpass", from: 2400, to: 1600, q: 0.8 } })),
+    win: () => {
+      playSparkleRun(659, 5, { spacing: 0.07, volume: 0.064 });
+      playChord([523, 784, 1047], 0.16, { delay: 0.18, volume: 0.052, filter: { type: "lowpass", from: 2400, to: 1600, q: 0.8 } });
+    },
     superWin: () => {
-      [520, 660, 880, 1100, 1320, 1760].forEach((freq, i) => playTone(freq, 0.12, { delay: i * 0.065, type: i > 3 ? "square" : "triangle", volume: 0.11 }));
+      playRiser(196, 1760, 0.36, { volume: 0.064, q: 3.1, noiseFreq: 5200 });
+      playImpact(130, { delay: 0.28, low: 0.082, mid: 0.047, noise: 0.024, noiseFreq: 1800 });
+      playChord([523, 784, 1047, 1568], 0.24, { delay: 0.34, type: "sawtooth", volume: 0.058, filter: { type: "bandpass", from: 720, to: 2400, q: 1.6 } });
     },
     jackpot: () => {
-      [392, 523, 659, 784, 1047, 1319, 1568].forEach((freq, i) => playTone(freq, 0.17, { delay: i * 0.07, type: i > 3 ? "square" : "triangle", volume: 0.12 }));
-      playChord([262, 330, 392, 523], 0.42, { delay: 0.48, type: "sawtooth", volume: 0.085 });
+      playRiser(130, 2093, 0.48, { volume: 0.075, q: 3.4, noiseFreq: 6200 });
+      playImpact(82, { delay: 0.42, low: 0.11, mid: 0.058, noise: 0.038, noiseFreq: 1200 });
+      playSparkleRun(392, 9, { delay: 0.1, spacing: 0.055, volume: 0.082 });
+      playChord([392, 523, 784, 1047, 1568], 0.42, { delay: 0.52, type: "sawtooth", volume: 0.062, filter: { type: "bandpass", from: 650, to: 2600, q: 1.7 } });
     },
     wheelSpin: () => {
       playTone(520, 0.042, { to: 860, type: "triangle", volume: 0.045, filter: { type: "bandpass", from: 700, to: 1450, q: 3.2 } });
@@ -3303,14 +3365,14 @@ function playSound(kind) {
       playNoise(0.08, { delay: 0.04, frequency: 1500, filterType: "bandpass", volume: 0.02 });
     },
     climaxIntro: () => {
-      playTone(78, 0.72, { to: 48, type: "sawtooth", volume: 0.07 });
-      playTone(132, 0.58, { delay: 0.08, to: 92, type: "square", volume: 0.04 });
-      [420, 520, 640].forEach((freq, i) => playTone(freq, 0.08, { delay: 0.18 + i * 0.16, type: "triangle", volume: 0.05 }));
+      playTone(62, 1.35, { to: 44, type: "sawtooth", volume: 0.072, filter: { type: "lowpass", from: 420, to: 130, q: 1.3 } });
+      playNoise(1.2, { delay: 0.08, frequency: 520, filterType: "bandpass", volume: 0.026 });
+      [392, 493, 587].forEach((freq, i) => playTone(freq, 0.09, { delay: 0.22 + i * 0.22, type: "triangle", volume: 0.04 }));
     },
     climaxLift: () => {
-      playTone(64, 1.05, { to: 118, type: "sawtooth", volume: 0.075 });
-      playTone(180, 0.82, { delay: 0.08, to: 260, type: "square", volume: 0.036 });
-      playChord([392, 587, 784], 0.2, { delay: 0.58, type: "triangle", volume: 0.074 });
+      playRiser(72, 360, 1.05, { volume: 0.064, q: 2.2, noiseFreq: 1600 });
+      playTone(180, 0.9, { delay: 0.08, to: 260, type: "square", volume: 0.032, filter: { type: "lowpass", from: 680, to: 480, q: 1.2 } });
+      playChord([392, 587, 784], 0.22, { delay: 0.62, type: "triangle", volume: 0.064 });
     },
     logoReturn: () => {
       playTone(760, 0.13, { to: 420, type: "triangle", volume: 0.06 });
