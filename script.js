@@ -10,25 +10,25 @@ const PERF_ENABLED = new URLSearchParams(window.location.search).has("perf");
 const SPECIAL_METER_TARGET = 9;
 const SPECIAL_METER_THRESHOLDS = [9, 21, 40];
 const SPECIAL_METER_MAX = SPECIAL_METER_THRESHOLDS[SPECIAL_METER_THRESHOLDS.length - 1];
-const AUDIO_MASTER_VOLUME = 0.82;
-const AUDIO_SFX_VOLUME = 0.76;
-const AUDIO_BGM_VOLUME = 0.5;
+const AUDIO_MASTER_VOLUME = 0.92;
+const AUDIO_SFX_VOLUME = 0.96;
+const AUDIO_BGM_VOLUME = 0.42;
 const AUDIO_LOWCUT_HZ = 45;
-const AUDIO_SFX_PEAK_LIMIT = 0.26;
-const AUDIO_BGM_PEAK_LIMIT = 0.085;
+const AUDIO_SFX_PEAK_LIMIT = 0.42;
+const AUDIO_BGM_PEAK_LIMIT = 0.074;
 const AUDIO_CATEGORY_GAINS = {
-  button: 0.58,
-  movement: 0.6,
-  match: 1,
-  meter: 1.06,
-  eventRoll: 1.12,
-  coin: 1.14,
-  multiplier: 1.18,
-  transition: 1.22,
-  payout: 1.28,
-  special: 1.1,
-  wheel: 1.18,
-  voice: 0.66,
+  button: 0.68,
+  movement: 0.68,
+  match: 1.18,
+  meter: 1.28,
+  eventRoll: 1.36,
+  coin: 1.34,
+  multiplier: 1.42,
+  transition: 1.48,
+  payout: 1.58,
+  special: 1.34,
+  wheel: 1.46,
+  voice: 0.82,
   error: 0.62,
 };
 const MUSIC_BPM = 128;
@@ -127,11 +127,11 @@ const MULTIPLIER_ANCHOR_ROW_WEIGHTS_2X2 = [
   { row: 7, weight: 0 },
 ];
 const WIN_TIERS = [
-  { ratio: 100, label: "LEGENDARY WIN", art: "legendary", sound: "jackpot", voice: "voiceLegendaryWin", className: "tier-legendary", duration: 3400, quick: 2800, particles: 96, countVolume: 0.07 },
-  { ratio: 50, label: "EPIC WIN", art: "epic", sound: "jackpot", voice: "voiceEpicWin", className: "tier-epic", duration: 3000, quick: 2600, particles: 78, countVolume: 0.062 },
-  { ratio: 30, label: "SUPER MEGA WIN", art: "super-mega", sound: "superWin", voice: "voiceSuperMegaWin", className: "tier-super", duration: 2700, quick: 2400, particles: 62, countVolume: 0.054 },
-  { ratio: 20, label: "MEGA WIN", art: "mega", sound: "superWin", voice: "voiceMegaWin", className: "tier-mega", duration: 2300, quick: 2100, particles: 48, countVolume: 0.047 },
-  { ratio: 5, label: "BIG WIN", art: "big", sound: "win", voice: "voiceBigWin", className: "tier-big", duration: 1850, quick: 1750, particles: 32, countVolume: 0.039 },
+  { ratio: 100, label: "LEGENDARY WIN", art: "legendary", sound: "jackpot", voice: "voiceLegendaryWin", className: "tier-legendary", duration: 3400, quick: 2800, particles: 96, countVolume: 0.105 },
+  { ratio: 50, label: "EPIC WIN", art: "epic", sound: "jackpot", voice: "voiceEpicWin", className: "tier-epic", duration: 3000, quick: 2600, particles: 78, countVolume: 0.092 },
+  { ratio: 30, label: "SUPER MEGA WIN", art: "super-mega", sound: "superWin", voice: "voiceSuperMegaWin", className: "tier-super", duration: 2700, quick: 2400, particles: 62, countVolume: 0.082 },
+  { ratio: 20, label: "MEGA WIN", art: "mega", sound: "superWin", voice: "voiceMegaWin", className: "tier-mega", duration: 2300, quick: 2100, particles: 48, countVolume: 0.072 },
+  { ratio: 5, label: "BIG WIN", art: "big", sound: "win", voice: "voiceBigWin", className: "tier-big", duration: 1850, quick: 1750, particles: 32, countVolume: 0.058 },
 ];
 const EVENT_ROLL_STEPS = 5;
 const EVENT_ROLL_TOTAL = 1398;
@@ -147,10 +147,10 @@ const FULL_DROP_WHEEL_TURNS_MAX = 4;
 const FULL_DROP_WHEEL_FALLBACK_POINTER_Y = 7.5;
 const CLIMAX_IDLE_SLICE_MS = 1000;
 const BGM_DUCK_IMPORTANT_MS = 1400;
-const BGM_DUCK_LIGHT = 0.72;
-const BGM_DUCK_MEDIUM = 0.55;
-const BGM_DUCK_DEEP = 0.34;
-const BGM_DUCK_PAYOUT = 0.24;
+const BGM_DUCK_LIGHT = 0.64;
+const BGM_DUCK_MEDIUM = 0.42;
+const BGM_DUCK_DEEP = 0.25;
+const BGM_DUCK_PAYOUT = 0.18;
 const DEFAULT_SOUND_PROFILE = { category: "movement", cooldown: 70, maxVoices: 1, attenuation: 0.5, release: 260, gain: 0.54 };
 const FULL_DROP_WHEEL_PRIZES = [
   { label: "0.1x", multiplier: 0.1, weight: 26 },
@@ -208,36 +208,36 @@ const SOUND_PROFILES = {
   button: { category: "button", cooldown: 78, maxVoices: 1, attenuation: 0.55, release: 150, gain: 0.54 },
   move: { category: "movement", cooldown: 76, maxVoices: 1, attenuation: 0.5, release: 150, gain: 0.5 },
   error: { category: "error", cooldown: 180, maxVoices: 1, attenuation: 0.5, release: 240, gain: 0.54 },
-  match: { category: "match", cooldown: 92, maxVoices: 2, attenuation: 0.5, release: 260, gain: 0.78 },
-  cascade: { category: "match", cooldown: 112, maxVoices: 2, attenuation: 0.5, release: 280, gain: 0.76 },
+  match: { category: "match", cooldown: 92, maxVoices: 2, attenuation: 0.5, release: 260, gain: 0.9 },
+  cascade: { category: "match", cooldown: 112, maxVoices: 2, attenuation: 0.5, release: 280, gain: 0.9 },
   drop: { category: "movement", cooldown: 170, maxVoices: 1, attenuation: 0.6, release: 220, gain: 0.48 },
-  meterTick: { category: "meter", cooldown: 95, maxVoices: 1, attenuation: 0.5, release: 260, gain: 0.62 },
-  specialReady: { category: "meter", cooldown: 230, maxVoices: 1, attenuation: 0.5, release: 520, gain: 0.82 },
-  specialSpawn: { category: "special", cooldown: 190, maxVoices: 1, attenuation: 0.55, release: 500, gain: 0.72 },
+  meterTick: { category: "meter", cooldown: 95, maxVoices: 1, attenuation: 0.5, release: 260, gain: 0.86 },
+  specialReady: { category: "meter", cooldown: 230, maxVoices: 1, attenuation: 0.5, release: 520, gain: 1 },
+  specialSpawn: { category: "special", cooldown: 190, maxVoices: 1, attenuation: 0.55, release: 500, gain: 0.9 },
   specialBlast: { category: "special", cooldown: 280, maxVoices: 1, attenuation: 0.6, release: 560, gain: 0.62 },
-  candyClearEvent: { category: "special", cooldown: 230, maxVoices: 1, attenuation: 0.55, release: 460, gain: 0.78 },
-  flameSweep: { category: "special", cooldown: 210, maxVoices: 1, attenuation: 0.55, release: 340, gain: 0.58 },
-  flameBurn: { category: "special", cooldown: 280, maxVoices: 1, attenuation: 0.65, release: 620, gain: 0.76 },
+  candyClearEvent: { category: "special", cooldown: 230, maxVoices: 1, attenuation: 0.55, release: 460, gain: 0.98 },
+  flameSweep: { category: "special", cooldown: 210, maxVoices: 1, attenuation: 0.55, release: 340, gain: 0.82 },
+  flameBurn: { category: "special", cooldown: 280, maxVoices: 1, attenuation: 0.65, release: 620, gain: 1 },
   flameResist: { category: "special", cooldown: 210, maxVoices: 1, attenuation: 0.55, release: 340, gain: 0.54 },
   multiplierMerge: { category: "multiplier", cooldown: 190, maxVoices: 1, attenuation: 0.5, release: 440, gain: 0.66 },
   multiplierHigh: { category: "multiplier", cooldown: 190, maxVoices: 1, attenuation: 0.55, release: 460, gain: 0.7 },
-  multiplierCollect: { category: "coin", cooldown: 130, maxVoices: 2, attenuation: 0.45, release: 340, gain: 0.78 },
-  multiplierCollectHigh: { category: "multiplier", cooldown: 165, maxVoices: 2, attenuation: 0.5, release: 460, gain: 0.84 },
-  multiplierEpicCollect: { category: "multiplier", cooldown: 210, maxVoices: 1, attenuation: 0.58, release: 620, gain: 0.92 },
-  multiplierJackpotCollect: { category: "multiplier", cooldown: 260, maxVoices: 1, attenuation: 0.62, release: 760, gain: 1 },
-  slotProgress: { category: "eventRoll", cooldown: 150, maxVoices: 1, attenuation: 0.5, release: 260, gain: 0.76 },
-  win: { category: "payout", cooldown: 300, maxVoices: 1, attenuation: 0.6, release: 920, gain: 0.88 },
-  superWin: { category: "payout", cooldown: 420, maxVoices: 1, attenuation: 0.65, release: 1250, gain: 0.94 },
+  multiplierCollect: { category: "coin", cooldown: 130, maxVoices: 2, attenuation: 0.45, release: 340, gain: 0.96 },
+  multiplierCollectHigh: { category: "multiplier", cooldown: 165, maxVoices: 2, attenuation: 0.5, release: 460, gain: 1.02 },
+  multiplierEpicCollect: { category: "multiplier", cooldown: 210, maxVoices: 1, attenuation: 0.58, release: 620, gain: 1.12 },
+  multiplierJackpotCollect: { category: "multiplier", cooldown: 260, maxVoices: 1, attenuation: 0.62, release: 760, gain: 1.22 },
+  slotProgress: { category: "eventRoll", cooldown: 150, maxVoices: 1, attenuation: 0.5, release: 260, gain: 1 },
+  win: { category: "payout", cooldown: 300, maxVoices: 1, attenuation: 0.6, release: 920, gain: 1.1 },
+  superWin: { category: "payout", cooldown: 420, maxVoices: 1, attenuation: 0.65, release: 1250, gain: 1.16 },
   jackpot: { category: "payout", cooldown: 560, maxVoices: 1, attenuation: 0.7, release: 1700, gain: 1 },
-  voiceBigWin: { category: "voice", cooldown: 700, maxVoices: 1, attenuation: 0.4, release: 1200, gain: 0.56 },
-  voiceMegaWin: { category: "voice", cooldown: 800, maxVoices: 1, attenuation: 0.4, release: 1300, gain: 0.58 },
-  voiceSuperMegaWin: { category: "voice", cooldown: 900, maxVoices: 1, attenuation: 0.4, release: 1500, gain: 0.6 },
-  voiceEpicWin: { category: "voice", cooldown: 900, maxVoices: 1, attenuation: 0.4, release: 1400, gain: 0.6 },
-  voiceLegendaryWin: { category: "voice", cooldown: 1000, maxVoices: 1, attenuation: 0.4, release: 1700, gain: 0.62 },
-  wheelSpin: { category: "wheel", cooldown: 58, maxVoices: 2, attenuation: 0.45, release: 90, gain: 0.7 },
-  wheelStop: { category: "wheel", cooldown: 360, maxVoices: 1, attenuation: 0.55, release: 850, gain: 0.96 },
-  climaxIntro: { category: "transition", cooldown: 900, maxVoices: 1, attenuation: 0.5, release: 1800, gain: 0.9 },
-  climaxLift: { category: "transition", cooldown: 900, maxVoices: 1, attenuation: 0.5, release: 1800, gain: 0.92 },
+  voiceBigWin: { category: "voice", cooldown: 700, maxVoices: 1, attenuation: 0.4, release: 1200, gain: 0.7 },
+  voiceMegaWin: { category: "voice", cooldown: 800, maxVoices: 1, attenuation: 0.4, release: 1300, gain: 0.74 },
+  voiceSuperMegaWin: { category: "voice", cooldown: 900, maxVoices: 1, attenuation: 0.4, release: 1500, gain: 0.78 },
+  voiceEpicWin: { category: "voice", cooldown: 900, maxVoices: 1, attenuation: 0.4, release: 1400, gain: 0.78 },
+  voiceLegendaryWin: { category: "voice", cooldown: 1000, maxVoices: 1, attenuation: 0.4, release: 1700, gain: 0.82 },
+  wheelSpin: { category: "wheel", cooldown: 58, maxVoices: 2, attenuation: 0.45, release: 90, gain: 0.94 },
+  wheelStop: { category: "wheel", cooldown: 360, maxVoices: 1, attenuation: 0.55, release: 850, gain: 1.22 },
+  climaxIntro: { category: "transition", cooldown: 900, maxVoices: 1, attenuation: 0.5, release: 1800, gain: 1.1 },
+  climaxLift: { category: "transition", cooldown: 900, maxVoices: 1, attenuation: 0.5, release: 1800, gain: 1.14 },
   logoReturn: { category: "transition", cooldown: 500, maxVoices: 1, attenuation: 0.4, release: 760, gain: 0.68 },
 };
 
@@ -2522,8 +2522,7 @@ async function maybeShowWinCard() {
   playWinCountLoop(countDuration, tier.countVolume || 0.04);
   spawnParticles(tier.particles);
   triggerScreenFx(ratio >= 50 ? "fx-jackpot" : ratio >= 20 ? "fx-blast" : "fx-bump", ratio >= 50 ? 980 : 640);
-  playSound(tier.voice || "voiceBigWin");
-  window.setTimeout(() => playSound(tier.sound || "win"), 140);
+  playWinCardPerformance(tier);
   await wait(resolveDelay(tier.duration, tier.quick));
   winOverlay.classList.add("hidden");
   setPerfPhase("resolve");
@@ -2613,6 +2612,7 @@ async function playFullDropWheel() {
   const landingAngle = wheelLandingAngle(prizeIndex, sliceAngle, prize.multiplier);
   const finalRotation = wheelRotationDeltaToLand(landingAngle, climaxPointerAngle(), spinProfile.turns);
   slotTotals.forEach((value, index) => spawnSlotClimaxEnergy(index, value, 12 + index * 85));
+  playWheelStartPerformance();
   playSound("slotProgress");
   await wait(980);
 
@@ -2621,6 +2621,7 @@ async function playFullDropWheel() {
   await animateClimaxWheel(finalRotation, spinProfile);
 
   duckBackgroundMusic(1300, BGM_DUCK_DEEP);
+  playWheelStopPerformance(prize.multiplier);
   playSound("wheelStop");
   addWin(award);
   state.climaxSpinning = false;
@@ -3317,6 +3318,127 @@ function duckBackgroundMusic(duration = BGM_DUCK_IMPORTANT_MS, depth = BGM_DUCK_
   state.musicDuckingUntil = Math.max(state.musicDuckingUntil || 0, until);
   if (!state.musicDuckWindows) state.musicDuckWindows = [];
   state.musicDuckWindows.push({ until, depth });
+  const context = ensureAudio();
+  if (!context || !state.bgmGain) return;
+  const now = context.currentTime;
+  const current = Math.max(0.0001, state.bgmGain.gain.value || AUDIO_BGM_VOLUME);
+  state.bgmGain.gain.cancelScheduledValues(now);
+  state.bgmGain.gain.setValueAtTime(current, now);
+  state.bgmGain.gain.exponentialRampToValueAtTime(Math.max(0.0001, AUDIO_BGM_VOLUME * depth), now + 0.055);
+  state.bgmGain.gain.setValueAtTime(Math.max(0.0001, AUDIO_BGM_VOLUME * depth), now + Math.max(0.08, duration / 1000));
+  state.bgmGain.gain.exponentialRampToValueAtTime(AUDIO_BGM_VOLUME, now + Math.max(0.36, duration / 1000 + 0.36));
+}
+
+function withSoundScope(category, gain, fn) {
+  const previous = state.soundScope;
+  state.soundScope = { category, gain };
+  try {
+    fn();
+  } finally {
+    state.soundScope = previous;
+  }
+}
+
+function playEventRollStepSound(stage, index, total) {
+  withSoundScope("eventRoll", stage >= 3 ? 1.28 : 1.08, () => {
+    const progress = total <= 1 ? 1 : index / (total - 1);
+    const base = hz(stage >= 3 ? "F" : "Db", 4) * (1 + progress * 0.18);
+    playTone(base, 0.038, { type: "square", volume: 0.056, filter: { type: "bandpass", from: 1100, to: 2600, q: 4.8 } });
+    playNoise(0.022, { delay: 0.006, frequency: 5200 + progress * 1800, filterType: "highpass", volume: 0.018 });
+    if (index === 0 || index === total - 1) playBassThump(hz("Bb", 1), { delay: 0.014, duration: 0.07, volume: 0.046, toRatio: 0.68 });
+  });
+}
+
+function playFlameSweepPerformance(index, total) {
+  withSoundScope("special", 1.05, () => {
+    const progress = total <= 1 ? 1 : index / (total - 1);
+    playFlameWhoosh({
+      start: hz("F", 2) * (1 + progress * 0.18),
+      end: hz("Bb", 4) * (1 + progress * 0.12),
+      duration: 0.16,
+      volume: 0.038,
+      crackle: index % 2 === 0 ? 3 : 2,
+      noiseFreq: 3000,
+    });
+    if (index === 0 || index >= total - 2) playBassThump(hz("Bb", 1), { delay: 0.03, duration: 0.1, volume: 0.04, toRatio: 0.58 });
+  });
+}
+
+function playFlameBurnPerformance() {
+  withSoundScope("special", 1.3, () => {
+    playRiser(hz("Bb", 1), hz("F", 5), 0.24, { volume: 0.07, q: 3.2, noiseFreq: 3600 });
+    playMachineRumble({ delay: 0.02, duration: 0.52, root: hz("Bb", 1), to: hz("F", 1), volume: 0.066, noiseFreq: 520 });
+    playFireCrackle({ delay: 0.08, count: 9, spacing: 0.035, volume: 0.034, frequency: 2200 });
+    playImpact(hz("F", 1), { delay: 0.18, low: 0.12, mid: 0.06, noise: 0.046, noiseFreq: 820 });
+  });
+}
+
+function playMultiplierCollectPerformance(collected, shouldPlayClimaxIntro = false) {
+  if (!state.sound || collected.length === 0) return;
+  const highValue = Math.max(...collected.map((item) => item.value));
+  const isFull = state.filledSlots.size >= SLOT_COUNT;
+  const tierGain = shouldPlayClimaxIntro || isFull ? 1.35 : collected.length >= 2 ? 1.18 : 1;
+  withSoundScope("multiplier", tierGain, () => {
+    playTone(hz("F", 4), 0.08, { type: "sawtooth", volume: 0.052, filter: { type: "bandpass", from: 720, to: 1900, q: 4.4 } });
+    playSparkleRun(hz("Db", 5), Math.min(7, collected.length + 3), { delay: 0.04, spacing: 0.045, volume: 0.064 });
+    collected.forEach((item, index) => {
+      const delay = 0.11 + index * 0.11;
+      playBassThump(hz("Bb", 1), { delay, duration: 0.1, volume: 0.056, toRatio: 0.62 });
+      playTone(hz("Bb", 5) * (1 + index * 0.06), 0.045, { delay: delay + 0.025, type: "square", volume: 0.062, filter: { type: "highpass", from: 1100, q: 0.9 } });
+      playNoise(0.024, { delay: delay + 0.02, frequency: 6200, filterType: "highpass", volume: 0.022 });
+    });
+    if (collected.length >= 2 || highValue >= 50) {
+      playRiser(hz("Bb", 2), hz("Db", 6), 0.32, { delay: 0.14, volume: 0.058, q: 3, noiseFreq: 4800 });
+      playBrassStab("bright", { delay: 0.42, volume: 0.06, duration: 0.13, voices: 4 });
+    }
+    if (isFull || shouldPlayClimaxIntro) {
+      playHydraulicClank({ delay: 0.52, root: hz("F", 1), low: 0.082, noise: 0.036, stab: 0.04, chord: "tonic" });
+      playMachineRumble({ delay: 0.58, duration: 0.5, root: hz("Bb", 1), to: hz("Db", 2), volume: 0.052, noiseFreq: 740 });
+    }
+  });
+}
+
+function playClimaxIntroPerformance(phase) {
+  withSoundScope("transition", phase === "lift" ? 1.34 : 1.24, () => {
+    if (phase === "logo") {
+      playMachineRumble({ duration: 1.2, root: hz("Bb", 1), to: hz("F", 1), volume: 0.075, from: 520, lowTo: 120, noiseFreq: 520 });
+      playTone(hz("Bb", 2), 0.38, { delay: 0.08, to: hz("F", 2), type: "sawtooth", volume: 0.058, filter: { type: "bandpass", from: 420, to: 1250, q: 3.4 } });
+      playHydraulicClank({ delay: 0.48, root: hz("F", 1), low: 0.075, noise: 0.034, stab: 0.038, chord: "shadow" });
+      playNoise(0.12, { delay: 0.9, frequency: 4800, filterType: "highpass", volume: 0.028 });
+      return;
+    }
+    playRiser(hz("Bb", 1), hz("Bb", 3), 1.05, { volume: 0.078, q: 2.5, noiseFreq: 1700 });
+    playMachineRumble({ delay: 0.04, duration: 1.08, root: hz("F", 1), to: hz("Db", 2), volume: 0.056, noiseFreq: 760 });
+    playHydraulicClank({ delay: 0.38, root: hz("Bb", 1), low: 0.066, noise: 0.032, stab: 0.034, chord: "shadow" });
+    playHydraulicClank({ delay: 1.02, root: hz("F", 1), low: 0.08, noise: 0.04, stab: 0.044, chord: "tonic" });
+  });
+}
+
+function playWheelStartPerformance() {
+  withSoundScope("wheel", 1.24, () => {
+    playMachineRumble({ duration: 0.9, root: hz("Bb", 1), to: hz("F", 1), volume: 0.065, noiseFreq: 620 });
+    playRiser(hz("F", 2), hz("Db", 5), 0.58, { delay: 0.08, volume: 0.052, q: 3, noiseFreq: 3400 });
+    playHydraulicClank({ delay: 0.54, root: hz("Bb", 1), low: 0.072, noise: 0.032, stab: 0.038, chord: "dominant" });
+  });
+}
+
+function playWheelStopPerformance(multiplier) {
+  withSoundScope("wheel", multiplier >= 5 ? 1.48 : 1.22, () => {
+    playImpact(hz("Bb", 1), { low: 0.13, mid: 0.064, noise: 0.04, noiseFreq: 950 });
+    playNoise(0.05, { delay: 0.045, frequency: 7600, filterType: "highpass", volume: 0.026 });
+    playBrassStab(multiplier >= 5 ? "tonic" : "resolve", { delay: 0.1, volume: multiplier >= 5 ? 0.076 : 0.062, duration: 0.18, voices: 4 });
+    if (multiplier >= 1) playSparkleRun(hz("Bb", 4), multiplier >= 5 ? 7 : 4, { delay: 0.18, spacing: 0.04, volume: multiplier >= 5 ? 0.07 : 0.052 });
+  });
+}
+
+function playWinCardPerformance(tier) {
+  withSoundScope("payout", tier.ratio >= 50 ? 1.45 : tier.ratio >= 20 ? 1.28 : 1.1, () => {
+    playImpact(hz("Bb", 1), { low: tier.ratio >= 50 ? 0.14 : 0.105, mid: 0.062, noise: 0.038, noiseFreq: 1300 });
+    playRiser(hz("Bb", 2), tier.ratio >= 50 ? hz("F", 6) : hz("Db", 6), 0.34, { delay: 0.02, volume: 0.068, q: 3.3, noiseFreq: 5200 });
+    playNoise(0.08, { delay: 0.08, frequency: 7200, filterType: "highpass", volume: 0.03 });
+  });
+  playSound(tier.voice || "voiceBigWin");
+  window.setTimeout(() => playSound(tier.sound || "win"), 120);
 }
 
 function playMultiplierCollectSound(value, collectedCount = 1, filledSlotCount = state.filledSlots.size) {
@@ -4220,6 +4342,7 @@ async function presentCollectedMultipliers(collected) {
   spawnParticles(collected.length * 12);
   collected.forEach((item, index) => spawnSlotClimaxEnergy(item.col, item.payout, index * 80));
   const highCollect = Math.max(...collected.map((item) => item.value));
+  playMultiplierCollectPerformance(collected, shouldPlayClimaxIntro);
   playMultiplierCollectSound(highCollect, collected.length, state.filledSlots.size);
   if (highCollect >= 100) triggerScreenFx("fx-jackpot", 780);
   else if (highCollect >= 20) triggerScreenFx("fx-bump", 420);
@@ -4232,11 +4355,13 @@ async function presentCollectedMultipliers(collected) {
 
 async function playClimaxIntroSequence() {
   duckBackgroundMusic(4300, BGM_DUCK_DEEP);
+  playClimaxIntroPerformance("logo");
   playSound("climaxIntro");
   await wait(1800);
 
   state.climaxIntroPhase = "wheel";
   render();
+  playClimaxIntroPerformance("lift");
   playSound("climaxLift");
   await wait(1800);
 
@@ -4437,7 +4562,10 @@ async function playFlameEvent(stage = currentSpecialStageIndex()) {
     state.flameCells = finalCells;
     state.flameFinal = false;
     render();
-    if (i === 0 || i === steps - 1 || i % 3 === 0) playSound("flameSweep");
+    if (i === 0 || i === steps - 1 || i % 3 === 0) {
+      playFlameSweepPerformance(i, steps);
+      playSound("flameSweep");
+    }
     await wait(stepDelays[i]);
   }
 
@@ -4446,6 +4574,7 @@ async function playFlameEvent(stage = currentSpecialStageIndex()) {
   setEventPulse(true);
   render();
   triggerScreenFx("fx-blast", 360);
+  playFlameBurnPerformance();
   playSound("flameBurn");
   await wait(resolveDelay(260, 120));
 
@@ -4873,6 +5002,7 @@ async function processSpecialAwards() {
       state.stagePreviews[stage - 1] = randomBoardEvent(stage);
       render();
       triggerStageRollStep(stage);
+      playEventRollStepSound(stage, i, rollDelays.length);
       playSound("wheelSpin");
       await wait(rollDelays[i]);
     }
