@@ -7525,9 +7525,9 @@ button {
 
 .phone {
   --climax-wheel-left: 50%;
-  --climax-wheel-top: 12%;
-  --climax-wheel-size: 112%;
-  --climax-mask-path: polygon(9% 2%, 50% 1%, 91% 2%, 98% 5%, 98% 12%, 92% 16%, 88% 17%, 50% 17.5%, 12% 17%, 8% 16%, 2% 12%, 2% 5%);
+  --climax-wheel-top: 24%;
+  --climax-wheel-size: 98%;
+  --climax-mask-path: polygon(9.3% 0.59%, 51.29% -3.07%, 92.58% 0.38%, 92.87% 5.65%, 91.53% 9.04%, 92.14% 12.79%, 90.55% 14.73%, 44.48% 14.61%, 11.16% 14.7%, 8.37% 14.28%, 8.91% 8.54%, 8.06% 4.76%);
 }
 
 .climax-stage {
