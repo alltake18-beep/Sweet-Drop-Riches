@@ -10,21 +10,22 @@ const PERF_ENABLED = new URLSearchParams(window.location.search).has("perf");
 const SPECIAL_METER_TARGET = 9;
 const SPECIAL_METER_THRESHOLDS = [9, 21, 40];
 const SPECIAL_METER_MAX = SPECIAL_METER_THRESHOLDS[SPECIAL_METER_THRESHOLDS.length - 1];
-const AUDIO_MASTER_VOLUME = 0.86;
-const AUDIO_SFX_VOLUME = 0.74;
-const AUDIO_BGM_VOLUME = 0.52;
+const AUDIO_MASTER_VOLUME = 0.82;
+const AUDIO_SFX_VOLUME = 0.78;
+const AUDIO_BGM_VOLUME = 0.5;
 const AUDIO_LOWCUT_HZ = 45;
-const AUDIO_SFX_PEAK_LIMIT = 0.26;
+const AUDIO_SFX_PEAK_LIMIT = 0.24;
 const AUDIO_BGM_PEAK_LIMIT = 0.085;
 const AUDIO_CATEGORY_GAINS = {
-  button: 0.9,
-  movement: 0.86,
+  button: 0.82,
+  movement: 0.82,
   match: 0.86,
-  coin: 0.84,
-  multiplier: 0.82,
-  payout: 0.84,
-  special: 0.78,
-  error: 0.76,
+  coin: 0.9,
+  multiplier: 0.92,
+  payout: 0.92,
+  special: 0.84,
+  wheel: 0.9,
+  error: 0.7,
 };
 const MUSIC_BPM = 128;
 const MUSIC_STEP_MS = 60000 / MUSIC_BPM / 2;
@@ -191,34 +192,34 @@ const WHEEL_LABEL_TUNE = {
   },
 };
 const SOUND_PROFILES = {
-  button: { category: "button", cooldown: 80, maxVoices: 1, attenuation: 0.5, release: 180, gain: 0.78 },
-  move: { category: "movement", cooldown: 70, maxVoices: 1, attenuation: 0.45, release: 180, gain: 0.74 },
-  error: { category: "error", cooldown: 140, maxVoices: 1, attenuation: 0.5, release: 240, gain: 0.7 },
-  match: { category: "match", cooldown: 110, maxVoices: 2, attenuation: 0.45, release: 320, gain: 0.78 },
-  cascade: { category: "match", cooldown: 140, maxVoices: 2, attenuation: 0.5, release: 320, gain: 0.72 },
-  drop: { category: "movement", cooldown: 170, maxVoices: 1, attenuation: 0.55, release: 260, gain: 0.68 },
-  specialReady: { category: "special", cooldown: 220, maxVoices: 1, attenuation: 0.5, release: 500, gain: 0.74 },
-  specialSpawn: { category: "special", cooldown: 180, maxVoices: 1, attenuation: 0.55, release: 560, gain: 0.72 },
-  specialBlast: { category: "special", cooldown: 260, maxVoices: 1, attenuation: 0.6, release: 640, gain: 0.62 },
-  candyClearEvent: { category: "special", cooldown: 220, maxVoices: 1, attenuation: 0.55, release: 520, gain: 0.76 },
-  flameSweep: { category: "special", cooldown: 180, maxVoices: 1, attenuation: 0.5, release: 420, gain: 0.7 },
-  flameBurn: { category: "special", cooldown: 260, maxVoices: 1, attenuation: 0.65, release: 720, gain: 0.56 },
-  flameResist: { category: "special", cooldown: 180, maxVoices: 1, attenuation: 0.5, release: 360, gain: 0.62 },
-  multiplierMerge: { category: "multiplier", cooldown: 180, maxVoices: 1, attenuation: 0.5, release: 480, gain: 0.68 },
-  multiplierHigh: { category: "multiplier", cooldown: 180, maxVoices: 1, attenuation: 0.55, release: 520, gain: 0.7 },
-  multiplierCollect: { category: "coin", cooldown: 120, maxVoices: 2, attenuation: 0.45, release: 360, gain: 0.72 },
-  multiplierCollectHigh: { category: "multiplier", cooldown: 150, maxVoices: 2, attenuation: 0.5, release: 480, gain: 0.68 },
-  multiplierEpicCollect: { category: "multiplier", cooldown: 190, maxVoices: 1, attenuation: 0.58, release: 620, gain: 0.64 },
-  multiplierJackpotCollect: { category: "multiplier", cooldown: 240, maxVoices: 1, attenuation: 0.62, release: 760, gain: 0.62 },
-  slotProgress: { category: "coin", cooldown: 130, maxVoices: 2, attenuation: 0.45, release: 280, gain: 0.66 },
-  win: { category: "payout", cooldown: 300, maxVoices: 1, attenuation: 0.6, release: 900, gain: 0.66 },
-  superWin: { category: "payout", cooldown: 420, maxVoices: 1, attenuation: 0.65, release: 1200, gain: 0.62 },
-  jackpot: { category: "payout", cooldown: 560, maxVoices: 1, attenuation: 0.7, release: 1600, gain: 0.58 },
-  wheelSpin: { category: "payout", cooldown: 20, maxVoices: 4, attenuation: 0.35, release: 90, gain: 0.58 },
-  wheelStop: { category: "payout", cooldown: 320, maxVoices: 1, attenuation: 0.55, release: 760, gain: 0.7 },
-  climaxIntro: { category: "multiplier", cooldown: 900, maxVoices: 1, attenuation: 0.5, release: 1500, gain: 0.72 },
-  climaxLift: { category: "multiplier", cooldown: 900, maxVoices: 1, attenuation: 0.5, release: 1500, gain: 0.68 },
-  logoReturn: { category: "multiplier", cooldown: 500, maxVoices: 1, attenuation: 0.4, release: 720, gain: 0.62 },
+  button: { category: "button", cooldown: 70, maxVoices: 1, attenuation: 0.5, release: 180, gain: 0.72 },
+  move: { category: "movement", cooldown: 62, maxVoices: 1, attenuation: 0.45, release: 170, gain: 0.7 },
+  error: { category: "error", cooldown: 150, maxVoices: 1, attenuation: 0.5, release: 260, gain: 0.66 },
+  match: { category: "match", cooldown: 98, maxVoices: 2, attenuation: 0.46, release: 320, gain: 0.78 },
+  cascade: { category: "match", cooldown: 118, maxVoices: 2, attenuation: 0.48, release: 340, gain: 0.74 },
+  drop: { category: "movement", cooldown: 150, maxVoices: 1, attenuation: 0.55, release: 260, gain: 0.68 },
+  specialReady: { category: "special", cooldown: 210, maxVoices: 1, attenuation: 0.5, release: 520, gain: 0.76 },
+  specialSpawn: { category: "special", cooldown: 170, maxVoices: 1, attenuation: 0.55, release: 580, gain: 0.74 },
+  specialBlast: { category: "special", cooldown: 250, maxVoices: 1, attenuation: 0.6, release: 680, gain: 0.66 },
+  candyClearEvent: { category: "special", cooldown: 210, maxVoices: 1, attenuation: 0.55, release: 540, gain: 0.76 },
+  flameSweep: { category: "special", cooldown: 155, maxVoices: 1, attenuation: 0.52, release: 420, gain: 0.66 },
+  flameBurn: { category: "special", cooldown: 250, maxVoices: 1, attenuation: 0.65, release: 760, gain: 0.6 },
+  flameResist: { category: "special", cooldown: 170, maxVoices: 1, attenuation: 0.5, release: 380, gain: 0.62 },
+  multiplierMerge: { category: "multiplier", cooldown: 170, maxVoices: 1, attenuation: 0.5, release: 500, gain: 0.7 },
+  multiplierHigh: { category: "multiplier", cooldown: 170, maxVoices: 1, attenuation: 0.55, release: 540, gain: 0.72 },
+  multiplierCollect: { category: "coin", cooldown: 115, maxVoices: 2, attenuation: 0.45, release: 360, gain: 0.72 },
+  multiplierCollectHigh: { category: "multiplier", cooldown: 145, maxVoices: 2, attenuation: 0.5, release: 500, gain: 0.7 },
+  multiplierEpicCollect: { category: "multiplier", cooldown: 185, maxVoices: 1, attenuation: 0.58, release: 650, gain: 0.66 },
+  multiplierJackpotCollect: { category: "multiplier", cooldown: 235, maxVoices: 1, attenuation: 0.62, release: 820, gain: 0.64 },
+  slotProgress: { category: "wheel", cooldown: 120, maxVoices: 2, attenuation: 0.45, release: 300, gain: 0.68 },
+  win: { category: "payout", cooldown: 300, maxVoices: 1, attenuation: 0.6, release: 920, gain: 0.68 },
+  superWin: { category: "payout", cooldown: 420, maxVoices: 1, attenuation: 0.65, release: 1250, gain: 0.64 },
+  jackpot: { category: "payout", cooldown: 560, maxVoices: 1, attenuation: 0.7, release: 1700, gain: 0.62 },
+  wheelSpin: { category: "wheel", cooldown: 18, maxVoices: 4, attenuation: 0.35, release: 90, gain: 0.6 },
+  wheelStop: { category: "wheel", cooldown: 320, maxVoices: 1, attenuation: 0.55, release: 800, gain: 0.72 },
+  climaxIntro: { category: "multiplier", cooldown: 900, maxVoices: 1, attenuation: 0.5, release: 1800, gain: 0.74 },
+  climaxLift: { category: "multiplier", cooldown: 900, maxVoices: 1, attenuation: 0.5, release: 1800, gain: 0.7 },
+  logoReturn: { category: "multiplier", cooldown: 500, maxVoices: 1, attenuation: 0.4, release: 760, gain: 0.64 },
 };
 
 const boardEl = document.getElementById("board");
@@ -2462,15 +2463,23 @@ function playWinCountLoop(duration, volume = 0.04) {
     const elapsed = performance.now() - started;
     if (elapsed >= duration || winOverlay.classList.contains("hidden")) {
       window.clearInterval(timer);
-      playChord([880, 1175, 1568], 0.16, { volume: Math.min(0.08, volume + 0.018) });
+      playChord(SFX_CHORDS.resolve.map((freq) => freq * 2), 0.13, {
+        volume: Math.min(0.058, volume + 0.012),
+        filter: { type: "lowpass", from: 2600, to: 1500, q: 0.8 },
+      });
       return;
     }
     const progress = elapsed / duration;
-    const freq = 620 + progress * 520 + (step % 3) * 55;
-    playTone(freq, 0.045, { type: "triangle", volume });
-    if (step % 4 === 0) playTone(980 + progress * 620, 0.035, { type: "sine", volume: volume * 0.62 });
+    const motif = [hz("F", 4), hz("Ab", 4), hz("Bb", 4), hz("Db", 5)];
+    const freq = motif[step % motif.length] * (1 + progress * 0.08);
+    playTone(freq, 0.04, {
+      type: step % 4 === 3 ? "square" : "triangle",
+      volume: volume * 0.72,
+      filter: { type: "lowpass", from: 2400, to: 1500, q: 0.7 },
+    });
+    if (step % 6 === 0) playTone(hz("Bb", 2), 0.055, { to: hz("Ab", 2), type: "sine", volume: volume * 0.44 });
     step += 1;
-  }, 78);
+  }, 92);
 }
 
 async function maybeFullDropBonus() {
@@ -3004,10 +3013,10 @@ function hz(note, octave) {
 }
 
 const MUSIC_CHORDS = [
-  [hz("Ab", 3), hz("C", 4), hz("Db", 4), hz("F", 4)],
-  [hz("G", 3), hz("Db", 4), hz("F", 4), hz("Ab", 4)],
-  [hz("Gb", 3), hz("B", 3), hz("Db", 4), hz("F", 4)],
-  [hz("F", 3), hz("B", 3), hz("Eb", 4), hz("Ab", 4)],
+  [hz("Bb", 3), hz("Db", 4), hz("F", 4), hz("Ab", 4), hz("C", 5)],
+  [hz("Eb", 3), hz("G", 3), hz("Db", 4), hz("F", 4), hz("C", 5)],
+  [hz("Ab", 3), hz("B", 3), hz("Eb", 4), hz("Gb", 4), hz("Bb", 4)],
+  [hz("Db", 3), hz("F", 3), hz("B", 3), hz("Eb", 4), hz("Bb", 4)],
 ];
 const MUSIC_BASS = [
   [hz("Bb", 1), hz("Db", 2), hz("F", 2), hz("Ab", 1), hz("Bb", 1), hz("F", 2), hz("Ab", 1), hz("Db", 2)],
@@ -3021,6 +3030,13 @@ const MUSIC_HOOK = [
   hz("Eb", 4), hz("F", 4), hz("Ab", 4), hz("Bb", 4),
   hz("Db", 5), hz("Bb", 4), hz("Ab", 4), hz("F", 4),
 ];
+const SFX_CHORDS = {
+  tonic: [hz("Bb", 3), hz("Db", 4), hz("F", 4), hz("Ab", 4)],
+  bright: [hz("Db", 4), hz("F", 4), hz("Bb", 4), hz("C", 5)],
+  dominant: [hz("Eb", 3), hz("G", 3), hz("Db", 4), hz("F", 4)],
+  shadow: [hz("Ab", 3), hz("B", 3), hz("Eb", 4), hz("Gb", 4)],
+  resolve: [hz("Db", 4), hz("F", 4), hz("Ab", 4), hz("Bb", 4)],
+};
 
 function playMusicKick(accent = 1) {
   playTone(74, 0.12, { to: 44, type: "sine", volume: 0.07 * accent, music: true });
@@ -3231,6 +3247,67 @@ function playSparkleRun(base = 784, count = 5, options = {}) {
   }
 }
 
+function playSfxChord(name = "tonic", duration = 0.12, options = {}) {
+  const chord = SFX_CHORDS[name] || SFX_CHORDS.tonic;
+  const transpose = options.transpose || 1;
+  const tones = chord.slice(0, options.voices || 3).map((freq) => freq * transpose);
+  playChord(tones, duration, {
+    delay: options.delay || 0,
+    type: options.type || "triangle",
+    volume: options.volume || 0.055,
+    filter: options.filter || { type: "lowpass", from: 2200, to: 1300, q: 0.9 },
+  });
+}
+
+function playBrassStab(name = "dominant", options = {}) {
+  playSfxChord(name, options.duration || 0.11, {
+    delay: options.delay || 0,
+    transpose: options.transpose || 2,
+    voices: options.voices || 3,
+    type: "sawtooth",
+    volume: options.volume || 0.04,
+    filter: { type: "bandpass", from: options.from || 760, to: options.to || 1900, q: options.q || 2.2 },
+  });
+}
+
+function playBassThump(root = hz("Bb", 1), options = {}) {
+  const delay = options.delay || 0;
+  playTone(root, options.duration || 0.14, {
+    delay,
+    to: Math.max(40, root * (options.toRatio || 0.56)),
+    type: "sine",
+    volume: options.volume || 0.058,
+  });
+}
+
+function playWahFlick(freq = hz("F", 4), options = {}) {
+  playTone(freq, options.duration || 0.06, {
+    delay: options.delay || 0,
+    to: freq * (options.toRatio || 1.08),
+    type: "sawtooth",
+    volume: options.volume || 0.028,
+    filter: { type: "bandpass", from: options.from || 620, to: options.to || 1700, q: options.q || 4.2 },
+  });
+}
+
+function playMachineRumble(options = {}) {
+  const delay = options.delay || 0;
+  const duration = options.duration || 0.72;
+  playTone(options.root || hz("Bb", 1), duration, {
+    delay,
+    to: options.to || hz("F", 1),
+    type: "sawtooth",
+    volume: options.volume || 0.052,
+    filter: { type: "lowpass", from: options.from || 520, to: options.lowTo || 180, q: 1.2 },
+  });
+  playNoise(duration * 0.8, {
+    delay: delay + duration * 0.08,
+    frequency: options.noiseFreq || 620,
+    filterType: "bandpass",
+    volume: (options.volume || 0.052) * 0.38,
+  });
+}
+
 function reserveSoundVoice(kind, profile, now) {
   const voice = state.soundVoiceState[kind] || { active: 0, lastAt: 0 };
   const elapsed = now - voice.lastAt;
@@ -3256,7 +3333,7 @@ function playSound(kind) {
   state.lastSoundAt[kind] = now;
   ensureAudio();
   startBackgroundMusic();
-  if (kind !== "button" && kind !== "move") state.musicDuckingUntil = now + 520;
+  if (!["button", "move", "wheelSpin"].includes(kind)) state.musicDuckingUntil = now + 520;
   state.soundScope = {
     category: profile.category,
     gain: (profile.gain || 1) * attenuation,
@@ -3264,122 +3341,122 @@ function playSound(kind) {
 
   const soundMap = {
     button: () => {
-      playTone(820, 0.035, { to: 1180, type: "triangle", volume: 0.032, filter: { type: "highpass", from: 520, q: 0.7 } });
-      playTone(410, 0.028, { delay: 0.018, to: 520, type: "sine", volume: 0.018 });
+      playWahFlick(hz("F", 5), { duration: 0.034, volume: 0.026, from: 900, to: 2100, q: 3.8 });
+      playTone(hz("Bb", 4), 0.026, { delay: 0.018, to: hz("C", 5), type: "sine", volume: 0.015 });
     },
     move: () => {
-      playTone(390, 0.052, { to: 640, type: "triangle", volume: 0.04, filter: { type: "bandpass", from: 720, to: 1100, q: 2.2 } });
-      playNoise(0.028, { delay: 0.012, frequency: 3400, filterType: "highpass", volume: 0.012 });
+      playWahFlick(hz("Db", 4), { duration: 0.046, volume: 0.03, from: 560, to: 1400, q: 3.6 });
+      playNoise(0.022, { delay: 0.012, frequency: 3600, filterType: "highpass", volume: 0.008 });
     },
     match: () => {
-      playChord([698, 932, 1175], 0.082, { volume: 0.052, filter: { type: "lowpass", from: 2100, to: 1400, q: 0.9 } });
-      playNoise(0.045, { delay: 0.03, frequency: 5600, filterType: "highpass", volume: 0.018 });
+      playSfxChord("bright", 0.09, { volume: 0.044, voices: 3, filter: { type: "lowpass", from: 2300, to: 1500, q: 0.8 } });
+      playTone(hz("Bb", 5), 0.042, { delay: 0.054, type: "triangle", volume: 0.032, filter: { type: "highpass", from: 720, q: 0.8 } });
     },
     cascade: () => {
-      playTone(520, 0.075, { to: 390, type: "square", volume: 0.034, filter: { type: "lowpass", from: 1200, to: 650, q: 1 } });
-      playTone(880, 0.065, { delay: 0.055, to: 1180, type: "triangle", volume: 0.038 });
-      playNoise(0.04, { delay: 0.025, frequency: 4800, filterType: "highpass", volume: 0.014 });
+      playBassThump(hz("Bb", 2), { duration: 0.1, volume: 0.03, toRatio: 0.72 });
+      playSfxChord("tonic", 0.085, { delay: 0.045, volume: 0.036, voices: 3 });
     },
     drop: () => {
-      playTone(210, 0.09, { to: 132, type: "sine", volume: 0.038 });
-      playNoise(0.038, { delay: 0.012, frequency: 900, filterType: "bandpass", volume: 0.014 });
+      playBassThump(hz("F", 2), { duration: 0.085, volume: 0.032, toRatio: 0.64 });
+      playNoise(0.03, { delay: 0.012, frequency: 980, filterType: "bandpass", volume: 0.01 });
     },
-    specialReady: () => playChord([659, 988, 1319], 0.16, { volume: 0.088, filter: { type: "lowpass", from: 2400, to: 1600, q: 1 } }),
+    specialReady: () => {
+      playBrassStab("dominant", { volume: 0.038, duration: 0.095 });
+      playTone(hz("C", 5), 0.08, { delay: 0.09, type: "triangle", volume: 0.032, filter: { type: "lowpass", from: 2500, to: 1400, q: 0.8 } });
+    },
     specialSpawn: () => {
-      playRiser(520, 1480, 0.18, { volume: 0.052, q: 3.2 });
-      playChord([784, 1175, 1568], 0.12, { delay: 0.11, volume: 0.076, filter: { type: "lowpass", from: 2600, to: 1800, q: 1.2 } });
-      playNoise(0.075, { delay: 0.08, frequency: 6800, filterType: "highpass", volume: 0.016 });
+      playRiser(hz("F", 4), hz("Db", 6), 0.16, { volume: 0.04, q: 3 });
+      playBrassStab("bright", { delay: 0.11, volume: 0.044, duration: 0.12, to: 2200 });
     },
     specialBlast: () => {
-      playImpact(128, { low: 0.105, mid: 0.058, noise: 0.032, noiseFreq: 1250 });
-      playChord([659, 988, 1319], 0.14, { delay: 0.055, volume: 0.088, filter: { type: "bandpass", from: 760, to: 2100, q: 1.8 } });
-      playNoise(0.18, { delay: 0.02, frequency: 4200, filterType: "highpass", volume: 0.018 });
+      playImpact(hz("Bb", 1), { low: 0.086, mid: 0.038, noise: 0.024, noiseFreq: 1200 });
+      playBrassStab("dominant", { delay: 0.05, volume: 0.05, duration: 0.14, q: 2.4 });
     },
     candyClearEvent: () => {
-      playChord([740, 988, 1480], 0.105, { volume: 0.082, filter: { type: "lowpass", from: 2600, to: 1500, q: 1.1 } });
-      playSparkleRun(988, 4, { delay: 0.06, spacing: 0.042, volume: 0.038 });
-      playNoise(0.08, { frequency: 6400, filterType: "highpass", volume: 0.014 });
+      playSfxChord("bright", 0.09, { volume: 0.04, voices: 3 });
+      playSparkleRun(hz("Ab", 5), 3, { delay: 0.058, spacing: 0.044, volume: 0.032 });
     },
     flameSweep: () => {
-      playRiser(220, 740, 0.16, { volume: 0.036, q: 2.8, noiseFreq: 2800 });
-      playNoise(0.11, { delay: 0.02, frequency: 1800, filterType: "bandpass", volume: 0.026 });
+      playRiser(hz("Bb", 2), hz("F", 4), 0.13, { volume: 0.028, q: 2.6, noiseFreq: 2200 });
     },
     flameBurn: () => {
-      playImpact(92, { low: 0.088, mid: 0.04, noise: 0.035, noiseFreq: 900 });
-      playTone(180, 0.32, { delay: 0.03, to: 64, type: "sawtooth", volume: 0.054, filter: { type: "lowpass", from: 720, to: 220, q: 1.4 } });
-      [540, 620, 710].forEach((freq, i) => playTone(freq, 0.06, { delay: 0.08 + i * 0.052, type: "triangle", volume: 0.034 }));
+      playImpact(hz("F", 1), { low: 0.076, mid: 0.034, noise: 0.028, noiseFreq: 860 });
+      playMachineRumble({ delay: 0.035, duration: 0.34, root: hz("Bb", 1), to: hz("F", 1), volume: 0.034, noiseFreq: 720 });
     },
     flameResist: () => {
-      playTone(190, 0.11, { to: 92, type: "sawtooth", volume: 0.07 });
-      playChord([520, 740], 0.075, { delay: 0.035, volume: 0.045 });
+      playBassThump(hz("Ab", 1), { duration: 0.1, volume: 0.045, toRatio: 0.58 });
+      playWahFlick(hz("Eb", 4), { delay: 0.035, duration: 0.06, volume: 0.026, toRatio: 0.82 });
     },
-    multiplierMerge: () => playChord([520, 780, 1040], 0.14, { volume: 0.1 }),
+    multiplierMerge: () => {
+      playBassThump(hz("Bb", 1), { volume: 0.052 });
+      playSfxChord("tonic", 0.12, { delay: 0.045, volume: 0.052, voices: 3 });
+    },
     multiplierHigh: () => {
-      [620, 780, 980, 1240].forEach((freq, i) => playTone(freq, 0.09, { delay: i * 0.055, volume: 0.1 }));
+      playSparkleRun(hz("F", 5), 4, { spacing: 0.05, volume: 0.05 });
+      playBrassStab("bright", { delay: 0.15, volume: 0.034, duration: 0.1 });
     },
     multiplierCollect: () => {
-      playTone(392, 0.07, { to: 784, type: "triangle", volume: 0.066, filter: { type: "bandpass", from: 620, to: 1700, q: 2.4 } });
-      playChord([784, 1047], 0.082, { delay: 0.062, volume: 0.054 });
-      playNoise(0.04, { delay: 0.025, frequency: 6200, filterType: "highpass", volume: 0.012 });
+      playWahFlick(hz("Bb", 4), { duration: 0.066, volume: 0.044, from: 700, to: 1900 });
+      playSfxChord("tonic", 0.075, { delay: 0.058, volume: 0.034, transpose: 2, voices: 2 });
     },
     multiplierCollectHigh: () => {
-      playImpact(156, { low: 0.052, mid: 0.026, noise: 0.014, noiseFreq: 2100 });
-      [523, 784, 1047, 1397].forEach((freq, i) => playTone(freq, 0.092, { delay: i * 0.052, volume: 0.072, filter: { type: "lowpass", from: 2300, to: 1500, q: 0.9 } }));
+      playBassThump(hz("Bb", 1), { volume: 0.042, duration: 0.11 });
+      playSparkleRun(hz("Db", 5), 4, { delay: 0.035, spacing: 0.052, volume: 0.052 });
     },
     multiplierEpicCollect: () => {
-      playImpact(130, { low: 0.07, mid: 0.038, noise: 0.022, noiseFreq: 1800 });
-      playSparkleRun(523, 6, { delay: 0.05, spacing: 0.052, volume: 0.072 });
-      playChord([659, 988, 1319], 0.16, { delay: 0.22, type: "sawtooth", volume: 0.05, filter: { type: "bandpass", from: 820, to: 2200, q: 2 } });
+      playImpact(hz("Bb", 1), { low: 0.062, mid: 0.03, noise: 0.018, noiseFreq: 1600 });
+      playSparkleRun(hz("F", 4), 5, { delay: 0.052, spacing: 0.052, volume: 0.056 });
+      playBrassStab("bright", { delay: 0.24, volume: 0.036, duration: 0.12 });
     },
     multiplierJackpotCollect: () => {
-      playImpact(98, { low: 0.09, mid: 0.05, noise: 0.03, noiseFreq: 1400 });
-      playSparkleRun(392, 8, { delay: 0.04, spacing: 0.05, volume: 0.08 });
-      playChord([523, 784, 1047, 1568], 0.22, { delay: 0.32, type: "sawtooth", volume: 0.058, filter: { type: "bandpass", from: 760, to: 2600, q: 1.8 } });
+      playImpact(hz("F", 1), { low: 0.085, mid: 0.042, noise: 0.026, noiseFreq: 1250 });
+      playSparkleRun(hz("Bb", 4), 6, { delay: 0.045, spacing: 0.052, volume: 0.064 });
+      playBrassStab("tonic", { delay: 0.34, volume: 0.045, duration: 0.15, voices: 4 });
     },
     slotProgress: () => {
-      playChord([523, 698], 0.07, { volume: 0.065 });
-      playTone(196, 0.085, { delay: 0.02, to: 160, type: "sine", volume: 0.025 });
+      playMachineRumble({ duration: 0.28, root: hz("Bb", 1), to: hz("Db", 2), volume: 0.034, noiseFreq: 760 });
+      playSparkleRun(hz("F", 4), 3, { delay: 0.08, spacing: 0.06, volume: 0.034 });
     },
     win: () => {
-      playSparkleRun(659, 5, { spacing: 0.07, volume: 0.064 });
-      playChord([523, 784, 1047], 0.16, { delay: 0.18, volume: 0.052, filter: { type: "lowpass", from: 2400, to: 1600, q: 0.8 } });
+      playSparkleRun(hz("F", 4), 4, { spacing: 0.07, volume: 0.05 });
+      playSfxChord("resolve", 0.14, { delay: 0.18, volume: 0.044, voices: 3 });
     },
     superWin: () => {
-      playRiser(196, 1760, 0.36, { volume: 0.064, q: 3.1, noiseFreq: 5200 });
-      playImpact(130, { delay: 0.28, low: 0.082, mid: 0.047, noise: 0.024, noiseFreq: 1800 });
-      playChord([523, 784, 1047, 1568], 0.24, { delay: 0.34, type: "sawtooth", volume: 0.058, filter: { type: "bandpass", from: 720, to: 2400, q: 1.6 } });
+      playRiser(hz("Bb", 2), hz("Db", 6), 0.34, { volume: 0.052, q: 3.1, noiseFreq: 4600 });
+      playImpact(hz("Bb", 1), { delay: 0.28, low: 0.07, mid: 0.036, noise: 0.02, noiseFreq: 1500 });
+      playBrassStab("resolve", { delay: 0.36, volume: 0.05, duration: 0.18, voices: 4 });
     },
     jackpot: () => {
-      playRiser(130, 2093, 0.48, { volume: 0.075, q: 3.4, noiseFreq: 6200 });
-      playImpact(82, { delay: 0.42, low: 0.11, mid: 0.058, noise: 0.038, noiseFreq: 1200 });
-      playSparkleRun(392, 9, { delay: 0.1, spacing: 0.055, volume: 0.082 });
-      playChord([392, 523, 784, 1047, 1568], 0.42, { delay: 0.52, type: "sawtooth", volume: 0.062, filter: { type: "bandpass", from: 650, to: 2600, q: 1.7 } });
+      playRiser(hz("F", 2), hz("F", 6), 0.46, { volume: 0.06, q: 3.4, noiseFreq: 5600 });
+      playImpact(hz("F", 1), { delay: 0.4, low: 0.095, mid: 0.045, noise: 0.028, noiseFreq: 1100 });
+      playSparkleRun(hz("Bb", 4), 7, { delay: 0.12, spacing: 0.055, volume: 0.066 });
+      playBrassStab("tonic", { delay: 0.56, volume: 0.056, duration: 0.24, voices: 4 });
     },
     wheelSpin: () => {
-      playTone(520, 0.042, { to: 860, type: "triangle", volume: 0.045, filter: { type: "bandpass", from: 700, to: 1450, q: 3.2 } });
-      playNoise(0.024, { delay: 0.012, frequency: 5200, filterType: "highpass", volume: 0.011 });
+      playWahFlick(hz("Bb", 4), { duration: 0.032, volume: 0.026, from: 900, to: 1600, q: 5.2 });
     },
     wheelStop: () => {
-      playChord([659, 988, 1319], 0.18, { volume: 0.104, filter: { type: "lowpass", from: 2600, to: 1200, q: 1.1 } });
-      playTone(220, 0.22, { delay: 0.08, to: 145, type: "square", volume: 0.044 });
-      playNoise(0.08, { delay: 0.04, frequency: 1500, filterType: "bandpass", volume: 0.02 });
+      playImpact(hz("Bb", 1), { low: 0.07, mid: 0.034, noise: 0.018, noiseFreq: 1200 });
+      playBrassStab("resolve", { delay: 0.09, volume: 0.048, duration: 0.16, voices: 4 });
     },
     climaxIntro: () => {
-      playTone(62, 1.35, { to: 44, type: "sawtooth", volume: 0.072, filter: { type: "lowpass", from: 420, to: 130, q: 1.3 } });
-      playNoise(1.2, { delay: 0.08, frequency: 520, filterType: "bandpass", volume: 0.026 });
-      [392, 493, 587].forEach((freq, i) => playTone(freq, 0.09, { delay: 0.22 + i * 0.22, type: "triangle", volume: 0.04 }));
+      playMachineRumble({ duration: 1.28, root: hz("Bb", 1), to: hz("F", 1), volume: 0.058, from: 480, lowTo: 140, noiseFreq: 520 });
+      playBrassStab("shadow", { delay: 0.22, volume: 0.032, duration: 0.1, transpose: 1 });
+      playBrassStab("dominant", { delay: 0.7, volume: 0.034, duration: 0.12, transpose: 1 });
     },
     climaxLift: () => {
-      playRiser(72, 360, 1.05, { volume: 0.064, q: 2.2, noiseFreq: 1600 });
-      playTone(180, 0.9, { delay: 0.08, to: 260, type: "square", volume: 0.032, filter: { type: "lowpass", from: 680, to: 480, q: 1.2 } });
-      playChord([392, 587, 784], 0.22, { delay: 0.62, type: "triangle", volume: 0.064 });
+      playRiser(hz("Bb", 1), hz("Bb", 3), 1.02, { volume: 0.052, q: 2.2, noiseFreq: 1500 });
+      playMachineRumble({ delay: 0.06, duration: 0.82, root: hz("F", 1), to: hz("Db", 2), volume: 0.03, noiseFreq: 840 });
+      playBrassStab("tonic", { delay: 0.66, volume: 0.044, duration: 0.16, transpose: 1 });
     },
     logoReturn: () => {
-      playTone(760, 0.13, { to: 420, type: "triangle", volume: 0.06 });
-      playChord([520, 780], 0.09, { delay: 0.14, volume: 0.048 });
-      playTone(220, 0.11, { delay: 0.26, to: 170, type: "square", volume: 0.035 });
+      playSfxChord("resolve", 0.11, { volume: 0.036, transpose: 2, voices: 3 });
+      playBassThump(hz("Bb", 1), { delay: 0.14, duration: 0.1, volume: 0.036, toRatio: 0.7 });
     },
-    error: () => playTone(150, 0.09, { to: 92, type: "sawtooth", volume: 0.055 }),
+    error: () => {
+      playTone(hz("F", 2), 0.085, { to: hz("Db", 2), type: "sawtooth", volume: 0.04, filter: { type: "lowpass", from: 800, to: 360, q: 1 } });
+      playNoise(0.04, { delay: 0.018, frequency: 760, filterType: "bandpass", volume: 0.01 });
+    },
   };
 
   try {
