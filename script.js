@@ -25,7 +25,7 @@ const AUDIO_CATEGORY_GAINS = {
   payout: 0.92,
   special: 0.84,
   wheel: 0.9,
-  voice: 0.86,
+  voice: 0.72,
   error: 0.7,
 };
 const MUSIC_BPM = 128;
@@ -134,12 +134,16 @@ const EVENT_ROLL_STEPS = 5;
 const EVENT_ROLL_TOTAL = 1398;
 const EVENT_ROLL_TOTAL_FAST = 489;
 const EVENT_ROLL_WEIGHTS = [0.72, 0.86, 1.02, 1.15, 1.25];
+const EVENT_ROLL_EXTRA_MAX = 2;
+const EVENT_ROLL_EXTRA_MS = 240;
+const EVENT_ROLL_EXTRA_FAST_MS = 80;
 const FULL_DROP_WHEEL_SPIN_MIN_MS = 5000;
 const FULL_DROP_WHEEL_SPIN_MAX_MS = 7000;
 const FULL_DROP_WHEEL_TURNS_MIN = 2;
 const FULL_DROP_WHEEL_TURNS_MAX = 4;
 const FULL_DROP_WHEEL_FALLBACK_POINTER_Y = 7.5;
 const CLIMAX_IDLE_SLICE_MS = 1000;
+const BGM_DUCK_IMPORTANT_MS = 1400;
 const DEFAULT_SOUND_PROFILE = { category: "movement", cooldown: 40, maxVoices: 2, attenuation: 0.4, release: 360, gain: 0.72 };
 const FULL_DROP_WHEEL_PRIZES = [
   { label: "0.1x", multiplier: 0.1, weight: 26 },
@@ -217,11 +221,11 @@ const SOUND_PROFILES = {
   win: { category: "payout", cooldown: 300, maxVoices: 1, attenuation: 0.6, release: 920, gain: 0.68 },
   superWin: { category: "payout", cooldown: 420, maxVoices: 1, attenuation: 0.65, release: 1250, gain: 0.64 },
   jackpot: { category: "payout", cooldown: 560, maxVoices: 1, attenuation: 0.7, release: 1700, gain: 0.62 },
-  voiceBigWin: { category: "voice", cooldown: 700, maxVoices: 1, attenuation: 0.4, release: 1200, gain: 0.78 },
-  voiceMegaWin: { category: "voice", cooldown: 800, maxVoices: 1, attenuation: 0.4, release: 1300, gain: 0.82 },
-  voiceSuperMegaWin: { category: "voice", cooldown: 900, maxVoices: 1, attenuation: 0.4, release: 1500, gain: 0.84 },
-  voiceEpicWin: { category: "voice", cooldown: 900, maxVoices: 1, attenuation: 0.4, release: 1400, gain: 0.84 },
-  voiceLegendaryWin: { category: "voice", cooldown: 1000, maxVoices: 1, attenuation: 0.4, release: 1700, gain: 0.86 },
+  voiceBigWin: { category: "voice", cooldown: 700, maxVoices: 1, attenuation: 0.4, release: 1200, gain: 0.62 },
+  voiceMegaWin: { category: "voice", cooldown: 800, maxVoices: 1, attenuation: 0.4, release: 1300, gain: 0.66 },
+  voiceSuperMegaWin: { category: "voice", cooldown: 900, maxVoices: 1, attenuation: 0.4, release: 1500, gain: 0.68 },
+  voiceEpicWin: { category: "voice", cooldown: 900, maxVoices: 1, attenuation: 0.4, release: 1400, gain: 0.68 },
+  voiceLegendaryWin: { category: "voice", cooldown: 1000, maxVoices: 1, attenuation: 0.4, release: 1700, gain: 0.7 },
   wheelSpin: { category: "wheel", cooldown: 18, maxVoices: 4, attenuation: 0.35, release: 90, gain: 0.6 },
   wheelStop: { category: "wheel", cooldown: 320, maxVoices: 1, attenuation: 0.55, release: 800, gain: 0.72 },
   climaxIntro: { category: "multiplier", cooldown: 900, maxVoices: 1, attenuation: 0.5, release: 1800, gain: 0.74 },
@@ -482,6 +486,24 @@ function eventRollDelay(index, fast = state.fast) {
     return total - used;
   }
   return Math.round((total * EVENT_ROLL_WEIGHTS[index]) / weightTotal);
+}
+
+function eventRollDelays(extraSteps = 0, fast = state.fast) {
+  const total = (fast ? EVENT_ROLL_TOTAL_FAST : EVENT_ROLL_TOTAL)
+    + extraSteps * (fast ? EVENT_ROLL_EXTRA_FAST_MS : EVENT_ROLL_EXTRA_MS);
+  const weights = Array.from({ length: EVENT_ROLL_STEPS + extraSteps }, (_, index) =>
+    EVENT_ROLL_WEIGHTS[Math.min(index, EVENT_ROLL_WEIGHTS.length - 1)] * (1 + Math.max(0, index - EVENT_ROLL_STEPS + 1) * 0.18)
+  );
+  const weightTotal = weights.reduce((sum, weight) => sum + weight, 0);
+  return weights.map((weight, index) => {
+    if (index === weights.length - 1) {
+      const used = weights
+        .slice(0, index)
+        .reduce((sum, item) => sum + Math.round((total * item) / weightTotal), 0);
+      return total - used;
+    }
+    return Math.round((total * weight) / weightTotal);
+  });
 }
 
 function randomItem(items) {
@@ -2473,6 +2495,7 @@ async function maybeShowWinCard() {
   const tier = WIN_TIERS.find((item) => ratio >= item.ratio);
   if (!tier) return false;
 
+  duckBackgroundMusic(tier.duration + 420);
   setPerfPhase("win-card");
   winLabelEl.textContent = tier.label;
   winTitleArtEl.src = winArtAsset(tier.art);
@@ -2510,29 +2533,32 @@ function animateWinAmount(target, duration) {
 
 function playWinCountLoop(duration, volume = 0.04) {
   if (!state.sound) return;
+  duckBackgroundMusic(duration + 360);
   const started = performance.now();
   let step = 0;
   const timer = window.setInterval(() => {
     const elapsed = performance.now() - started;
     if (elapsed >= duration || winOverlay.classList.contains("hidden")) {
       window.clearInterval(timer);
-      playChord(SFX_CHORDS.resolve.map((freq) => freq * 2), 0.13, {
-        volume: Math.min(0.058, volume + 0.012),
-        filter: { type: "lowpass", from: 2600, to: 1500, q: 0.8 },
-      });
+      playImpact(hz("Bb", 1), { low: 0.052, mid: 0.025, noise: 0.015, noiseFreq: 1400 });
+      playSparkleRun(hz("Bb", 5), 4, { delay: 0.04, spacing: 0.035, volume: Math.min(0.04, volume + 0.006) });
+      playBrassStab("resolve", { delay: 0.12, volume: 0.032, duration: 0.1 });
       return;
     }
     const progress = elapsed / duration;
-    const motif = [hz("F", 4), hz("Ab", 4), hz("Bb", 4), hz("Db", 5)];
-    const freq = motif[step % motif.length] * (1 + progress * 0.08);
-    playTone(freq, 0.04, {
-      type: step % 4 === 3 ? "square" : "triangle",
-      volume: volume * 0.72,
-      filter: { type: "lowpass", from: 2400, to: 1500, q: 0.7 },
+    const coinMotif = [hz("Bb", 5), hz("Db", 6), hz("F", 6), hz("Ab", 6), hz("C", 7)];
+    const freq = coinMotif[step % coinMotif.length] * (1 + progress * 0.035);
+    playTone(freq, 0.032, {
+      type: step % 5 === 4 ? "square" : "triangle",
+      volume: volume * 0.48,
+      filter: { type: "highpass", from: 1100, q: 0.9 },
     });
-    if (step % 6 === 0) playTone(hz("Bb", 2), 0.055, { to: hz("Ab", 2), type: "sine", volume: volume * 0.44 });
+    if (step % 2 === 0) {
+      playNoise(0.018, { frequency: 5200 + Math.random() * 1800, filterType: "highpass", volume: volume * 0.12 });
+    }
+    if (step % 5 === 0) playTone(hz("Bb", 2), 0.045, { to: hz("F", 2), type: "sine", volume: volume * 0.28 });
     step += 1;
-  }, 92);
+  }, 58);
 }
 
 async function maybeFullDropBonus() {
@@ -2567,6 +2593,7 @@ async function playFullDropWheel() {
 
   render();
   const spinProfile = createWheelSpinProfile();
+  duckBackgroundMusic(spinProfile.duration + 2600);
   const landingAngle = wheelLandingAngle(prizeIndex, sliceAngle, prize.multiplier);
   const finalRotation = wheelRotationDeltaToLand(landingAngle, climaxPointerAngle(), spinProfile.turns);
   slotTotals.forEach((value, index) => spawnSlotClimaxEnergy(index, value, 12 + index * 85));
@@ -3261,6 +3288,10 @@ function armBackgroundMusic() {
   startBackgroundMusic();
 }
 
+function duckBackgroundMusic(duration = BGM_DUCK_IMPORTANT_MS) {
+  state.musicDuckingUntil = Math.max(state.musicDuckingUntil || 0, performance.now() + duration);
+}
+
 function playMultiplierCollectSound(value) {
   if (value >= 100) {
     playSound("multiplierJackpotCollect");
@@ -3438,9 +3469,9 @@ function speakAnnouncer(text, options = {}) {
     || voices.find((voice) => /english|en-/i.test(`${voice.lang} ${voice.name}`));
   if (preferred) utterance.voice = preferred;
   utterance.lang = preferred?.lang || "en-US";
-  utterance.rate = options.rate || 0.9;
-  utterance.pitch = options.pitch || 0.72;
-  utterance.volume = options.volume || 0.74;
+  utterance.rate = options.rate || 1.08;
+  utterance.pitch = options.pitch || 0.86;
+  utterance.volume = options.volume || 0.46;
   window.speechSynthesis.cancel();
   window.speechSynthesis.speak(utterance);
   return true;
@@ -3594,66 +3625,66 @@ function playSound(kind) {
       playAnnouncerVoice("Big win", {
         chord: "tonic",
         pattern: [hz("Bb", 2), hz("Db", 3), hz("F", 3)],
-        rate: 0.92,
-        pitch: 0.74,
-        volume: 0.62,
+        rate: 1.16,
+        pitch: 0.9,
+        volume: 0.34,
         duration: 0.44,
         noteDuration: 0.075,
         spacing: 0.088,
-        stabVolume: 0.022,
+        stabVolume: 0.018,
       });
     },
     voiceMegaWin: () => {
       playAnnouncerVoice("Mega win", {
         chord: "dominant",
         pattern: [hz("Db", 3), hz("F", 3), hz("Ab", 3), hz("Bb", 3)],
-        rate: 0.88,
-        pitch: 0.72,
-        volume: 0.68,
+        rate: 1.12,
+        pitch: 0.88,
+        volume: 0.38,
         duration: 0.56,
         noteDuration: 0.082,
         spacing: 0.086,
-        stabVolume: 0.026,
+        stabVolume: 0.02,
       });
     },
     voiceSuperMegaWin: () => {
       playAnnouncerVoice("Super mega win", {
         chord: "bright",
         pattern: [hz("Bb", 2), hz("Db", 3), hz("F", 3), hz("Ab", 3), hz("Bb", 3)],
-        rate: 0.82,
-        pitch: 0.7,
-        volume: 0.72,
+        rate: 1.08,
+        pitch: 0.86,
+        volume: 0.42,
         duration: 0.72,
         noteDuration: 0.086,
         spacing: 0.088,
-        stabVolume: 0.028,
+        stabVolume: 0.022,
       });
     },
     voiceEpicWin: () => {
       playAnnouncerVoice("Epic win", {
         chord: "shadow",
         pattern: [hz("F", 2), hz("Bb", 2), hz("Db", 3), hz("F", 3), hz("Ab", 3)],
-        rate: 0.84,
-        pitch: 0.68,
-        volume: 0.72,
+        rate: 1.1,
+        pitch: 0.88,
+        volume: 0.42,
         duration: 0.64,
         noteDuration: 0.085,
         spacing: 0.086,
-        stabVolume: 0.03,
+        stabVolume: 0.024,
       });
     },
     voiceLegendaryWin: () => {
       playAnnouncerVoice("Legendary win", {
         chord: "tonic",
         pattern: [hz("Bb", 1), hz("F", 2), hz("Bb", 2), hz("Db", 3), hz("F", 3), hz("Bb", 3)],
-        rate: 0.78,
-        pitch: 0.66,
-        volume: 0.76,
+        rate: 1.04,
+        pitch: 0.84,
+        volume: 0.46,
         duration: 0.84,
         noteDuration: 0.09,
         spacing: 0.09,
-        rumble: 0.036,
-        stabVolume: 0.034,
+        rumble: 0.03,
+        stabVolume: 0.026,
       });
     },
     wheelSpin: () => {
@@ -3924,7 +3955,9 @@ function sniperStepDelays(steps) {
 }
 
 function flameStepDelays(steps) {
-  const total = state.fast ? 520 : 1900;
+  const baseSteps = state.fast ? 8 : 14;
+  const extraSteps = Math.max(0, steps - baseSteps);
+  const total = (state.fast ? 520 : 1900) + extraSteps * (state.fast ? 70 : 210);
   const weights = Array.from({ length: steps }, (_, index) => {
     const progress = index / Math.max(1, steps - 1);
     return 0.16 + progress ** 3.2 * 2.9;
@@ -4137,8 +4170,9 @@ function settleBoardBeforeFill() {
 
 async function presentCollectedMultipliers(collected) {
   if (collected.length === 0) return;
-  setStatus(collected.map((item) => `SLOT ${item.col + 1} ${formatScore(item.payout)}`).join("  "));
   const shouldPlayClimaxIntro = state.pendingClimaxIntro;
+  duckBackgroundMusic(shouldPlayClimaxIntro ? 4300 : 1700);
+  setStatus(collected.map((item) => `SLOT ${item.col + 1} ${formatScore(item.payout)}`).join("  "));
   if (shouldPlayClimaxIntro) {
     state.pendingClimaxIntro = false;
     state.climaxLogoReturn = false;
@@ -4352,9 +4386,11 @@ function clearFlameMarks() {
 }
 
 async function playFlameEvent(stage = currentSpecialStageIndex()) {
-  const steps = state.fast ? 8 : 14;
+  const extraSteps = randomInt(1, 2);
+  const steps = (state.fast ? 8 : 14) + extraSteps;
   const stepDelays = flameStepDelays(steps);
   let finalCells = new Set();
+  duckBackgroundMusic(stepDelays.reduce((sum, delay) => sum + delay, 0) + 1500);
   playSound("specialReady");
 
   for (let i = 0; i < steps; i += 1) {
@@ -4792,11 +4828,14 @@ async function processSpecialAwards() {
     state.rollingStage = stage;
     state.miniSlotWin = false;
 
-    for (let i = 0; i < EVENT_ROLL_STEPS; i += 1) {
+    const rollDelays = eventRollDelays(randomInt(1, EVENT_ROLL_EXTRA_MAX));
+    duckBackgroundMusic(rollDelays.reduce((sum, delay) => sum + delay, 0) + 1200);
+    for (let i = 0; i < rollDelays.length; i += 1) {
       state.stagePreviews[stage - 1] = randomBoardEvent(stage);
       render();
       triggerStageRollStep(stage);
-      await wait(eventRollDelay(i));
+      playSound("wheelSpin");
+      await wait(rollDelays[i]);
     }
 
     state.stagePreviews[stage - 1] = event;
