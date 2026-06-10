@@ -4125,6 +4125,16 @@ function initClimaxTunePanel() {
 
   const maskPoints = readMaskPoints();
 
+  function rotateSelectedLabelToTop() {
+    const index = FULL_DROP_WHEEL_LABEL_ORDER.indexOf(selectedLabel);
+    if (index < 0) return;
+    const sliceAngle = 360 / FULL_DROP_WHEEL_LABEL_ORDER.length;
+    const item = labelTune.items[selectedLabel] || {};
+    const labelAngle = labelTune.angleOffset + index * sliceAngle + sliceAngle * 0.5 + (item.angle || 0);
+    state.climaxWheelRotation = -labelAngle;
+    renderClimaxStage();
+  }
+
   function maskPath() {
     return `polygon(${maskPoints.map((point) => `${+point.x.toFixed(2)}% ${+point.y.toFixed(2)}%`).join(", ")})`;
   }
@@ -4167,6 +4177,11 @@ function initClimaxTunePanel() {
     refreshOutput();
   }
 
+  function applyLabelTuneAndKeepTop() {
+    rotateSelectedLabelToTop();
+    applyLabelTune();
+  }
+
   function tuneRow(parent, label, value, onMinus, onPlus) {
     const row = document.createElement("div");
     row.className = "climax-tune-row";
@@ -4181,7 +4196,7 @@ function initClimaxTunePanel() {
     const valueEl = row.querySelector(".climax-tune-value");
     const update = (next) => {
       valueEl.textContent = next;
-      applyLabelTune();
+      applyLabelTuneAndKeepTop();
     };
     row.querySelector('[data-action="minus"]').addEventListener("click", () => update(onMinus()));
     row.querySelector('[data-action="plus"]').addEventListener("click", () => update(onPlus()));
@@ -4201,6 +4216,7 @@ function initClimaxTunePanel() {
     select.value = selectedLabel;
     select.addEventListener("change", () => {
       selectedLabel = select.value;
+      rotateSelectedLabelToTop();
       renderLabelTuneControls();
       applyLabelTune();
     });
@@ -4308,6 +4324,7 @@ function initClimaxTunePanel() {
     labelEl.addEventListener("click", (event) => {
       event.stopPropagation();
       selectedLabel = labelEl.dataset.label || selectedLabel;
+      rotateSelectedLabelToTop();
       renderLabelTuneControls();
       applyLabelTune();
     });
@@ -4365,6 +4382,7 @@ function initClimaxTunePanel() {
   refreshOutput();
   applyMaskPath();
   renderLabelTuneControls();
+  rotateSelectedLabelToTop();
   applyLabelTune();
   placeHandleLayer();
   window.addEventListener("resize", placeHandleLayer);
