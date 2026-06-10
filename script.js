@@ -128,7 +128,10 @@ const EVENT_ROLL_STEPS = 5;
 const EVENT_ROLL_TOTAL = 1398;
 const EVENT_ROLL_TOTAL_FAST = 489;
 const EVENT_ROLL_WEIGHTS = [0.72, 0.86, 1.02, 1.15, 1.25];
-const FULL_DROP_WHEEL_SPIN_MS = 5000;
+const FULL_DROP_WHEEL_SPIN_MIN_MS = 5000;
+const FULL_DROP_WHEEL_SPIN_MAX_MS = 7000;
+const FULL_DROP_WHEEL_TURNS_MIN = 6;
+const FULL_DROP_WHEEL_TURNS_MAX = 9;
 const FULL_DROP_WHEEL_FALLBACK_POINTER_Y = 7.5;
 const DEFAULT_SOUND_PROFILE = { category: "movement", cooldown: 40, maxVoices: 2, attenuation: 0.4, release: 360, gain: 0.72 };
 const FULL_DROP_WHEEL_PRIZES = [
@@ -207,7 +210,7 @@ const SOUND_PROFILES = {
   win: { category: "payout", cooldown: 300, maxVoices: 1, attenuation: 0.6, release: 900, gain: 0.66 },
   superWin: { category: "payout", cooldown: 420, maxVoices: 1, attenuation: 0.65, release: 1200, gain: 0.62 },
   jackpot: { category: "payout", cooldown: 560, maxVoices: 1, attenuation: 0.7, release: 1600, gain: 0.58 },
-  wheelSpin: { category: "payout", cooldown: 140, maxVoices: 1, attenuation: 0.45, release: 360, gain: 0.66 },
+  wheelSpin: { category: "payout", cooldown: 20, maxVoices: 4, attenuation: 0.35, release: 90, gain: 0.58 },
   wheelStop: { category: "payout", cooldown: 320, maxVoices: 1, attenuation: 0.55, release: 760, gain: 0.7 },
 };
 
@@ -462,6 +465,14 @@ function eventRollDelay(index, fast = state.fast) {
 
 function randomItem(items) {
   return items[Math.floor(Math.random() * items.length)];
+}
+
+function randomRange(min, max) {
+  return min + Math.random() * (max - min);
+}
+
+function randomInt(min, max) {
+  return Math.floor(randomRange(min, max + 1));
 }
 
 function weightedPick(items) {
@@ -1086,6 +1097,10 @@ function wheelLabelSliceAngle() {
   return 360 / FULL_DROP_WHEEL_LABEL_ORDER.length;
 }
 
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
 function normalizeAngle(degrees) {
   return ((degrees % 360) + 360) % 360;
 }
@@ -1151,10 +1166,68 @@ function wheelLandingAngle(prizeIndex, sliceAngle, multiplier) {
   return normalizeAngle(prizeIndex * sliceAngle + sliceAngle * 0.5 + wheelEdgeLandingOffset(sliceAngle, multiplier));
 }
 
-function wheelRotationDeltaToLand(landingAngle, pointerAngle) {
+function wheelRotationDeltaToLand(landingAngle, pointerAngle, turns) {
   const desiredRotation = normalizeAngle(pointerAngle - landingAngle);
   const currentRotation = normalizeAngle(state.climaxWheelRotation || 0);
-  return 360 * 10 + normalizeAngle(desiredRotation - currentRotation);
+  return 360 * turns + normalizeAngle(desiredRotation - currentRotation);
+}
+
+function currentClimaxHighlightIndex(sliceAngle = wheelLabelSliceAngle()) {
+  return Math.floor(normalizeAngle(climaxPointerAngle() - state.climaxWheelRotation) / sliceAngle) % FULL_DROP_WHEEL_LABEL_ORDER.length;
+}
+
+function createWheelSpinProfile() {
+  const duration = randomInt(FULL_DROP_WHEEL_SPIN_MIN_MS, FULL_DROP_WHEEL_SPIN_MAX_MS);
+  const turns = randomInt(FULL_DROP_WHEEL_TURNS_MIN, FULL_DROP_WHEEL_TURNS_MAX);
+  return {
+    duration,
+    turns,
+    accelPower: randomRange(2.1, 2.8),
+    decelPower: randomRange(2.4, 3.4),
+  };
+}
+
+function wheelSpinProgress(t, profile) {
+  const start = t ** profile.accelPower;
+  const end = (1 - t) ** profile.decelPower;
+  return clamp(start / (start + end), 0, 1);
+}
+
+function animateClimaxWheel(finalRotation, profile) {
+  return new Promise((resolve) => {
+    const started = performance.now();
+    const startRotation = state.climaxWheelRotation || 0;
+    const sliceAngle = wheelLabelSliceAngle();
+    let lastHighlightIndex = currentClimaxHighlightIndex(sliceAngle);
+    let lastTickAt = 0;
+    const previousTransition = climaxWheelRotorEl?.style.transition || "";
+    if (climaxWheelRotorEl) climaxWheelRotorEl.style.transition = "none";
+
+    const tick = (now) => {
+      const progress = clamp((now - started) / profile.duration, 0, 1);
+      state.climaxWheelRotation = startRotation + finalRotation * wheelSpinProgress(progress, profile);
+      renderClimaxStage();
+
+      const highlightIndex = currentClimaxHighlightIndex(sliceAngle);
+      if (highlightIndex !== lastHighlightIndex && now - lastTickAt > 42) {
+        playSound("wheelSpin");
+        lastHighlightIndex = highlightIndex;
+        lastTickAt = now;
+      }
+
+      if (progress < 1) {
+        requestAnimationFrame(tick);
+        return;
+      }
+
+      state.climaxWheelRotation = startRotation + finalRotation;
+      renderClimaxStage();
+      if (climaxWheelRotorEl) climaxWheelRotorEl.style.transition = previousTransition;
+      resolve();
+    };
+
+    requestAnimationFrame(tick);
+  });
 }
 
 function renderClimaxStage() {
@@ -1182,8 +1255,7 @@ function renderClimaxStage() {
   }
   if (climaxWheelHighlightEl) {
     const sliceAngle = wheelLabelSliceAngle();
-    const normalized = normalizeAngle(climaxPointerAngle() - state.climaxWheelRotation);
-    const index = Math.floor(normalized / sliceAngle) % FULL_DROP_WHEEL_LABEL_ORDER.length;
+    const index = currentClimaxHighlightIndex(sliceAngle);
     climaxWheelHighlightEl.style.setProperty("--highlight-angle", `${index * sliceAngle + sliceAngle * 0.5}deg`);
   }
 }
@@ -2412,32 +2484,23 @@ async function playFullDropWheel() {
   const award = Math.round(baseTotal * prize.multiplier);
 
   render();
+  const spinProfile = createWheelSpinProfile();
   const landingAngle = wheelLandingAngle(prizeIndex, sliceAngle, prize.multiplier);
-  const finalRotation = wheelRotationDeltaToLand(landingAngle, climaxPointerAngle());
+  const finalRotation = wheelRotationDeltaToLand(landingAngle, climaxPointerAngle(), spinProfile.turns);
   slotTotals.forEach((value, index) => spawnSlotClimaxEnergy(index, value, 12 + index * 85));
   playSound("slotProgress");
-  await wait(resolveDelay(980, 520));
+  await wait(980);
 
   state.climaxSpinning = true;
   render();
-  let spinElapsed = 0;
-  const spinTimer = window.setInterval(() => {
-    spinElapsed += 180;
-    playSound("wheelSpin");
-    if (spinElapsed >= FULL_DROP_WHEEL_SPIN_MS) window.clearInterval(spinTimer);
-  }, 180);
-  await wait(60);
-  state.climaxWheelRotation += finalRotation;
-  renderClimaxStage();
-  await wait(FULL_DROP_WHEEL_SPIN_MS);
-  window.clearInterval(spinTimer);
+  await animateClimaxWheel(finalRotation, spinProfile);
 
   playSound("wheelStop");
   addWin(award);
   state.climaxSpinning = false;
   triggerScreenFx(prize.multiplier >= 5 ? "fx-jackpot" : prize.multiplier >= 1 ? "fx-blast" : "fx-bump", 820);
   render();
-  await wait(resolveDelay(1500, 900));
+  await wait(1500);
 }
 
 async function ensureLegalMove() {
@@ -3010,8 +3073,8 @@ function playSound(kind) {
       playChord([262, 330, 392, 523], 0.42, { delay: 0.48, type: "sawtooth", volume: 0.085 });
     },
     wheelSpin: () => {
-      playTone(420, 0.16, { to: 760, type: "triangle", volume: 0.07 });
-      playTone(980, 0.08, { delay: 0.04, to: 1320, type: "sine", volume: 0.052 });
+      playTone(520, 0.045, { to: 860, type: "triangle", volume: 0.056 });
+      playTone(1180, 0.035, { delay: 0.018, to: 1460, type: "sine", volume: 0.034 });
     },
     wheelStop: () => {
       playChord([660, 990, 1320], 0.18, { volume: 0.12 });
