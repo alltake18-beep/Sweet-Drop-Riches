@@ -7527,6 +7527,7 @@ button {
   --climax-wheel-left: 50%;
   --climax-wheel-top: 24%;
   --climax-wheel-size: 98%;
+  --climax-center-line-x: 50%;
   --climax-mask-path: polygon(9.3% 0.59%, 51.29% -3.07%, 92.58% 0.38%, 92.87% 5.65%, 91.53% 9.04%, 92.14% 12.79%, 90.55% 14.73%, 44.48% 14.61%, 11.16% 14.7%, 8.37% 14.28%, 8.91% 8.54%, 8.06% 4.76%);
 }
 
@@ -7661,6 +7662,25 @@ button {
     0 3px 0 rgba(50, 21, 88, 0.9),
     0 0 8px rgba(118, 248, 255, 0.92),
     0 0 14px rgba(255, 238, 115, 0.86);
+}
+
+.climax-center-line {
+  position: absolute;
+  z-index: 6;
+  top: 0;
+  bottom: 0;
+  left: var(--climax-center-line-x);
+  display: none;
+  width: 2px;
+  background: linear-gradient(180deg, transparent 3%, rgba(143, 247, 255, 0.96) 16%, rgba(255, 238, 122, 0.9) 50%, rgba(143, 247, 255, 0.96) 84%, transparent 97%);
+  box-shadow: 0 0 8px rgba(49, 196, 255, 0.92);
+  transform: translateX(-50%);
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.phone.tune-climax .climax-center-line {
+  display: block;
 }
 
 .phone.multiplier-climax .play-area::before {

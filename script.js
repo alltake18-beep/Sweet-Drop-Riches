@@ -144,15 +144,42 @@ const FULL_DROP_WHEEL_PRIZES = [
   { label: "50x", multiplier: 50, weight: 0.05 },
   { label: "100x", multiplier: 100, weight: 0 },
 ];
-const FULL_DROP_WHEEL_LABEL_ORDER = ["100x", "0.1x", "1x", "0.2x", "20x", "2x", "5x", "50x", "1.5x", "30x", "10x", "0.5x"];
+const FULL_DROP_WHEEL_LABEL_ORDER = [
+  { key: "x100", text: "x100", prizeLabel: "100x" },
+  { key: "x0.1", text: "x0.1", prizeLabel: "0.1x" },
+  { key: "x1", text: "x1", prizeLabel: "1x" },
+  { key: "x0.2", text: "x0.2", prizeLabel: "0.2x" },
+  { key: "x20", text: "x20", prizeLabel: "20x" },
+  { key: "x2", text: "x2", prizeLabel: "2x" },
+  { key: "x5", text: "x5", prizeLabel: "5x" },
+  { key: "x50", text: "x50", prizeLabel: "50x" },
+  { key: "x1.5", text: "x1.5", prizeLabel: "1.5x" },
+  { key: "x30", text: "x30", prizeLabel: "30x" },
+  { key: "x10", text: "x10", prizeLabel: "10x" },
+  { key: "x0.5", text: "x0.5", prizeLabel: "0.5x" },
+  { key: "x10-2", text: "x10", prizeLabel: "10x" },
+];
 const WHEEL_LABEL_TUNE = {
   cx: 50,
   cy: 50,
-  radius: 36.5,
+  radius: 35.5,
   angleOffset: -90,
   rotateOffset: 90,
-  fontSize: 46,
+  fontSize: 28,
   items: {
+    x100: { angle: -2, radius: 0, rotate: 0, font: 2 },
+    "x0.1": { angle: -4.5, radius: -4, rotate: 0, font: -7 },
+    x5: { angle: 13.5, radius: -2, rotate: 0, font: -1 },
+    "x0.5": { angle: 1, radius: -4, rotate: 0, font: -6 },
+    x50: { angle: 10.5, radius: 0, rotate: 0, font: 2 },
+    x10: { angle: 3, radius: 0, rotate: 0, font: 0 },
+    x30: { angle: 6, radius: 0, rotate: 0, font: 2 },
+    "x1.5": { angle: 8.5, radius: -4, rotate: 0, font: -7 },
+    x2: { angle: 14.5, radius: -2, rotate: 0, font: -2 },
+    x20: { angle: 16, radius: 0, rotate: 0, font: 0 },
+    "x0.2": { angle: 18, radius: -4, rotate: 0, font: -7 },
+    x1: { angle: 19.5, radius: -2, rotate: 0, font: -2 },
+    "x10-2": { angle: 0, radius: 0, rotate: 0, font: 0 },
   },
 };
 const SOUND_PROFILES = {
@@ -211,6 +238,7 @@ const climaxStageEl = document.getElementById("climaxStage");
 const climaxWheelRotorEl = document.getElementById("climaxWheelRotor");
 const climaxWheelLabelsEl = document.getElementById("climaxWheelLabels");
 const climaxWheelHighlightEl = document.getElementById("climaxWheelHighlight");
+const climaxCenterLineEl = document.getElementById("climaxCenterLine");
 
 const state = {
   board: [],
@@ -1044,6 +1072,19 @@ function isMultiplierClimaxActive() {
   return state.filledSlots.size > 0 || state.climaxSpinning;
 }
 
+function wheelLabelIndexByKey(key) {
+  return FULL_DROP_WHEEL_LABEL_ORDER.findIndex((item) => item.key === key);
+}
+
+function wheelLabelIndexByPrize(label) {
+  const index = FULL_DROP_WHEEL_LABEL_ORDER.findIndex((item) => item.prizeLabel === label);
+  return index >= 0 ? index : 0;
+}
+
+function wheelLabelSliceAngle() {
+  return 360 / FULL_DROP_WHEEL_LABEL_ORDER.length;
+}
+
 function renderClimaxStage() {
   if (!climaxStageEl) return;
   const active = isMultiplierClimaxActive();
@@ -1052,10 +1093,10 @@ function renderClimaxStage() {
     climaxWheelRotorEl.style.setProperty("--wheel-rotation", `${state.climaxWheelRotation || 0}deg`);
   }
   if (climaxWheelLabelsEl && !climaxWheelLabelsEl.childElementCount) {
-    const sliceAngle = 360 / FULL_DROP_WHEEL_PRIZES.length;
-    climaxWheelLabelsEl.innerHTML = FULL_DROP_WHEEL_LABEL_ORDER.map((label, index) => {
+    const sliceAngle = wheelLabelSliceAngle();
+    climaxWheelLabelsEl.innerHTML = FULL_DROP_WHEEL_LABEL_ORDER.map(({ key, text }, index) => {
       const angle = WHEEL_LABEL_TUNE.angleOffset + index * sliceAngle + sliceAngle * 0.5;
-      const item = WHEEL_LABEL_TUNE.items[label] || {};
+      const item = WHEEL_LABEL_TUNE.items[key] || {};
       const finalAngle = angle + (item.angle || 0);
       const finalRadius = WHEEL_LABEL_TUNE.radius + (item.radius || 0);
       const radians = (finalAngle * Math.PI) / 180;
@@ -1063,24 +1104,26 @@ function renderClimaxStage() {
       const y = WHEEL_LABEL_TUNE.cy + Math.sin(radians) * finalRadius;
       const rotate = finalAngle + WHEEL_LABEL_TUNE.rotateOffset + (item.rotate || 0);
       const fontSize = WHEEL_LABEL_TUNE.fontSize + (item.font || 0);
-      const digits = label.replace(/[^0-9]/g, "").length;
-      return `<button type="button" class="climax-wheel-label score-length-${Math.min(4, digits)}" data-label="${label}" style="--label-x:${x}%; --label-y:${y}%; --label-rotate:${rotate}deg; --label-font:${fontSize}px">${label}</button>`;
+      const digits = text.replace(/[^0-9]/g, "").length;
+      return `<button type="button" class="climax-wheel-label score-length-${Math.min(4, digits)}" data-label="${key}" style="--label-x:${x}%; --label-y:${y}%; --label-rotate:${rotate}deg; --label-font:${fontSize}px">${text}</button>`;
     }).join("");
   }
   if (climaxWheelHighlightEl) {
-    const sliceAngle = 360 / FULL_DROP_WHEEL_PRIZES.length;
-    const phoneRect = document.querySelector(".phone")?.getBoundingClientRect();
+    const sliceAngle = wheelLabelSliceAngle();
+    const phoneEl = document.querySelector(".phone");
+    const phoneRect = phoneEl?.getBoundingClientRect();
     const wheelRect = climaxWheelRotorEl?.getBoundingClientRect();
     let centerAngle = -90;
     if (phoneRect && wheelRect) {
-      const px = phoneRect.left + phoneRect.width * 0.5;
+      const linePercent = parseFloat(getComputedStyle(phoneEl).getPropertyValue("--climax-center-line-x")) || 50;
+      const px = phoneRect.left + phoneRect.width * (linePercent / 100);
       const py = phoneRect.top + phoneRect.height * 0.5;
       const wx = wheelRect.left + wheelRect.width * 0.5;
       const wy = wheelRect.top + wheelRect.height * 0.5;
       centerAngle = (Math.atan2(py - wy, px - wx) * 180) / Math.PI + 90;
     }
     const normalized = ((centerAngle - state.climaxWheelRotation) % 360 + 360) % 360;
-    const index = Math.floor(normalized / sliceAngle) % FULL_DROP_WHEEL_PRIZES.length;
+    const index = Math.floor(normalized / sliceAngle) % FULL_DROP_WHEEL_LABEL_ORDER.length;
     climaxWheelHighlightEl.style.setProperty("--highlight-angle", `${index * sliceAngle + sliceAngle * 0.5}deg`);
   }
 }
@@ -2304,8 +2347,8 @@ async function playFullDropWheel() {
   if (baseTotal <= 0) return;
 
   const prize = weightedPick(FULL_DROP_WHEEL_PRIZES);
-  const prizeIndex = FULL_DROP_WHEEL_PRIZES.indexOf(prize);
-  const sliceAngle = 360 / FULL_DROP_WHEEL_PRIZES.length;
+  const prizeIndex = wheelLabelIndexByPrize(prize.label);
+  const sliceAngle = wheelLabelSliceAngle();
   const finalRotation = 360 * 10 + (360 - (prizeIndex * sliceAngle + sliceAngle * 0.5));
   const award = Math.round(baseTotal * prize.multiplier);
 
@@ -4061,9 +4104,10 @@ function initClimaxTunePanel() {
     ["wheel left", "--climax-wheel-left", -200, 300, 0.5, "%"],
     ["wheel top", "--climax-wheel-top", -200, 500, 0.5, "%"],
     ["wheel size", "--climax-wheel-size", 25, 500, 1, "%"],
+    ["center line", "--climax-center-line-x", -50, 150, 0.5, "%"],
   ];
   const labelTune = JSON.parse(JSON.stringify(WHEEL_LABEL_TUNE));
-  let selectedLabel = FULL_DROP_WHEEL_LABEL_ORDER[0];
+  let selectedLabel = FULL_DROP_WHEEL_LABEL_ORDER[0].key;
 
   const panel = document.createElement("div");
   panel.className = "climax-tune-panel";
@@ -4126,9 +4170,9 @@ function initClimaxTunePanel() {
   const maskPoints = readMaskPoints();
 
   function rotateSelectedLabelToTop() {
-    const index = FULL_DROP_WHEEL_LABEL_ORDER.indexOf(selectedLabel);
+    const index = wheelLabelIndexByKey(selectedLabel);
     if (index < 0) return;
-    const sliceAngle = 360 / FULL_DROP_WHEEL_LABEL_ORDER.length;
+    const sliceAngle = wheelLabelSliceAngle();
     const item = labelTune.items[selectedLabel] || {};
     const labelAngle = labelTune.angleOffset + index * sliceAngle + sliceAngle * 0.5 + (item.angle || 0);
     state.climaxWheelRotation = -labelAngle;
@@ -4148,7 +4192,7 @@ function initClimaxTunePanel() {
       const value = phone.style.getPropertyValue(name) || getComputedStyle(phone).getPropertyValue(name).trim();
       return `  ${name}: ${value || `0${unit}`};`;
     });
-    lines.splice(3, 0, `  --climax-mask-path: ${maskPath()};`);
+    lines.push(`  --climax-mask-path: ${maskPath()};`);
     return `.phone {\n${lines.join("\n")}\n}\n\nWHEEL_LABEL_TUNE = ${JSON.stringify(labelTune, null, 2)};`;
   }
 
@@ -4157,10 +4201,10 @@ function initClimaxTunePanel() {
   }
 
   function applyLabelTune() {
-    const sliceAngle = 360 / FULL_DROP_WHEEL_LABEL_ORDER.length;
+    const sliceAngle = wheelLabelSliceAngle();
     document.querySelectorAll(".climax-wheel-label").forEach((el) => {
       const label = el.dataset.label;
-      const index = FULL_DROP_WHEEL_LABEL_ORDER.indexOf(label);
+      const index = wheelLabelIndexByKey(label);
       if (index < 0) return;
       const item = labelTune.items[label] || {};
       const angle = labelTune.angleOffset + index * sliceAngle + sliceAngle * 0.5 + (item.angle || 0);
@@ -4209,7 +4253,7 @@ function initClimaxTunePanel() {
     selectRow.className = "climax-tune-row";
     selectRow.innerHTML = `
       <span>selected</span>
-      <select class="climax-label-select">${FULL_DROP_WHEEL_LABEL_ORDER.map((label) => `<option value="${label}">${label}</option>`).join("")}</select>
+      <select class="climax-label-select">${FULL_DROP_WHEEL_LABEL_ORDER.map(({ key }) => `<option value="${key}">${key}</option>`).join("")}</select>
       <span></span>
     `;
     const select = selectRow.querySelector("select");
@@ -4244,8 +4288,9 @@ function initClimaxTunePanel() {
   for (const [label, name, min, max, step, unit] of controls) {
     const row = document.createElement("label");
     row.className = "climax-tune-row";
+    row.dataset.control = name;
     const value = numericValue(name);
-    const hasStepper = name === "--climax-wheel-left" || name === "--climax-wheel-top" || name === "--climax-wheel-size";
+    const hasStepper = name === "--climax-wheel-left" || name === "--climax-wheel-top" || name === "--climax-wheel-size" || name === "--climax-center-line-x";
     row.innerHTML = `
       <span>${label}</span>
       <div class="climax-tune-control">
@@ -4263,6 +4308,7 @@ function initClimaxTunePanel() {
       const next = `${numeric}${unit}`;
       phone.style.setProperty(name, next);
       valueEl.textContent = next;
+      renderClimaxStage();
       refreshOutput();
     };
     input.addEventListener("input", () => {
@@ -4272,6 +4318,16 @@ function initClimaxTunePanel() {
       button.addEventListener("click", () => setControlValue(Number(input.value) + Number(button.dataset.step)));
     });
     controlsEl.appendChild(row);
+  }
+
+  function syncControlReadout(name, value) {
+    const row = Array.from(controlsEl.querySelectorAll(".climax-tune-row")).find((item) => item.dataset.control === name);
+    if (!row) return;
+    const input = row.querySelector("input");
+    const valueEl = row.querySelector(".climax-tune-value");
+    const numeric = parseFloat(value);
+    if (input && Number.isFinite(numeric)) input.value = String(numeric);
+    if (valueEl) valueEl.textContent = value;
   }
 
   function placeHandleLayer() {
@@ -4330,8 +4386,32 @@ function initClimaxTunePanel() {
     });
   });
 
+  climaxCenterLineEl?.addEventListener("pointerdown", (event) => {
+    if (!params.has("tune")) return;
+    event.preventDefault();
+    event.stopPropagation();
+    climaxCenterLineEl.setPointerCapture(event.pointerId);
+    const move = (moveEvent) => {
+      const rect = phone.getBoundingClientRect();
+      const percent = ((moveEvent.clientX - rect.left) / rect.width) * 100;
+      const value = `${+percent.toFixed(1)}%`;
+      phone.style.setProperty("--climax-center-line-x", value);
+      syncControlReadout("--climax-center-line-x", value);
+      renderClimaxStage();
+      refreshOutput();
+    };
+    const up = () => {
+      climaxCenterLineEl.removeEventListener("pointermove", move);
+      climaxCenterLineEl.removeEventListener("pointerup", up);
+      climaxCenterLineEl.removeEventListener("pointercancel", up);
+    };
+    climaxCenterLineEl.addEventListener("pointermove", move);
+    climaxCenterLineEl.addEventListener("pointerup", up);
+    climaxCenterLineEl.addEventListener("pointercancel", up);
+  });
+
   climaxStageEl.addEventListener("pointerdown", (event) => {
-    if (!params.has("tune") || draggingPoint || event.target.closest(".climax-mask-handle") || event.target.closest(".climax-tune-panel")) return;
+    if (!params.has("tune") || draggingPoint || event.target.closest(".climax-mask-handle") || event.target.closest(".climax-center-line") || event.target.closest(".climax-tune-panel")) return;
     event.preventDefault();
     climaxStageEl.setPointerCapture(event.pointerId);
     const rect = climaxStageEl.getBoundingClientRect();
