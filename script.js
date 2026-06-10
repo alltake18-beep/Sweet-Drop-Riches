@@ -196,6 +196,11 @@ const winLabelEl = document.getElementById("winLabel");
 const winTitleArtEl = document.getElementById("winTitleArt");
 const winMultiplierEl = document.getElementById("winMultiplier");
 const winAmountEl = document.getElementById("winAmount");
+const climaxStageEl = document.getElementById("climaxStage");
+const climaxPrizesEl = document.getElementById("climaxPrizes");
+const climaxOrbsEl = document.getElementById("climaxOrbs");
+const climaxOrbEls = Array.from(document.querySelectorAll(".climax-orb"));
+const climaxResultEl = document.getElementById("climaxResult");
 
 const state = {
   board: [],
@@ -259,6 +264,8 @@ const state = {
   rollingStage: null,
   miniSlotWin: false,
   eventPulse: false,
+  climaxSpinning: false,
+  climaxResult: null,
   boardRescueLevel: 0,
   sniperTarget: null,
   flameCells: new Set(),
@@ -278,6 +285,19 @@ function formatBalance(value) {
 
 function formatScore(value) {
   return formatMoney(Math.round(value || 0), 0);
+}
+
+function slotTotal() {
+  return state.slotValues.reduce((sum, value) => sum + Math.round(value || 0), 0);
+}
+
+function isMultiplierClimaxActive() {
+  return state.filledSlots.size > 0 || state.climaxSpinning || Boolean(state.climaxResult);
+}
+
+function climaxPrizeScores(baseTotal = slotTotal()) {
+  const total = Math.max(1, Math.round(baseTotal || currentBet()));
+  return [0.5, 1, 1.5, 2, 3].map((multiplier) => formatScore(Math.max(1, Math.round(total * multiplier))));
 }
 
 function multiplierPayout(multiplierOrValue) {
@@ -1023,10 +1043,32 @@ function renderSlots() {
   if (hasFlash) state.slotFlash = Array(SLOT_COUNT).fill(null);
 }
 
+function renderClimaxStage() {
+  if (!climaxStageEl || !climaxPrizesEl || !climaxOrbsEl) return;
+
+  const scores = climaxPrizeScores(slotTotal());
+  climaxPrizesEl.innerHTML = scores
+    .map((score, index) => `<span class="climax-prize prize-${index + 1}">${score}</span>`)
+    .join("");
+
+  climaxOrbEls.forEach((orb, index) => {
+    const value = state.slotValues[index] || 0;
+    const filled = state.filledSlots.has(index) && value > 0;
+    orb.classList.toggle("filled", filled);
+    orb.classList.toggle("empty", !filled);
+    orb.querySelector("strong").textContent = filled ? formatScore(value) : "";
+  });
+
+  if (climaxResultEl) {
+    climaxResultEl.textContent = state.climaxResult ? formatScore(state.climaxResult.award) : "";
+  }
+}
+
 function render() {
   measurePerf("render.board", renderBoard);
   measurePerf("render.slots", renderSlots);
   measurePerf("render.hud", renderHud);
+  measurePerf("render.climax", renderClimaxStage);
   scheduleBoardSizeSync();
 }
 
@@ -2442,6 +2484,36 @@ function triggerScreenFx(className, duration = 420) {
   window.setTimeout(() => phone.classList.remove(className), duration);
 }
 
+function spawnSlotClimaxEnergy(col) {
+  const phone = document.querySelector(".phone");
+  const source = slotsEl?.children[col];
+  const target = climaxOrbEls[col];
+  if (!phone || !source || !target) return;
+
+  const phoneRect = phone.getBoundingClientRect();
+  const sourceRect = source.getBoundingClientRect();
+  const targetRect = target.getBoundingClientRect();
+  const startX = sourceRect.left + sourceRect.width * 0.5 - phoneRect.left;
+  const startY = sourceRect.top + sourceRect.height * 0.5 - phoneRect.top;
+  const endX = targetRect.left + targetRect.width * 0.5 - phoneRect.left;
+  const endY = targetRect.top + targetRect.height * 0.5 - phoneRect.top;
+
+  for (let i = 0; i < 8; i += 1) {
+    const spark = document.createElement("i");
+    spark.className = "slot-climax-energy";
+    spark.style.setProperty("--sx", `${startX}px`);
+    spark.style.setProperty("--sy", `${startY}px`);
+    spark.style.setProperty("--tx", `${endX - startX}px`);
+    spark.style.setProperty("--ty", `${endY - startY}px`);
+    spark.style.setProperty("--mx", `${(endX - startX) * 0.72}px`);
+    spark.style.setProperty("--my", `${(endY - startY) * 0.72}px`);
+    spark.style.setProperty("--delay", `${i * 48}ms`);
+    spark.style.setProperty("--drift", `${(i % 2 ? 1 : -1) * (6 + i)}px`);
+    phone.appendChild(spark);
+    window.setTimeout(() => spark.remove(), 1100 + i * 48);
+  }
+}
+
 function resizeFxCanvas() {
   if (!fxCanvas) return;
   const rect = fxCanvas.getBoundingClientRect();
@@ -2707,7 +2779,7 @@ function playChord(freqs, duration, options = {}) {
 }
 
 function isSlotHypeActive() {
-  return state.filledSlots.size >= 2;
+  return isMultiplierClimaxActive();
 }
 
 function playNormalMusicBeat(beat) {
@@ -3037,6 +3109,9 @@ function renderHud() {
   const phoneEl = document.querySelector(".phone");
   phoneEl?.classList.toggle("low-balance", !hasEnoughBalanceForMove());
   phoneEl?.classList.toggle("slot-hype", isSlotHypeActive());
+  phoneEl?.classList.toggle("multiplier-climax", isMultiplierClimaxActive());
+  phoneEl?.classList.toggle("climax-ready", state.filledSlots.size >= SLOT_COUNT);
+  phoneEl?.classList.toggle("climax-spinning", state.climaxSpinning);
   if (!state.stagePreviews.length) state.stagePreviews = initialStagePreviews();
   const currentStage = currentSpecialStageIndex();
   const focusedStage = state.rollingStage && (state.miniSlotRolling || state.miniSlotWin);
@@ -3322,6 +3397,7 @@ async function presentCollectedMultipliers(collected) {
   if (collected.length === 0) return;
   setStatus(collected.map((item) => `SLOT ${item.col + 1} ${formatScore(item.payout)}`).join("  "));
   render();
+  collected.forEach((item) => spawnSlotClimaxEnergy(item.col));
   spawnParticles(collected.length * 12);
   const highCollect = Math.max(...collected.map((item) => item.value));
   playMultiplierCollectSound(highCollect);

@@ -7269,6 +7269,250 @@ button {
   -webkit-text-stroke-width: 1.2px;
 }
 
+.climax-stage {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+  border-radius: 14px;
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.99);
+  transition: opacity 220ms ease, transform 220ms ease;
+  background:
+    linear-gradient(180deg, rgba(20, 2, 14, 0.08), rgba(20, 2, 14, 0.18)),
+    url("assets/ui/climax-wheel-banner-bg.png?v=art-20260610-175149") center / 100% 100% no-repeat;
+}
+
+.phone.multiplier-climax .brand-logo {
+  opacity: 0;
+  transform: scale(0.985);
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.phone.multiplier-climax .climax-stage {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.climax-stage::after {
+  content: "";
+  position: absolute;
+  inset: 5% 4%;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 225, 118, 0.55);
+  box-shadow:
+    inset 0 0 16px rgba(255, 92, 205, 0.18),
+    inset 0 0 20px rgba(255, 210, 91, 0.14);
+  pointer-events: none;
+}
+
+.climax-prizes {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  animation: none;
+}
+
+.phone.multiplier-climax .climax-prizes {
+  animation: climax-prize-breathe 1.5s ease-in-out infinite alternate;
+}
+
+.phone.climax-spinning .climax-prizes {
+  animation: climax-prize-spin 420ms linear infinite;
+}
+
+.climax-prize {
+  position: absolute;
+  width: 58px;
+  margin-left: -29px;
+  color: #fff3a6;
+  font-size: clamp(10px, 2.75vw, 15px);
+  font-weight: 1000;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  -webkit-text-stroke: 0.9px rgba(87, 21, 20, 0.98);
+  text-shadow:
+    0 2px 0 rgba(60, 8, 24, 0.98),
+    0 0 7px rgba(255, 231, 100, 0.75),
+    0 0 10px rgba(255, 91, 205, 0.38);
+}
+
+.climax-prize.prize-1 { left: 18%; top: 45%; transform: rotate(-18deg); }
+.climax-prize.prize-2 { left: 34%; top: 33%; transform: rotate(-8deg); }
+.climax-prize.prize-3 { left: 50%; top: 29%; transform: rotate(0deg); }
+.climax-prize.prize-4 { left: 66%; top: 33%; transform: rotate(8deg); }
+.climax-prize.prize-5 { left: 82%; top: 45%; transform: rotate(18deg); }
+
+.climax-orbs {
+  position: absolute;
+  left: 50%;
+  bottom: 5.8%;
+  z-index: 5;
+  display: flex;
+  gap: clamp(5px, 1.7vw, 9px);
+  transform: translateX(-50%);
+}
+
+.climax-orb {
+  position: relative;
+  width: clamp(20px, 6.1vw, 30px);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: rgba(255, 237, 154, 0.55);
+  background:
+    radial-gradient(circle at 35% 22%, rgba(255, 255, 255, 0.2), transparent 24%),
+    linear-gradient(180deg, rgba(38, 8, 26, 0.9), rgba(7, 2, 11, 0.95));
+  border: 1px solid rgba(255, 219, 107, 0.54);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 0 7px rgba(0, 0, 0, 0.48);
+}
+
+.climax-orb.filled {
+  color: #fff8bf;
+  border-color: rgba(255, 235, 132, 0.96);
+  background:
+    radial-gradient(circle at 35% 22%, rgba(255, 255, 255, 0.58), transparent 24%),
+    radial-gradient(circle, rgba(89, 238, 255, 0.38), transparent 58%),
+    linear-gradient(180deg, rgba(52, 32, 100, 0.94), rgba(7, 4, 28, 0.96));
+  box-shadow:
+    0 0 10px rgba(91, 240, 255, 0.62),
+    0 0 13px rgba(255, 205, 78, 0.44),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+
+.climax-orb.filled::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: inherit;
+  background: conic-gradient(from 0deg, transparent 0 36deg, rgba(255, 218, 88, 0.84) 36deg 47deg, transparent 47deg 90deg);
+  opacity: 0.54;
+  animation: ray-spin 2.8s linear infinite;
+}
+
+.climax-orb strong {
+  position: relative;
+  z-index: 1;
+  max-width: 90%;
+  font-size: clamp(7px, 2vw, 10px);
+  line-height: 1;
+  white-space: nowrap;
+  -webkit-text-stroke: 0.45px rgba(55, 16, 88, 0.92);
+  text-shadow:
+    0 1px 0 rgba(29, 3, 52, 0.95),
+    0 0 5px rgba(255, 225, 94, 0.82);
+}
+
+.climax-result {
+  position: absolute;
+  left: 50%;
+  bottom: 34%;
+  z-index: 6;
+  min-width: 72px;
+  transform: translateX(-50%) scale(0.9);
+  padding: 3px 8px;
+  border-radius: 999px;
+  color: #fff8c6;
+  font-size: clamp(12px, 3.7vw, 20px);
+  font-weight: 1000;
+  line-height: 1;
+  text-align: center;
+  background: rgba(38, 6, 32, 0.86);
+  border: 1px solid rgba(255, 221, 103, 0.78);
+  box-shadow: 0 0 14px rgba(255, 88, 204, 0.48);
+  opacity: 0;
+}
+
+.phone.multiplier-climax .climax-result:not(:empty) {
+  opacity: 1;
+  animation: climax-result-pop 520ms cubic-bezier(0.16, 1.12, 0.2, 1) both;
+}
+
+.phone.multiplier-climax .slot.filled::before {
+  display: block !important;
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 44%;
+  width: 38%;
+  height: 46%;
+  transform: translateX(-50%);
+  background:
+    radial-gradient(ellipse at 50% 100%, rgba(255, 224, 84, 0.88), transparent 52%),
+    radial-gradient(ellipse at 42% 88%, rgba(255, 88, 33, 0.7), transparent 58%);
+  filter: blur(1px) drop-shadow(0 0 8px rgba(255, 96, 34, 0.64));
+  opacity: 0.82;
+  animation: climax-flame 480ms ease-in-out infinite alternate;
+}
+
+.slot-climax-energy {
+  position: absolute;
+  left: var(--sx);
+  top: var(--sy);
+  z-index: 18;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle, #fff8bc, #79f8ff 48%, rgba(72, 220, 255, 0) 72%);
+  box-shadow:
+    0 0 8px rgba(113, 244, 255, 0.9),
+    0 0 14px rgba(255, 214, 88, 0.56);
+  transform: translate(-50%, -50%);
+  animation: slot-climax-energy-fly 860ms cubic-bezier(0.16, 0.84, 0.18, 1) var(--delay, 0ms) both;
+}
+
+@keyframes climax-prize-breathe {
+  0% { filter: brightness(0.94); transform: translateY(0); }
+  100% { filter: brightness(1.12); transform: translateY(-1px); }
+}
+
+@keyframes climax-prize-spin {
+  0% { transform: translateX(-2px); filter: brightness(1); }
+  50% { transform: translateX(2px); filter: brightness(1.25); }
+  100% { transform: translateX(-2px); filter: brightness(1); }
+}
+
+@keyframes climax-result-pop {
+  0% { transform: translateX(-50%) scale(0.84); filter: brightness(1); }
+  54% { transform: translateX(-50%) scale(1.1); filter: brightness(1.35); }
+  100% { transform: translateX(-50%) scale(1); filter: brightness(1); }
+}
+
+@keyframes climax-flame {
+  0% {
+    transform: translateX(-50%) scaleY(0.86) skewX(-5deg);
+    opacity: 0.62;
+  }
+  100% {
+    transform: translateX(-50%) scaleY(1.08) skewX(5deg);
+    opacity: 0.95;
+  }
+}
+
+@keyframes slot-climax-energy-fly {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.55);
+  }
+  18% {
+    opacity: 1;
+  }
+  72% {
+    opacity: 1;
+    transform: translate(calc(-50% + var(--mx) + var(--drift)), calc(-50% + var(--my))) scale(1.08);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(0.5);
+  }
+}
+
 /* Final override: bottom controls live inside the cabinet slot art. */
 .hud {
   position: absolute !important;
