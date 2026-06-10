@@ -198,6 +198,8 @@ const winMultiplierEl = document.getElementById("winMultiplier");
 const winAmountEl = document.getElementById("winAmount");
 const climaxStageEl = document.getElementById("climaxStage");
 const climaxWheelRotorEl = document.getElementById("climaxWheelRotor");
+const climaxWheelLabelsEl = document.getElementById("climaxWheelLabels");
+const climaxWheelHighlightEl = document.getElementById("climaxWheelHighlight");
 
 const state = {
   board: [],
@@ -1037,6 +1039,20 @@ function renderClimaxStage() {
   climaxStageEl.setAttribute("aria-hidden", String(!active));
   if (climaxWheelRotorEl) {
     climaxWheelRotorEl.style.setProperty("--wheel-rotation", `${state.climaxWheelRotation || 0}deg`);
+  }
+  if (climaxWheelLabelsEl && !climaxWheelLabelsEl.childElementCount) {
+    const sliceAngle = 360 / FULL_DROP_WHEEL_PRIZES.length;
+    climaxWheelLabelsEl.innerHTML = FULL_DROP_WHEEL_PRIZES.map((prize, index) => {
+      const angle = index * sliceAngle + sliceAngle * 0.5;
+      const digits = prize.label.replace(/[^0-9]/g, "").length;
+      return `<span class="climax-wheel-label score-length-${Math.min(4, digits)}" style="--angle:${angle}deg">${prize.label}</span>`;
+    }).join("");
+  }
+  if (climaxWheelHighlightEl) {
+    const sliceAngle = 360 / FULL_DROP_WHEEL_PRIZES.length;
+    const normalized = ((state.climaxWheelRotation % 360) + 360) % 360;
+    const index = Math.round((360 - normalized) / sliceAngle) % FULL_DROP_WHEEL_PRIZES.length;
+    climaxWheelHighlightEl.style.setProperty("--highlight-angle", `${index * sliceAngle + sliceAngle * 0.5}deg`);
   }
 }
 
@@ -2274,6 +2290,8 @@ async function playFullDropWheel() {
   let spinElapsed = 0;
   const spinTimer = window.setInterval(() => {
     spinElapsed += 180;
+    state.climaxWheelRotation += sliceAngle;
+    renderClimaxStage();
     playSound("wheelSpin");
     if (spinElapsed >= FULL_DROP_WHEEL_SPIN_MS) window.clearInterval(spinTimer);
   }, 180);
