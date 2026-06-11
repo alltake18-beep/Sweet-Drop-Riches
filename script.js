@@ -34,7 +34,7 @@ const AUDIO_CATEGORY_GAINS = {
   voice: 0.72,
   error: 0.62,
 };
-const AUDIO_ASSET_VERSION = "casino-audio-pack-20260611-lightning-charge-2s";
+const AUDIO_ASSET_VERSION = "casino-audio-pack-20260611-lightning-charge-1s";
 const AUDIO_ASSETS = {
   bgmNormal: "assets/audio/bgm-normal.wav",
   button: "assets/audio/button.wav",
@@ -204,7 +204,7 @@ const FULL_DROP_WHEEL_FALLBACK_POINTER_Y = 7.5;
 const CLIMAX_IDLE_SLICE_MS = 1000;
 const CLIMAX_INTRO_PUSH_DELAY_MS = 650;
 const CLIMAX_INTRO_WHEEL_RISE_MS = 2000;
-const CLIMAX_LIGHTNING_DURATION_MS = 2000;
+const CLIMAX_LIGHTNING_DURATION_MS = 1000;
 const CLIMAX_CHARGE_TARGETS = [
   { x: 42, y: 12.5, d: 7 },
   { x: 50, y: 12.5, d: 7 },
