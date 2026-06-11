@@ -6351,7 +6351,24 @@ function applyPerformanceMode() {
   phoneShellEl?.classList.toggle("ios-performance", IOS_PERFORMANCE_MODE);
 }
 
+function preventImageSelection() {
+  document.querySelectorAll(".phone img").forEach((img) => {
+    img.draggable = false;
+  });
+  document.addEventListener("dragstart", (event) => {
+    if (event.target instanceof HTMLImageElement && event.target.closest(".phone")) {
+      event.preventDefault();
+    }
+  });
+  document.addEventListener("selectstart", (event) => {
+    if (event.target instanceof Element && event.target.closest(".phone")) {
+      event.preventDefault();
+    }
+  });
+}
+
 applyPerformanceMode();
+preventImageSelection();
 preloadSymbolAssets();
 initPerfMonitor();
 initClimaxTunePanel();
