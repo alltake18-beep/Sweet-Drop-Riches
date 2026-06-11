@@ -768,6 +768,18 @@ function initialStagePreviews() {
   return SPECIAL_METER_THRESHOLDS.map((_, index) => randomBoardEvent(index + 1));
 }
 
+function stagePreviewLabel(preview) {
+  if (preview?.previewLabel) return preview.previewLabel;
+  if (preview?.kind === "multiplier") return multiplierDisplay(preview);
+  return "";
+}
+
+function stagePreviewDigitCount(label) {
+  const digits = String(label || "").replace(/\D/g, "").length;
+  if (!digits) return "";
+  return String(Math.min(6, Math.max(3, digits)));
+}
+
 function randomBoardEvent(stageIndex = currentSpecialStageIndex()) {
   if (state.boardRescueLevel >= 2 && hasTwoByTwoMultiplier() && Math.random() < RESCUE_FLAME_WEIGHT) {
     return { kind: "flame" };
@@ -4789,7 +4801,10 @@ function renderHud() {
     slot.classList.toggle("win", state.miniSlotWin && state.rollingStage === stage);
     slot.classList.toggle("dimmed", Boolean(focusedStage && state.rollingStage !== stage));
     slot.classList.toggle("multiplier-preview", preview.kind === "multiplier");
-    slot.dataset.value = preview.kind === "multiplier" ? multiplierDisplay(preview) : "";
+    slot.classList.toggle("flame-preview", preview.kind === "flame");
+    const previewLabel = preview.kind === "multiplier" ? stagePreviewLabel(preview) : "";
+    slot.dataset.value = previewLabel;
+    slot.dataset.digits = stagePreviewDigitCount(previewLabel);
   });
   state.miniSlotPreview = state.stagePreviews[0] || state.miniSlotPreview;
   miniSlotIconEl.src = eventPreviewAsset(state.miniSlotPreview);
@@ -6368,45 +6383,6 @@ function initBoardTunePanel() {
   const controls = [
     { label: "一般糖尺寸", name: "--normal-candy-size", min: 40, max: 500, step: 1, value: 90, unit: "%" },
     { label: "特殊糖尺寸", name: "--special-candy-size", min: 40, max: 500, step: 1, value: 116, unit: "%" },
-    { label: "盤面圓角", name: "--play-board-radius", min: 0, max: 80, step: 1, value: 14, unit: "px" },
-    { label: "底排 X", name: "--hud-x", min: -50, max: 50, step: 0.1, value: 0.3, unit: "%" },
-    { label: "底排 Y", name: "--hud-y", min: -50, max: 50, step: 0.1, value: -0.2, unit: "%" },
-    { label: "底排寬", name: "--hud-width", min: 20, max: 180, step: 0.1, value: 85.4, unit: "%" },
-    { label: "底排高", name: "--hud-height", min: 1, max: 20, step: 0.1, value: 3.6, unit: "%" },
-    { label: "底排間距", name: "--hud-gap", min: 0, max: 50, step: 0.1, value: 7.75, unit: "%" },
-    { label: "底排透視", name: "--hud-perspective", min: 80, max: 1200, step: 1, value: 430, unit: "px" },
-    { label: "底排仰角", name: "--hud-rotate-x", min: -45, max: 45, step: 1, value: 25, unit: "deg" },
-    { label: "餘額 X", name: "--balance-x", min: -100, max: 100, step: 0.5, value: 1, unit: "%" },
-    { label: "餘額 Y", name: "--balance-y", min: -100, max: 100, step: 0.5, value: -4, unit: "%" },
-    { label: "餘額角度", name: "--balance-angle", min: -45, max: 45, step: 1, value: 0, unit: "deg" },
-    { label: "餘額大小", name: "--balance-size", min: 40, max: 300, step: 1, value: 95, unit: "%" },
-    { label: "餘額標題字", name: "--balance-label-size", min: 40, max: 300, step: 1, value: 100, unit: "%" },
-    { label: "餘額數字字", name: "--balance-number-size", min: 40, max: 300, step: 1, value: 100, unit: "%" },
-    { label: "餘額厚度", name: "--balance-depth", min: 0, max: 200, step: 1, value: 0, unit: "%" },
-    { label: "餘額疊層", name: "--balance-stack", min: 0, max: 8, step: 1, value: 0, unit: "px" },
-    { label: "下注 X", name: "--bet-x", min: -100, max: 100, step: 0.5, value: 0, unit: "%" },
-    { label: "下注 Y", name: "--bet-y", min: -100, max: 100, step: 0.5, value: -4, unit: "%" },
-    { label: "下注角度", name: "--bet-angle", min: -45, max: 45, step: 1, value: 0, unit: "deg" },
-    { label: "下注大小", name: "--bet-size", min: 40, max: 300, step: 1, value: 101, unit: "%" },
-    { label: "下注文字", name: "--bet-text-size", min: 40, max: 300, step: 1, value: 100, unit: "%" },
-    { label: "下注箭頭", name: "--bet-arrow-size", min: 40, max: 300, step: 1, value: 100, unit: "%" },
-    { label: "下注厚度", name: "--bet-depth", min: 0, max: 200, step: 1, value: 100, unit: "%" },
-    { label: "下注疊層", name: "--bet-stack", min: 0, max: 8, step: 1, value: 0, unit: "px" },
-    { label: "閃電 X", name: "--fast-icon-x", min: -100, max: 100, step: 0.5, value: -4, unit: "%" },
-    { label: "閃電 Y", name: "--fast-icon-y", min: -100, max: 100, step: 0.5, value: 0, unit: "%" },
-    { label: "閃電角度", name: "--fast-icon-angle", min: -90, max: 90, step: 1, value: 5, unit: "deg" },
-    { label: "閃電大小", name: "--fast-icon-size", min: 40, max: 300, step: 1, value: 65, unit: "%" },
-    { label: "閃電斜切", name: "--fast-icon-skew", min: -45, max: 45, step: 1, value: 0, unit: "deg" },
-    { label: "閃電厚度", name: "--fast-icon-depth", min: 0, max: 200, step: 1, value: 100, unit: "%" },
-    { label: "閃電疊層", name: "--fast-icon-stack", min: 0, max: 12, step: 1, value: 0, unit: "px" },
-    { label: "選單 X", name: "--menu-icon-x", min: -100, max: 100, step: 0.5, value: 3.5, unit: "%" },
-    { label: "選單 Y", name: "--menu-icon-y", min: -100, max: 100, step: 0.5, value: -3, unit: "%" },
-    { label: "選單角度", name: "--menu-icon-angle", min: -90, max: 90, step: 1, value: 0, unit: "deg" },
-    { label: "選單大小", name: "--menu-icon-size", min: 40, max: 300, step: 1, value: 74, unit: "%" },
-    { label: "選單斜切", name: "--menu-icon-skew", min: -45, max: 45, step: 1, value: 0, unit: "deg" },
-    { label: "選單線厚", name: "--menu-icon-bar", min: 8, max: 80, step: 1, value: 23, unit: "%" },
-    { label: "選單厚度", name: "--menu-icon-depth", min: 0, max: 200, step: 1, value: 0, unit: "%" },
-    { label: "選單疊層", name: "--menu-icon-stack", min: 0, max: 12, step: 1, value: 0, unit: "px" },
   ];
 
   const panel = document.createElement("div");
@@ -6423,9 +6399,10 @@ function initBoardTunePanel() {
   const controlsEl = panel.querySelector(".board-tune-controls");
   const outputEl = panel.querySelector(".board-tune-output");
   let panelDrag = null;
+  const outputControls = [];
 
   function outputText() {
-    const lines = controls.map(({ name }) => `  ${name}: ${phoneShellEl.style.getPropertyValue(name)};`);
+    const lines = outputControls.map(({ name }) => `  ${name}: ${phoneShellEl.style.getPropertyValue(name)};`);
     return `.phone {\n${lines.join("\n")}\n}`;
   }
 
@@ -6434,13 +6411,15 @@ function initBoardTunePanel() {
     const tileRect = boardEl.querySelector(".tile")?.getBoundingClientRect();
     const imgRect = boardEl.querySelector(".tile.candy .candy-img")?.getBoundingClientRect();
     const specialRect = boardEl.querySelector(".tile.special-candy .special-img")?.getBoundingClientRect();
+    const socketRect = document.querySelector(".event-socket")?.getBoundingClientRect();
     readoutEl.textContent = tileRect
-      ? `board ${Math.round(boardRect.width)} x ${Math.round(boardRect.height)} / tile ${Math.round(tileRect.width)} x ${Math.round(tileRect.height)}${imgRect ? ` / normal ${Math.round(imgRect.width)} x ${Math.round(imgRect.height)}` : ""}${specialRect ? ` / special ${Math.round(specialRect.width)} x ${Math.round(specialRect.height)}` : ""}`
+      ? `盤面 ${Math.round(boardRect.width)} x ${Math.round(boardRect.height)} / 格 ${Math.round(tileRect.width)} x ${Math.round(tileRect.height)}${imgRect ? ` / 一般 ${Math.round(imgRect.width)} x ${Math.round(imgRect.height)}` : ""}${specialRect ? ` / 特殊 ${Math.round(specialRect.width)} x ${Math.round(specialRect.height)}` : ""}${socketRect ? ` / 上槽 ${Math.round(socketRect.width)} x ${Math.round(socketRect.height)}` : ""}`
       : `board ${Math.round(boardRect.width)} x ${Math.round(boardRect.height)}`;
     outputEl.value = outputText();
   }
 
-  controls.forEach((control) => {
+  function addTuneControl(control, parent = controlsEl) {
+    outputControls.push(control);
     const row = document.createElement("div");
     row.className = "board-tune-row";
     row.innerHTML = `
@@ -6475,8 +6454,11 @@ function initBoardTunePanel() {
       });
     });
     setValue(control.value);
-    controlsEl.appendChild(row);
-  });
+    parent.appendChild(row);
+    return { row, input, setValue, control };
+  }
+
+  controls.forEach((control) => addTuneControl(control));
 
   const movePanel = (clientX, clientY) => {
     if (!panelDrag) return;
