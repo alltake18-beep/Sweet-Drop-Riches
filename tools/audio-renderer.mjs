@@ -124,6 +124,54 @@ function coinSpray(buf, start, opts = {}) {
   }
 }
 
+function fireCrackle(buf, start, dur, opts = {}) {
+  const count = opts.count || 18;
+  for (let i = 0; i < count; i += 1) {
+    const t = start + Math.random() * dur;
+    addNoise(buf, t, 0.028 + Math.random() * 0.04, {
+      vol: (opts.vol || 0.035) * (0.55 + Math.random() * 0.5),
+      color: Math.random() > 0.35 ? "high" : "raw",
+      attack: 0.006,
+      release: 0.045,
+      pan: -0.55 + Math.random() * 1.1,
+    });
+    if (i % 4 === 0) {
+      addTone(buf, t, 0.075, hz("F", 2) * (0.8 + Math.random() * 0.55), {
+        vol: (opts.vol || 0.035) * 0.38,
+        type: "triangle",
+        attack: 0.012,
+        release: 0.055,
+        pan: -0.3 + Math.random() * 0.6,
+      });
+    }
+  }
+}
+
+function metalGroan(buf, start, dur, opts = {}) {
+  addTone(buf, start, dur, opts.root || hz("Bb", 1), {
+    to: opts.to || hz("Db", 2),
+    vol: opts.vol || 0.13,
+    type: "saw",
+    attack: 0.08,
+    release: 0.35,
+    vibrato: 0.004,
+  });
+  addTone(buf, start + 0.08, dur * 0.72, hz("F", 2), {
+    to: hz("Ab", 2),
+    vol: (opts.vol || 0.13) * 0.42,
+    type: "triangle",
+    attack: 0.08,
+    release: 0.24,
+    pan: -0.18,
+  });
+  addNoise(buf, start + 0.05, dur * 0.78, {
+    vol: (opts.vol || 0.13) * 0.18,
+    color: "low",
+    attack: 0.08,
+    release: 0.32,
+  });
+}
+
 function voiceBark(buf, start, syllables, opts = {}) {
   const base = opts.base || hz("Bb", 2);
   const vol = opts.vol || 0.12;
@@ -139,7 +187,7 @@ function voiceBark(buf, start, syllables, opts = {}) {
   };
   syllables.forEach((syllable, index) => {
     const t = start + index * spacing;
-    const dur = syllable.length > 4 ? 0.18 : 0.14;
+    const dur = opts.durations?.[index] || (syllable.length > 4 ? 0.2 : 0.15);
     const pitch = base * 2 ** (index * 0.9 / 12);
     addNoise(buf, t, 0.035, { vol: vol * 0.38, color: "high", attack: 0.001, release: 0.025, pan: -0.12 });
     addTone(buf, t, dur, pitch, { to: pitch * 0.92, vol: vol * 0.52, type: "saw", attack: 0.006, release: 0.08, pan: -0.05, vibrato: 0.006 });
@@ -206,9 +254,9 @@ function writeWav(name, buf, peak = 0.92) {
 }
 
 function makeBgm() {
-  const bpm = 128;
+  const bpm = 112;
   const beat = 60 / bpm;
-  const bars = 16;
+  const bars = 12;
   const buf = make(bars * 4 * beat);
   const chords = [
     ["Bb", 3, ["Bb", "Db", "F", "Ab", "C"]],
@@ -223,23 +271,23 @@ function makeBgm() {
     const chord = chords[bar % chords.length];
     for (let e = 0; e < 8; e += 1) {
       const t = base + e * beat * 0.5 + (e % 2 ? beat * 0.08 : 0);
-      if ([0, 3, 5].includes(e)) hit(buf, t, { root: hz("Bb", 1), size: e === 0 ? 0.45 : 0.28 });
+      if ([0, 5].includes(e)) hit(buf, t, { root: hz("Bb", 1), size: e === 0 ? 0.34 : 0.2 });
       if ([2, 6].includes(e)) {
-        addNoise(buf, t, 0.09, { vol: 0.09, color: "high" });
-        addTone(buf, t, 0.06, 180, { to: 130, vol: 0.065, type: "triangle" });
+        addNoise(buf, t, 0.08, { vol: 0.052, color: "high" });
+        addTone(buf, t, 0.06, 180, { to: 130, vol: 0.042, type: "triangle" });
       }
-      addNoise(buf, t, e % 2 ? 0.04 : 0.024, { vol: e % 2 ? 0.025 : 0.016, color: "high", pan: e % 2 ? 0.22 : -0.18 });
-      if ([0, 2, 3, 5, 7].includes(e)) {
+      addNoise(buf, t, e % 2 ? 0.04 : 0.024, { vol: e % 2 ? 0.017 : 0.01, color: "high", pan: e % 2 ? 0.22 : -0.18 });
+      if ([0, 2, 5, 7].includes(e)) {
         const n = bassNotes[(bar + e) % bassNotes.length];
-        addTone(buf, t, e === 0 ? 0.22 : 0.13, hz(n, 1), { vol: e === 0 ? 0.19 : 0.13, type: "saw", release: 0.08 });
+        addTone(buf, t, e === 0 ? 0.24 : 0.14, hz(n, 1), { vol: e === 0 ? 0.16 : 0.1, type: "saw", release: 0.1 });
         addTone(buf, t + 0.01, 0.08, hz(n, 2), { vol: 0.035, type: "triangle" });
       }
       if ([1, 3, 5, 7].includes(e)) {
         const note = chord[2][(e + bar) % chord[2].length];
-        addTone(buf, t, 0.075, hz(note, 4), { vol: 0.04, type: "saw", pan: 0.3, release: 0.045 });
+        addTone(buf, t, 0.075, hz(note, 4), { vol: 0.026, type: "saw", pan: 0.3, release: 0.045 });
       }
-      if ((bar % 4 === 0 || bar % 4 === 3) && [1, 2, 4, 6].includes(e)) {
-        addTone(buf, t + 0.01, 0.16, hook[(bar + e) % hook.length], { vol: 0.055, type: "rhodes", pan: -0.18, vibrato: 0.002, release: 0.08 });
+      if ((bar % 4 === 0 || bar % 4 === 3) && [2, 6].includes(e)) {
+        addTone(buf, t + 0.01, 0.18, hook[(bar + e) % hook.length], { vol: 0.044, type: "rhodes", pan: -0.18, vibrato: 0.002, release: 0.1 });
       }
     }
     if (bar % 2 === 0 || bar % 2 === 1) {
@@ -258,29 +306,29 @@ function makeOneShots() {
     "swap.wav": () => { const b = make(0.2); addTone(b, 0, 0.07, hz("Db", 4), { to: hz("F", 4), vol: 0.12, type: "saw" }); addNoise(b, 0.025, 0.04, { vol: 0.035, color: "high" }); return b; },
     "drop.wav": () => { const b = make(0.26); hit(b, 0.02, { root: hz("F", 2), size: 0.45 }); addNoise(b, 0.04, 0.08, { vol: 0.035, color: "low" }); return b; },
     "error.wav": () => { const b = make(0.22); addTone(b, 0, 0.11, hz("F", 2), { to: hz("Db", 2), vol: 0.16, type: "saw" }); return b; },
-    "match.wav": () => { const b = make(0.42); hit(b, 0, { root: hz("Bb", 2), size: 0.6 }); shine(b, 0.045, { count: 4, vol: 0.07 }); return b; },
-    "cascade.wav": () => { const b = make(0.46); hit(b, 0, { root: hz("Db", 2), size: 0.7 }); shine(b, 0.045, { base: hz("Ab", 5), count: 5, vol: 0.075 }); return b; },
+    "match.wav": () => { const b = make(0.38); hit(b, 0, { root: hz("Bb", 2), size: 0.42 }); shine(b, 0.045, { count: 3, vol: 0.045 }); return b; },
+    "cascade.wav": () => { const b = make(0.42); hit(b, 0, { root: hz("Db", 2), size: 0.5 }); shine(b, 0.045, { base: hz("Ab", 5), count: 4, vol: 0.048 }); return b; },
     "meter-gain.wav": () => { const b = make(0.38); riser(b, 0, 0.16, hz("Db", 4), hz("Ab", 5), { vol: 0.07, type: "triangle" }); shine(b, 0.12, { count: 3, vol: 0.06 }); return b; },
     "meter-ready.wav": () => { const b = make(0.72); riser(b, 0, 0.32, hz("Bb", 3), hz("F", 6), { vol: 0.12 }); hit(b, 0.28, { size: 0.85 }); shine(b, 0.34, { count: 6, vol: 0.07 }); return b; },
     "event-roll-start.wav": () => { const b = make(0.74); hit(b, 0, { size: 0.8 }); riser(b, 0.05, 0.34, hz("Bb", 2), hz("Db", 5), { vol: 0.11 }); shine(b, 0.26, { count: 3, vol: 0.05 }); return b; },
     "event-roll-tick.wav": () => { const b = make(0.13); addTone(b, 0, 0.04, hz("Db", 5), { vol: 0.12, type: "square" }); addNoise(b, 0.005, 0.025, { vol: 0.035, color: "high" }); return b; },
     "event-roll-lock.wav": () => { const b = make(0.48); hit(b, 0, { size: 0.9 }); shine(b, 0.11, { count: 4, vol: 0.06 }); return b; },
-    "flame-scan.wav": () => { const b = make(0.5); riser(b, 0, 0.28, hz("F", 2), hz("Bb", 4), { vol: 0.12 }); addNoise(b, 0.06, 0.32, { vol: 0.065, color: "high" }); return b; },
-    "flame-burn.wav": () => { const b = make(0.9); rumble(b, 0, 0.65, { vol: 0.22 }); riser(b, 0, 0.3, hz("Bb", 1), hz("F", 5), { vol: 0.13 }); hit(b, 0.24, { root: hz("F", 1), size: 1.25 }); addNoise(b, 0.1, 0.52, { vol: 0.12, color: "high" }); return b; },
-    "flame-resist.wav": () => { const b = make(0.36); hit(b, 0, { root: hz("Ab", 1), size: 0.55 }); addNoise(b, 0.04, 0.16, { vol: 0.06, color: "high" }); return b; },
+    "flame-scan.wav": () => { const b = make(0.62); addNoise(b, 0, 0.34, { vol: 0.038, color: "low", attack: 0.02, release: 0.18 }); riser(b, 0.05, 0.28, hz("F", 2), hz("Bb", 3), { vol: 0.052, type: "triangle" }); fireCrackle(b, 0.08, 0.42, { count: 10, vol: 0.028 }); return b; },
+    "flame-burn.wav": () => { const b = make(1.05); rumble(b, 0, 0.82, { vol: 0.13 }); fireCrackle(b, 0.05, 0.82, { count: 30, vol: 0.032 }); addNoise(b, 0.16, 0.62, { vol: 0.042, color: "low", attack: 0.035, release: 0.25 }); hit(b, 0.34, { root: hz("F", 1), size: 0.68 }); shine(b, 0.48, { base: hz("Bb", 4), count: 3, vol: 0.028, spacing: 0.075 }); return b; },
+    "flame-resist.wav": () => { const b = make(0.42); hit(b, 0, { root: hz("Ab", 1), size: 0.42 }); fireCrackle(b, 0.04, 0.22, { count: 8, vol: 0.024 }); return b; },
     "multiplier-collect.wav": () => { const b = make(0.55); riser(b, 0, 0.18, hz("Bb", 3), hz("Db", 5), { vol: 0.08 }); coinSpray(b, 0.12, { count: 5, vol: 0.08 }); hit(b, 0.2, { size: 0.65 }); return b; },
     "multiplier-high.wav": () => { const b = make(0.72); riser(b, 0, 0.28, hz("Bb", 2), hz("F", 6), { vol: 0.11 }); hit(b, 0.22, { size: 0.82 }); coinSpray(b, 0.28, { count: 8, vol: 0.09 }); return b; },
     "slot-full.wav": () => { const b = make(0.9); rumble(b, 0, 0.6, { vol: 0.16 }); hit(b, 0.1, { size: 1 }); riser(b, 0.16, 0.46, hz("Bb", 2), hz("F", 5), { vol: 0.1 }); shine(b, 0.48, { count: 6, vol: 0.08 }); return b; },
-    "climax-intro.wav": () => { const b = make(1.45); rumble(b, 0, 1.25, { vol: 0.18 }); hit(b, 0.46, { size: 1.05 }); riser(b, 0.72, 0.45, hz("Bb", 1), hz("Db", 4), { vol: 0.11 }); return b; },
-    "climax-lift.wav": () => { const b = make(1.45); rumble(b, 0, 1.0, { vol: 0.15 }); riser(b, 0, 1.0, hz("F", 1), hz("Bb", 3), { vol: 0.12 }); hit(b, 1.02, { size: 1.1 }); shine(b, 1.08, { count: 5, vol: 0.06 }); return b; },
+    "climax-intro.wav": () => { const b = make(3.05); addTone(b, 0.08, 0.16, hz("F", 4), { to: hz("Ab", 4), vol: 0.07, type: "triangle", pan: -0.35 }); hit(b, 0.22, { root: hz("Bb", 2), size: 0.32, pan: -0.25 }); addTone(b, 0.72, 0.18, hz("Ab", 4), { to: hz("Db", 5), vol: 0.075, type: "triangle", pan: 0.35 }); hit(b, 0.9, { root: hz("Db", 2), size: 0.36, pan: 0.25 }); rumble(b, 1.25, 1.05, { vol: 0.095 }); riser(b, 1.48, 1.05, hz("Bb", 2), hz("F", 5), { vol: 0.08, type: "saw" }); hit(b, 2.52, { root: hz("F", 1), size: 0.62 }); shine(b, 2.58, { count: 4, vol: 0.048 }); return b; },
+    "climax-lift.wav": () => { const b = make(3.05); metalGroan(b, 0, 2.45, { vol: 0.14, root: hz("F", 1), to: hz("Bb", 1) }); addNoise(b, 0.12, 2.2, { vol: 0.035, color: "low", attack: 0.14, release: 0.5 }); addTone(b, 0.42, 1.6, hz("Bb", 0), { to: hz("F", 1), vol: 0.09, type: "sine", attack: 0.2, release: 0.42 }); hit(b, 2.46, { root: hz("Bb", 1), size: 0.72 }); shine(b, 2.56, { count: 4, vol: 0.04 }); return b; },
     "logo-return.wav": () => { const b = make(0.42); hit(b, 0, { size: 0.55 }); shine(b, 0.08, { count: 3, vol: 0.04 }); return b; },
-    "wheel-start.wav": () => { const b = make(1.0); rumble(b, 0, 0.9, { vol: 0.18 }); riser(b, 0.08, 0.58, hz("F", 2), hz("Db", 5), { vol: 0.1 }); hit(b, 0.55, { size: 1 }); return b; },
+    "wheel-start.wav": () => { const b = make(3.05); metalGroan(b, 0, 2.55, { vol: 0.15, root: hz("F", 1), to: hz("Bb", 1) }); addNoise(b, 0.18, 2.1, { vol: 0.032, color: "low", attack: 0.18, release: 0.55 }); addTone(b, 0.4, 1.5, hz("Bb", 0), { to: hz("F", 1), vol: 0.08, type: "sine", attack: 0.22, release: 0.44 }); hit(b, 2.52, { root: hz("Bb", 1), size: 0.78 }); return b; },
     "wheel-tick.wav": () => { const b = make(0.11); addTone(b, 0, 0.032, hz("Bb", 4), { vol: 0.12, type: "square" }); addNoise(b, 0.005, 0.02, { vol: 0.03, color: "high" }); return b; },
     "wheel-stop.wav": () => { const b = make(0.7); hit(b, 0, { size: 1.1 }); shine(b, 0.12, { count: 4, vol: 0.06 }); return b; },
     "wheel-high-stop.wav": () => { const b = make(0.95); hit(b, 0, { size: 1.35 }); riser(b, 0.05, 0.3, hz("Bb", 2), hz("F", 6), { vol: 0.12 }); shine(b, 0.2, { count: 8, vol: 0.08 }); coinSpray(b, 0.32, { count: 8, vol: 0.07 }); return b; },
-    "win-big.wav": () => { const b = make(1.05); hit(b, 0, { size: 1.15 }); riser(b, 0.02, 0.34, hz("Bb", 2), hz("Db", 6), { vol: 0.12 }); voiceBark(b, 0.16, ["big", "win"], { vol: 0.13, base: hz("Bb", 2) }); coinSpray(b, 0.34, { count: 10, vol: 0.09 }); return b; },
-    "win-super.wav": () => { const b = make(1.25); hit(b, 0, { size: 1.3 }); riser(b, 0.02, 0.42, hz("Bb", 2), hz("F", 6), { vol: 0.14 }); voiceBark(b, 0.14, ["mega", "win"], { vol: 0.145, base: hz("Db", 2), spacing: 0.22 }); coinSpray(b, 0.34, { count: 16, vol: 0.1 }); shine(b, 0.56, { count: 7, vol: 0.08 }); return b; },
-    "win-jackpot.wav": () => { const b = make(1.5); hit(b, 0, { size: 1.5 }); riser(b, 0.0, 0.5, hz("F", 2), hz("F", 6), { vol: 0.16 }); voiceBark(b, 0.12, ["epic", "win"], { vol: 0.16, base: hz("F", 2), spacing: 0.24 }); coinSpray(b, 0.32, { count: 24, vol: 0.11, spacing: 0.032 }); shine(b, 0.66, { count: 8, vol: 0.09 }); return b; },
+    "win-big.wav": () => { const b = make(1.55); hit(b, 0, { size: 1.05 }); riser(b, 0.02, 0.42, hz("Bb", 2), hz("Db", 6), { vol: 0.1 }); voiceBark(b, 0.12, ["big", "win"], { vol: 0.14, base: hz("Bb", 2), spacing: 0.42, durations: [0.38, 0.2] }); coinSpray(b, 0.52, { count: 18, vol: 0.085, spacing: 0.035 }); shine(b, 0.76, { count: 5, vol: 0.055 }); return b; },
+    "win-super.wav": () => { const b = make(1.7); hit(b, 0, { size: 1.18 }); riser(b, 0.02, 0.48, hz("Bb", 2), hz("F", 6), { vol: 0.12 }); voiceBark(b, 0.1, ["mega", "win"], { vol: 0.155, base: hz("Db", 2), spacing: 0.46, durations: [0.42, 0.22] }); coinSpray(b, 0.58, { count: 24, vol: 0.095, spacing: 0.032 }); shine(b, 0.86, { count: 7, vol: 0.07 }); return b; },
+    "win-jackpot.wav": () => { const b = make(1.9); hit(b, 0, { size: 1.35 }); riser(b, 0.0, 0.58, hz("F", 2), hz("F", 6), { vol: 0.135 }); voiceBark(b, 0.1, ["epic", "win"], { vol: 0.17, base: hz("F", 2), spacing: 0.5, durations: [0.46, 0.24] }); coinSpray(b, 0.62, { count: 34, vol: 0.105, spacing: 0.028 }); shine(b, 0.94, { count: 9, vol: 0.08 }); return b; },
     "payout-loop.wav": () => { const b = make(1.2); coinSpray(b, 0, { count: 26, vol: 0.07, spacing: 0.043 }); addTone(b, 0, 1.2, hz("Bb", 2), { to: hz("F", 2), vol: 0.06, type: "sine", attack: 0.02, release: 0.2 }); return b; },
     "payout-snap.wav": () => { const b = make(0.55); hit(b, 0, { size: 1.25 }); coinSpray(b, 0.04, { count: 8, vol: 0.09, spacing: 0.026 }); shine(b, 0.14, { count: 5, vol: 0.06 }); return b; },
     "near-miss.wav": () => { const b = make(0.9); riser(b, 0, 0.52, hz("Bb", 1), hz("F", 3), { vol: 0.055, type: "saw" }); addTone(b, 0.12, 0.15, hz("Bb", 1), { to: hz("Ab", 1), vol: 0.08, type: "sine" }); addNoise(b, 0.2, 0.18, { vol: 0.028, color: "low" }); addTone(b, 0.52, 0.08, hz("Db", 4), { vol: 0.055, type: "triangle" }); return b; },

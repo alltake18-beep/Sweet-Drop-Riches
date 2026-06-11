@@ -21,7 +21,7 @@ const AUDIO_MUSIC_DUCK_RELEASE = 0.42;
 const AUDIO_CATEGORY_GAINS = {
   button: 0.68,
   movement: 0.68,
-  match: 1.08,
+  match: 0.86,
   meter: 1.16,
   eventRoll: 1.24,
   coin: 1.18,
@@ -34,7 +34,7 @@ const AUDIO_CATEGORY_GAINS = {
   voice: 0.72,
   error: 0.62,
 };
-const AUDIO_ASSET_VERSION = "casino-audio-pack-20260611-asset-bus";
+const AUDIO_ASSET_VERSION = "casino-audio-pack-20260611-stage-audio-retune";
 const AUDIO_ASSETS = {
   bgmNormal: "assets/audio/bgm-normal.wav",
   button: "assets/audio/button.wav",
@@ -73,7 +73,7 @@ const AUDIO_ASSETS = {
 const AUDIO_ASSET_CATEGORY_GAINS = {
   button: 0.14,
   movement: 0.16,
-  match: 0.42,
+  match: 0.27,
   meter: 0.5,
   eventRoll: 0.58,
   coin: 0.5,
@@ -86,7 +86,7 @@ const AUDIO_ASSET_CATEGORY_GAINS = {
   voice: 0.54,
   error: 0.18,
 };
-const MUSIC_BPM = 128;
+const MUSIC_BPM = 112;
 const MUSIC_STEP_MS = 60000 / MUSIC_BPM / 2;
 const MUSIC_SWING = 0.62;
 const MUSIC_LOOP_STEPS = 128;
@@ -1336,7 +1336,7 @@ function startClimaxIdleSpin() {
     if (climaxWheelHighlightEl) {
       const index = Math.floor(normalizeAngle(pointerAngle - state.climaxWheelRotation) / sliceAngle) % FULL_DROP_WHEEL_LABEL_ORDER.length;
       climaxWheelHighlightEl.style.setProperty("--highlight-angle", `${index * sliceAngle + sliceAngle * 0.5}deg`);
-      if (state.climaxIntroPhase === "wheel" && index !== state.climaxIdleLastTickIndex) {
+      if (state.climaxIntroPhase !== "wheel" && index !== state.climaxIdleLastTickIndex) {
         playSound("wheelSpin");
       }
       state.climaxIdleLastTickIndex = index;
@@ -2727,7 +2727,7 @@ async function playFullDropWheel() {
   const finalRotation = wheelRotationDeltaToLand(landingAngle, climaxPointerAngle(), spinProfile.turns);
   slotTotals.forEach((value, index) => spawnSlotClimaxEnergy(index, value, 12 + index * 85));
   playWheelStartPerformance();
-  await wait(980);
+  await wait(3000);
 
   state.climaxSpinning = true;
   render();
@@ -4839,14 +4839,14 @@ async function presentCollectedMultipliers(collected) {
 }
 
 async function playClimaxIntroSequence() {
-  duckBackgroundMusic(4300, BGM_DUCK_DEEP);
+  duckBackgroundMusic(6600, BGM_DUCK_DEEP);
   playClimaxIntroPerformance("logo");
-  await wait(1800);
+  await wait(3000);
 
   state.climaxIntroPhase = "wheel";
   render();
   playClimaxIntroPerformance("lift");
-  await wait(1800);
+  await wait(3000);
 
   state.climaxIntroPhase = null;
   render();
