@@ -213,12 +213,26 @@ const CLIMAX_CHARGE_TARGETS = [
 const CLIMAX_LIGHTNING_PATHS = {
   left: [
     { x: 32, y: 64 },
-    { x: 35.5, y: 41 },
+    { x: 32.4, y: 58.8 },
+    { x: 33.1, y: 53.7 },
+    { x: 33.9, y: 48.8 },
+    { x: 34.8, y: 44.3 },
+    { x: 35.8, y: 40 },
+    { x: 36.8, y: 35.8 },
+    { x: 37.8, y: 31.5 },
+    { x: 38.7, y: 27.2 },
     { x: 39.5, y: 23 },
   ],
   right: [
     { x: 68, y: 64 },
-    { x: 64.5, y: 41 },
+    { x: 67.6, y: 58.8 },
+    { x: 66.9, y: 53.7 },
+    { x: 66.1, y: 48.8 },
+    { x: 65.2, y: 44.3 },
+    { x: 64.2, y: 40 },
+    { x: 63.2, y: 35.8 },
+    { x: 62.2, y: 31.5 },
+    { x: 61.3, y: 27.2 },
     { x: 60.5, y: 23 },
   ],
 };
@@ -3137,6 +3151,35 @@ function lightningRoutePoints(col, start, end, phoneRect, stageRect) {
   ];
 }
 
+function curvedLightningRoute(route) {
+  if (route.length < 3) return route;
+  const points = [route[0]];
+  for (let index = 0; index < route.length - 1; index += 1) {
+    const current = route[index];
+    const next = route[index + 1];
+    const previous = route[index - 1] || current;
+    const after = route[index + 2] || next;
+    const cp1 = {
+      x: current.x + (next.x - previous.x) / 6,
+      y: current.y + (next.y - previous.y) / 6,
+    };
+    const cp2 = {
+      x: next.x - (after.x - current.x) / 6,
+      y: next.y - (after.y - current.y) / 6,
+    };
+    const steps = 5;
+    for (let step = 1; step <= steps; step += 1) {
+      const t = step / steps;
+      const mt = 1 - t;
+      points.push({
+        x: mt ** 3 * current.x + 3 * mt ** 2 * t * cp1.x + 3 * mt * t ** 2 * cp2.x + t ** 3 * next.x,
+        y: mt ** 3 * current.y + 3 * mt ** 2 * t * cp1.y + 3 * mt * t ** 2 * cp2.y + t ** 3 * next.y,
+      });
+    }
+  }
+  return points;
+}
+
 function jaggedLightningPoints(route, intensity = 8) {
   const points = [];
   for (let index = 0; index < route.length - 1; index += 1) {
@@ -3161,6 +3204,28 @@ function jaggedLightningPoints(route, intensity = 8) {
 
 function pointsAttribute(points) {
   return points.map((point) => `${point.x.toFixed(1)},${point.y.toFixed(1)}`).join(" ");
+}
+
+function curvePathData(points) {
+  if (!points.length) return "";
+  if (points.length === 1) return `M ${points[0].x} ${points[0].y}`;
+  const commands = [`M ${points[0].x.toFixed(2)} ${points[0].y.toFixed(2)}`];
+  for (let index = 0; index < points.length - 1; index += 1) {
+    const current = points[index];
+    const next = points[index + 1];
+    const previous = points[index - 1] || current;
+    const after = points[index + 2] || next;
+    const cp1 = {
+      x: current.x + (next.x - previous.x) / 6,
+      y: current.y + (next.y - previous.y) / 6,
+    };
+    const cp2 = {
+      x: next.x - (after.x - current.x) / 6,
+      y: next.y - (after.y - current.y) / 6,
+    };
+    commands.push(`C ${cp1.x.toFixed(2)} ${cp1.y.toFixed(2)}, ${cp2.x.toFixed(2)} ${cp2.y.toFixed(2)}, ${next.x.toFixed(2)} ${next.y.toFixed(2)}`);
+  }
+  return commands.join(" ");
 }
 
 function playClimaxLightningPerformance(col) {
@@ -3191,7 +3256,7 @@ function spawnSlotClimaxEnergy(col, value, baseDelay = 0) {
   const startY = sourceRect.top - hostRect.top;
   const endX = targetRect.left + targetRect.width * 0.5 - hostRect.left;
   const endY = targetRect.top + targetRect.height * 0.5 - hostRect.top;
-  const route = lightningRoutePoints(col, { x: startX, y: startY }, { x: endX, y: endY }, hostRect, stageRect);
+  const route = curvedLightningRoute(lightningRoutePoints(col, { x: startX, y: startY }, { x: endX, y: endY }, hostRect, stageRect));
   const primary = jaggedLightningPoints(route, col === 1 ? 5 : 9);
   const secondary = jaggedLightningPoints(route, col === 1 ? 3 : 6);
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -5765,8 +5830,8 @@ function initClimaxTunePanel() {
   lightningTuneLayer.className = "climax-tune-lightning-layer";
   lightningTuneLayer.innerHTML = `
     <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-      <polyline class="left"></polyline>
-      <polyline class="right"></polyline>
+      <path class="left"></path>
+      <path class="right"></path>
     </svg>
   `;
   document.body.appendChild(lightningTuneLayer);
@@ -5977,8 +6042,8 @@ function initClimaxTunePanel() {
 
   function updateLightningTuneLayer() {
     ["left", "right"].forEach((side) => {
-      const polyline = lightningTuneLayer.querySelector(`polyline.${side}`);
-      polyline?.setAttribute("points", lightningTune[side].map((point) => `${point.x},${point.y}`).join(" "));
+      const path = lightningTuneLayer.querySelector(`path.${side}`);
+      path?.setAttribute("d", curvePathData(lightningTune[side]));
     });
     lightningTuneLayer.querySelectorAll(".climax-lightning-path-handle").forEach((handle) => {
       const side = handle.dataset.side;
