@@ -2582,6 +2582,7 @@ async function resolveMove(initialMatches, preferredSpawn = null) {
     state.lastClearedCells = null;
     collectEnd();
     await presentCollectedMultipliers(collected);
+    await maybeFullDropBonus();
 
     const collapseEnd = startPerfSpan("move.collapse");
     setPerfPhase("drop");
@@ -2732,7 +2733,7 @@ function playWinCountLoop(duration, volume = 0.04) {
 }
 
 async function maybeFullDropBonus() {
-  if (state.filledSlots.size < SLOT_COUNT) return;
+  if (state.filledSlots.size < SLOT_COUNT) return false;
 
   await playFullDropWheel();
 
@@ -2751,6 +2752,7 @@ async function maybeFullDropBonus() {
   await wait(960);
   state.climaxLogoReturn = false;
   render();
+  return true;
 }
 
 async function playFullDropWheel() {
@@ -3179,7 +3181,7 @@ function spawnSlotClimaxEnergy(col, value, baseDelay = 0) {
   const host = document.querySelector(".phone");
   const source = slotsEl?.children[col];
   const target = climaxChargeTargetsEl?.querySelector(`.climax-charge-target[data-slot="${col}"]`);
-  if (!host || !climaxStageEl || !source || !target) return;
+  if (!host || !climaxStageEl || !source || !target) return Promise.resolve();
 
   const hostRect = host.getBoundingClientRect();
   const sourceRect = source.getBoundingClientRect();
@@ -3218,6 +3220,7 @@ function spawnSlotClimaxEnergy(col, value, baseDelay = 0) {
     window.setTimeout(() => target.classList.remove("is-hit"), 360);
   }, baseDelay + CLIMAX_LIGHTNING_DURATION_MS);
   window.setTimeout(() => bolt.remove(), baseDelay + CLIMAX_LIGHTNING_DURATION_MS + 280);
+  return wait(baseDelay + CLIMAX_LIGHTNING_DURATION_MS);
 }
 
 function keyToPoint(key) {
@@ -4988,20 +4991,20 @@ async function presentCollectedMultipliers(collected) {
   }
   render();
   spawnParticles(collected.length * 12);
-  collected.forEach((item, index) => spawnSlotClimaxEnergy(item.col, item.payout, index * 80));
   const highCollect = Math.max(...collected.map((item) => item.value));
   const usedCollectAsset = playMultiplierCollectPerformance(collected, shouldPlayClimaxIntro);
   if (!usedCollectAsset) playMultiplierCollectSound(highCollect, collected.length, state.filledSlots.size);
   if (highCollect >= 100) triggerScreenFx("fx-jackpot", 780);
   else if (highCollect >= 20) triggerScreenFx("fx-bump", 420);
+  if (shouldPlayClimaxIntro) {
+    await playClimaxIntroSequence();
+  }
+  const lightningSettled = Promise.all(collected.map((item, index) => spawnSlotClimaxEnergy(item.col, item.payout, index * 80)));
+  await lightningSettled;
   if (!isFullCollect && !shouldPlayClimaxIntro && state.filledSlots.size === SLOT_COUNT - 1) {
     playNearMissPerformance("slot");
   }
-  if (shouldPlayClimaxIntro) {
-    await playClimaxIntroSequence();
-    return;
-  }
-  await wait(resolveDelay(highCollect >= 100 ? 760 : highCollect >= 50 ? 640 : 540, 190));
+  await wait(resolveDelay(highCollect >= 100 ? 320 : highCollect >= 50 ? 260 : 220, 90));
 }
 
 async function playClimaxIntroSequence() {
@@ -5286,6 +5289,7 @@ async function playFlameEvent(stage = currentSpecialStageIndex()) {
   state.clearing = new Set();
 
   await presentCollectedMultipliers(collected);
+  await maybeFullDropBonus();
 
   fillEmptyCells();
   maybeSeedRescueCascade(0);
@@ -5345,6 +5349,7 @@ async function playCandyClearEvent(type) {
   state.clearing = new Set();
 
   await presentCollectedMultipliers(collected);
+  await maybeFullDropBonus();
 
   fillEmptyCells();
   render();
