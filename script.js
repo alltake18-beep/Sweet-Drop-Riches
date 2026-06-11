@@ -359,6 +359,7 @@ const winMultiplierEl = document.getElementById("winMultiplier");
 const winAmountEl = document.getElementById("winAmount");
 const climaxStageEl = document.getElementById("climaxStage");
 const climaxWheelRotorEl = document.getElementById("climaxWheelRotor");
+const climaxWheelImageEl = document.getElementById("climaxWheelImage");
 const climaxWheelLabelsEl = document.getElementById("climaxWheelLabels");
 const climaxWheelHighlightEl = document.getElementById("climaxWheelHighlight");
 const climaxCenterLineEl = document.getElementById("climaxCenterLine");
@@ -1465,6 +1466,7 @@ function renderClimaxChargeTargets() {
 function renderClimaxStage() {
   if (!climaxStageEl) return;
   const active = isMultiplierClimaxActive();
+  if (active || phoneShellEl?.classList.contains("tune-climax")) ensureClimaxWheelImageLoaded();
   climaxStageEl.setAttribute("aria-hidden", String(!active));
   renderClimaxChargeTargets();
   if (!active || state.climaxSpinning) stopClimaxIdleSpin();
@@ -2929,7 +2931,7 @@ function triggerScreenFx(className, duration = 420) {
 function resizeFxCanvas() {
   if (!fxCanvas) return;
   const rect = fxCanvas.getBoundingClientRect();
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const dpr = Math.min(window.devicePixelRatio || 1, IOS_PERFORMANCE_MODE ? 1.25 : 2);
   const width = Math.max(1, Math.floor(rect.width * dpr));
   const height = Math.max(1, Math.floor(rect.height * dpr));
   if (fxCanvas.width !== width || fxCanvas.height !== height) {
@@ -2944,8 +2946,9 @@ function enqueueFx(items) {
   if (!fxCanvas || document.hidden) return;
   resizeFxCanvas();
   state.fx.items.push(...items);
-  if (state.fx.items.length > 90) {
-    state.fx.items.splice(0, state.fx.items.length - 90);
+  const maxFxItems = IOS_PERFORMANCE_MODE ? 48 : 90;
+  if (state.fx.items.length > maxFxItems) {
+    state.fx.items.splice(0, state.fx.items.length - maxFxItems);
   }
   if (!state.fx.frame) {
     state.fx.frame = requestAnimationFrame(drawFx);
@@ -6349,6 +6352,17 @@ function initClimaxTunePanel() {
 
 function applyPerformanceMode() {
   phoneShellEl?.classList.toggle("ios-performance", IOS_PERFORMANCE_MODE);
+}
+
+function ensureClimaxWheelImageLoaded() {
+  if (!climaxWheelImageEl || climaxWheelImageEl.dataset.loaded === "true") return;
+  const src = IOS_PERFORMANCE_MODE
+    ? climaxWheelImageEl.dataset.iosSrc || climaxWheelImageEl.dataset.src
+    : climaxWheelImageEl.dataset.src;
+  if (!src) return;
+  climaxWheelImageEl.src = src;
+  climaxWheelImageEl.draggable = false;
+  climaxWheelImageEl.dataset.loaded = "true";
 }
 
 function preventImageSelection() {

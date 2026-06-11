@@ -4,7 +4,16 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Sweet Drop Riches Prototype</title>
-    <link rel="stylesheet" href="styles.css?v=prevent-image-select-20260611-194854" />
+    <script>
+      (() => {
+        try {
+          const ios = /iP(hone|ad|od)/.test(navigator.userAgent)
+            || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+          if (ios) document.documentElement.classList.add("ios-performance");
+        } catch (error) {}
+      })();
+    </script>
+    <link rel="stylesheet" href="styles.css?v=mobile-assets-20260611-195335" />
   </head>
   <body>
     <main class="stage">
@@ -14,7 +23,7 @@
 
         <header class="topbar">
           <div class="brand" aria-label="Sweet Drop Riches">
-            <img class="brand-logo" src="assets/ui/logo-sweet-drop-riches-final.png?v=multiplier-guide-arrows-sum-ring" alt="Sweet Drop Riches" />
+            <img class="brand-logo" src="assets/ui/mobile/logo-sweet-drop-riches-mobile.png?v=mobile-assets-20260611-195335" alt="Sweet Drop Riches" />
           </div>
         </header>
 
@@ -22,7 +31,7 @@
           <div class="climax-wheel-view">
             <div class="climax-wheel-rotor" id="climaxWheelRotor">
               <div class="climax-wheel-highlight" id="climaxWheelHighlight"></div>
-              <img src="assets/ui/climax-wheel-disc.png?v=label-top-tune-20260611-022042" alt="" />
+              <img id="climaxWheelImage" data-src="assets/ui/climax-wheel-disc.png?v=label-top-tune-20260611-022042" data-ios-src="assets/ui/mobile/climax-wheel-disc-mobile.png?v=mobile-assets-20260611-195335" alt="" />
               <div class="climax-wheel-labels" id="climaxWheelLabels"></div>
             </div>
           </div>
@@ -131,6 +140,6 @@
       </section>
     </main>
 
-    <script src="script.js?v=prevent-image-select-20260611-194854"></script>
+    <script src="script.js?v=mobile-assets-20260611-195335"></script>
   </body>
 </html>

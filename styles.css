@@ -8475,6 +8475,26 @@ button {
     0 0 0 1px rgba(76, 225, 255, 0.18);
 }
 
+html.ios-performance .phone {
+  background:
+    url("assets/ui/mobile/candy-machine-final-bg-mobile.jpg?v=mobile-assets-20260611-195335") center / 100% 100% no-repeat,
+    linear-gradient(180deg, #170408, #070205);
+}
+
+html.ios-performance .hud-panel,
+html.ios-performance .board-bar {
+  background:
+    url("assets/ui/mobile/candy-match-hud-panel-mobile.png?v=mobile-assets-20260611-195335") center / 150% 205% no-repeat,
+    linear-gradient(180deg, rgba(72, 21, 96, 0.88), rgba(24, 5, 45, 0.9));
+}
+
+html.ios-performance .stage-slot,
+html.ios-performance .event-socket {
+  background:
+    url("assets/ui/mobile/candy-match-slot-reward-mobile.png?v=mobile-assets-20260611-195335") center / 112% 170% no-repeat,
+    linear-gradient(180deg, rgba(62, 14, 72, 0.82), rgba(17, 4, 30, 0.88));
+}
+
 .phone.ios-performance .ambient {
   display: none;
 }
