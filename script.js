@@ -5574,6 +5574,12 @@ function initClimaxTunePanel() {
   ];
   const labelTune = JSON.parse(JSON.stringify(WHEEL_LABEL_TUNE));
   let selectedLabel = FULL_DROP_WHEEL_LABEL_ORDER[0].key;
+  const circleTune = [
+    { x: 50, y: 23, d: 20 },
+    { x: 50, y: 39, d: 31 },
+    { x: 50, y: 56, d: 43 },
+  ];
+  let selectedCircle = 0;
 
   const panel = document.createElement("div");
   panel.className = "climax-tune-panel";
@@ -5582,6 +5588,8 @@ function initClimaxTunePanel() {
     <div class="climax-tune-controls"></div>
     <strong>Label Tune</strong>
     <div class="climax-label-tune"></div>
+    <strong>Circle Tune</strong>
+    <div class="climax-circle-tune"></div>
     <div class="climax-tune-actions">
       <button type="button" data-action="copy">Copy CSS</button>
       <button type="button" data-action="toggle-points">Hide Points</button>
@@ -5593,10 +5601,14 @@ function initClimaxTunePanel() {
 
   const controlsEl = panel.querySelector(".climax-tune-controls");
   const labelTuneEl = panel.querySelector(".climax-label-tune");
+  const circleTuneEl = panel.querySelector(".climax-circle-tune");
   const output = panel.querySelector(".climax-tune-output");
   const handleLayer = document.createElement("div");
   handleLayer.className = "climax-mask-handle-layer";
   document.body.appendChild(handleLayer);
+  const circleLayer = document.createElement("div");
+  circleLayer.className = "climax-tune-circle-layer";
+  document.body.appendChild(circleLayer);
   let draggingPoint = false;
 
   function numericValue(name) {
@@ -5659,6 +5671,12 @@ function initClimaxTunePanel() {
       return `  ${name}: ${value || `0${unit}`};`;
     });
     lines.push(`  --climax-mask-path: ${maskPath()};`);
+    circleTune.forEach((circle, index) => {
+      const id = index + 1;
+      lines.push(`  --tune-circle-${id}-x: ${+circle.x.toFixed(2)}%;`);
+      lines.push(`  --tune-circle-${id}-y: ${+circle.y.toFixed(2)}%;`);
+      lines.push(`  --tune-circle-${id}-d: ${+circle.d.toFixed(2)}%;`);
+    });
     return `.phone {\n${lines.join("\n")}\n}\n\nWHEEL_LABEL_TUNE = ${JSON.stringify(labelTune, null, 2)};`;
   }
 
@@ -5692,7 +5710,7 @@ function initClimaxTunePanel() {
     applyLabelTune();
   }
 
-  function tuneRow(parent, label, value, onMinus, onPlus) {
+  function tuneRow(parent, label, value, onMinus, onPlus, onUpdate = applyLabelTuneAndKeepTop) {
     const row = document.createElement("div");
     row.className = "climax-tune-row";
     row.innerHTML = `
@@ -5706,7 +5724,7 @@ function initClimaxTunePanel() {
     const valueEl = row.querySelector(".climax-tune-value");
     const update = (next) => {
       valueEl.textContent = next;
-      applyLabelTuneAndKeepTop();
+      onUpdate();
     };
     row.querySelector('[data-action="minus"]').addEventListener("click", () => update(onMinus()));
     row.querySelector('[data-action="plus"]').addEventListener("click", () => update(onPlus()));
@@ -5749,6 +5767,45 @@ function initClimaxTunePanel() {
     tuneRow(labelTuneEl, "item radius", item.radius.toFixed(1), () => (item.radius -= 0.5).toFixed(1), () => (item.radius += 0.5).toFixed(1));
     tuneRow(labelTuneEl, "item rotate", item.rotate.toFixed(1), () => (item.rotate -= 1).toFixed(1), () => (item.rotate += 1).toFixed(1));
     tuneRow(labelTuneEl, "item font", item.font.toFixed(0), () => (item.font -= 1).toFixed(0), () => (item.font += 1).toFixed(0));
+  }
+
+  function updateCircleLayer() {
+    circleLayer.querySelectorAll(".climax-tune-circle").forEach((circleEl, index) => {
+      const circle = circleTune[index];
+      circleEl.style.left = `${circle.x}%`;
+      circleEl.style.top = `${circle.y}%`;
+      circleEl.style.width = `${circle.d}%`;
+      circleEl.classList.toggle("is-selected", index === selectedCircle);
+    });
+    refreshOutput();
+  }
+
+  function renderCircleTuneControls() {
+    circleTuneEl.innerHTML = "";
+    const selectRow = document.createElement("label");
+    selectRow.className = "climax-tune-row";
+    selectRow.innerHTML = `
+      <span>selected</span>
+      <select class="climax-circle-select">${circleTune.map((_, index) => `<option value="${index}">circle ${index + 1}</option>`).join("")}</select>
+      <span></span>
+    `;
+    const select = selectRow.querySelector("select");
+    select.value = String(selectedCircle);
+    select.addEventListener("change", () => {
+      selectedCircle = Number(select.value);
+      renderCircleTuneControls();
+      updateCircleLayer();
+    });
+    circleTuneEl.appendChild(selectRow);
+
+    const circle = circleTune[selectedCircle];
+    const circleUpdate = () => {
+      renderCircleTuneControls();
+      updateCircleLayer();
+    };
+    tuneRow(circleTuneEl, "circle x", circle.x.toFixed(1), () => (circle.x -= 0.5).toFixed(1), () => (circle.x += 0.5).toFixed(1), circleUpdate);
+    tuneRow(circleTuneEl, "circle y", circle.y.toFixed(1), () => (circle.y -= 0.5).toFixed(1), () => (circle.y += 0.5).toFixed(1), circleUpdate);
+    tuneRow(circleTuneEl, "diameter", circle.d.toFixed(1), () => (circle.d = Math.max(1, circle.d - 0.5)).toFixed(1), () => (circle.d += 0.5).toFixed(1), circleUpdate);
   }
 
   for (const [label, name, min, max, step, unit] of controls) {
@@ -5802,11 +5859,16 @@ function initClimaxTunePanel() {
     handleLayer.style.top = `${rect.top}px`;
     handleLayer.style.width = `${rect.width}px`;
     handleLayer.style.height = `${rect.height}px`;
+    circleLayer.style.left = `${rect.left}px`;
+    circleLayer.style.top = `${rect.top}px`;
+    circleLayer.style.width = `${rect.width}px`;
+    circleLayer.style.height = `${rect.height}px`;
     handleLayer.querySelectorAll(".climax-mask-handle").forEach((handle, index) => {
       const point = maskPoints[index];
       handle.style.left = `${point.x}%`;
       handle.style.top = `${point.y}%`;
     });
+    updateCircleLayer();
   }
 
   maskPoints.forEach((point, index) => {
@@ -5839,6 +5901,48 @@ function initClimaxTunePanel() {
       handle.addEventListener("pointercancel", up);
     });
     handleLayer.appendChild(handle);
+  });
+
+  circleTune.forEach((circle, index) => {
+    const circleEl = document.createElement("button");
+    circleEl.type = "button";
+    circleEl.className = "climax-tune-circle";
+    circleEl.title = `circle ${index + 1}`;
+    circleEl.setAttribute("aria-label", `circle ${index + 1}`);
+    circleEl.textContent = String(index + 1);
+    circleEl.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      selectedCircle = index;
+      renderCircleTuneControls();
+      updateCircleLayer();
+    });
+    circleEl.addEventListener("pointerdown", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      selectedCircle = index;
+      renderCircleTuneControls();
+      updateCircleLayer();
+      circleEl.setPointerCapture(event.pointerId);
+      const move = (moveEvent) => {
+        const rect = climaxStageEl.getBoundingClientRect();
+        circle.x = ((moveEvent.clientX - rect.left) / rect.width) * 100;
+        circle.y = ((moveEvent.clientY - rect.top) / rect.height) * 100;
+        updateCircleLayer();
+        renderCircleTuneControls();
+      };
+      const up = () => {
+        draggingPoint = false;
+        circleEl.removeEventListener("pointermove", move);
+        circleEl.removeEventListener("pointerup", up);
+        circleEl.removeEventListener("pointercancel", up);
+      };
+      draggingPoint = true;
+      circleEl.addEventListener("pointermove", move);
+      circleEl.addEventListener("pointerup", up);
+      circleEl.addEventListener("pointercancel", up);
+    });
+    circleLayer.appendChild(circleEl);
   });
 
   renderClimaxStage();
@@ -5877,7 +5981,7 @@ function initClimaxTunePanel() {
   });
 
   climaxStageEl.addEventListener("pointerdown", (event) => {
-    if (!params.has("tune") || draggingPoint || event.target.closest(".climax-mask-handle") || event.target.closest(".climax-center-line") || event.target.closest(".climax-tune-panel")) return;
+    if (!params.has("tune") || draggingPoint || event.target.closest(".climax-mask-handle") || event.target.closest(".climax-tune-circle") || event.target.closest(".climax-center-line") || event.target.closest(".climax-tune-panel")) return;
     event.preventDefault();
     climaxStageEl.setPointerCapture(event.pointerId);
     const rect = climaxStageEl.getBoundingClientRect();
@@ -5917,6 +6021,7 @@ function initClimaxTunePanel() {
 
   panel.querySelector('[data-action="toggle-points"]').addEventListener("click", (event) => {
     handleLayer.classList.toggle("is-hidden");
+    circleLayer.classList.toggle("is-hidden");
     event.currentTarget.textContent = handleLayer.classList.contains("is-hidden") ? "Show Points" : "Hide Points";
   });
 
@@ -5928,6 +6033,7 @@ function initClimaxTunePanel() {
   refreshOutput();
   applyMaskPath();
   renderLabelTuneControls();
+  renderCircleTuneControls();
   rotateSelectedLabelToTop();
   applyLabelTune();
   placeHandleLayer();
