@@ -34,7 +34,7 @@ const AUDIO_CATEGORY_GAINS = {
   voice: 0.72,
   error: 0.62,
 };
-const AUDIO_ASSET_VERSION = "casino-audio-pack-20260611-lightning-charge";
+const AUDIO_ASSET_VERSION = "casino-audio-pack-20260611-lightning-charge-2s";
 const AUDIO_ASSETS = {
   bgmNormal: "assets/audio/bgm-normal.wav",
   button: "assets/audio/button.wav",
@@ -204,7 +204,7 @@ const FULL_DROP_WHEEL_FALLBACK_POINTER_Y = 7.5;
 const CLIMAX_IDLE_SLICE_MS = 1000;
 const CLIMAX_INTRO_PUSH_DELAY_MS = 650;
 const CLIMAX_INTRO_WHEEL_RISE_MS = 2000;
-const CLIMAX_LIGHTNING_DURATION_MS = 1000;
+const CLIMAX_LIGHTNING_DURATION_MS = 2000;
 const CLIMAX_CHARGE_TARGETS = [
   { x: 42, y: 12.5, d: 7 },
   { x: 50, y: 12.5, d: 7 },
@@ -212,28 +212,28 @@ const CLIMAX_CHARGE_TARGETS = [
 ];
 const CLIMAX_LIGHTNING_PATHS = {
   left: [
-    { x: 32, y: 64 },
-    { x: 32.4, y: 58.8 },
-    { x: 33.1, y: 53.7 },
-    { x: 33.9, y: 48.8 },
-    { x: 34.8, y: 44.3 },
-    { x: 35.8, y: 40 },
-    { x: 36.8, y: 35.8 },
-    { x: 37.8, y: 31.5 },
-    { x: 38.7, y: 27.2 },
-    { x: 39.5, y: 23 },
+    { x: 22.26, y: 84.85 },
+    { x: 4.85, y: 81.89 },
+    { x: 7.48, y: 67.88 },
+    { x: 4.04, y: 59 },
+    { x: 8.29, y: 49.54 },
+    { x: 4.04, y: 43.51 },
+    { x: 8.49, y: 35.99 },
+    { x: 5.25, y: 28.13 },
+    { x: 8.29, y: 12.76 },
+    { x: 41.7, y: 12.3 },
   ],
   right: [
-    { x: 68, y: 64 },
-    { x: 67.6, y: 58.8 },
-    { x: 66.9, y: 53.7 },
-    { x: 66.1, y: 48.8 },
-    { x: 65.2, y: 44.3 },
-    { x: 64.2, y: 40 },
-    { x: 63.2, y: 35.8 },
-    { x: 62.2, y: 31.5 },
-    { x: 61.3, y: 27.2 },
-    { x: 60.5, y: 23 },
+    { x: 77.33, y: 84.28 },
+    { x: 95.36, y: 81.89 },
+    { x: 91.71, y: 68.68 },
+    { x: 96.37, y: 58.09 },
+    { x: 92.12, y: 49.77 },
+    { x: 95.56, y: 42.03 },
+    { x: 92.93, y: 33.37 },
+    { x: 94.34, y: 27.79 },
+    { x: 94.34, y: 13.1 },
+    { x: 58.71, y: 12.53 },
   ],
 };
 const BGM_DUCK_IMPORTANT_MS = 1400;
@@ -448,6 +448,7 @@ const state = {
   pendingClimaxIntro: false,
   climaxLogoReturn: false,
   climaxChargedSlots: new Set(),
+  winCardShownThisResolve: false,
 };
 
 function formatMoney(value, decimals = 0) {
@@ -2531,6 +2532,7 @@ async function handleTileClick(row, col) {
 
 async function resolveMove(initialMatches, preferredSpawn = null) {
   state.resolving = true;
+  state.winCardShownThisResolve = false;
   setBoardBusy(true);
   setPerfPhase("resolve");
   let matches = initialMatches;
@@ -2651,6 +2653,7 @@ async function resolveMove(initialMatches, preferredSpawn = null) {
 }
 
 async function maybeShowWinCard() {
+  if (state.winCardShownThisResolve) return true;
   const ratio = state.currentWin / currentBet();
   const tier = WIN_TIERS.find((item) => ratio >= item.ratio);
   if (!tier) return false;
@@ -2673,6 +2676,7 @@ async function maybeShowWinCard() {
   await wait(resolveDelay(tier.duration, tier.quick));
   winOverlay.classList.add("hidden");
   setPerfPhase("resolve");
+  state.winCardShownThisResolve = true;
   return true;
 }
 
@@ -2798,7 +2802,9 @@ async function playFullDropWheel() {
   state.climaxSpinning = false;
   triggerScreenFx(prize.multiplier >= 5 ? "fx-jackpot" : prize.multiplier >= 1 ? "fx-blast" : "fx-bump", 820);
   render();
-  await wait(1500);
+  await wait(520);
+  await maybeShowWinCard();
+  await wait(360);
 }
 
 async function ensureLegalMove() {
