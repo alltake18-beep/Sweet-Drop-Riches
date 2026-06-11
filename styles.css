@@ -8449,3 +8449,108 @@ button {
 .climax-lightning-path-handle:active {
   cursor: grabbing;
 }
+
+/* iOS Safari performance mode: keep gameplay animations, reduce costly idle compositing. */
+.phone.ios-performance {
+  box-shadow:
+    0 10px 28px rgba(0, 0, 0, 0.48),
+    0 0 0 1px rgba(76, 225, 255, 0.18);
+}
+
+.phone.ios-performance .ambient {
+  display: none;
+}
+
+.phone.ios-performance .brand,
+.phone.ios-performance .candy-img,
+.phone.ios-performance .special-img,
+.phone.ios-performance .tile.multiplier .multiplier-symbol,
+.phone.ios-performance .event-socket img,
+.phone.ios-performance .stage-slot img {
+  filter: none !important;
+}
+
+.phone.ios-performance .board,
+.phone.ios-performance .board-bar,
+.phone.ios-performance .special-meter,
+.phone.ios-performance .stage-slot,
+.phone.ios-performance .event-socket,
+.phone.ios-performance .tile,
+.phone.ios-performance .climax-charge-target {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.phone.ios-performance .special-img,
+.phone.ios-performance .tile.special-candy::before,
+.phone.ios-performance .tile.special-candy::after,
+.phone.ios-performance .tile.special-bomb .special-img,
+.phone.ios-performance .tile.special-colorbomb::before,
+.phone.ios-performance .tile.special-chocolate::before,
+.phone.ios-performance .tile.special-chocolate .special-img,
+.phone.ios-performance .tile.special-fish .special-img,
+.phone.ios-performance .tile.multiplier::before,
+.phone.ios-performance .tile.multiplier::after,
+.phone.ios-performance .tile.multiplier.value-100,
+.phone.ios-performance .tile.multiplier.tier-legend,
+.phone.ios-performance .tile.multiplier.tier-ultimate,
+.phone.ios-performance .tile.multiplier.value-100 .multiplier-gem,
+.phone.ios-performance .tile.multiplier.tier-legend .multiplier-gem,
+.phone.ios-performance .tile.multiplier.tier-ultimate .multiplier-gem,
+.phone.ios-performance .stage-slot.active,
+.phone.ios-performance .stage-slot.rolling,
+.phone.ios-performance .event-socket.active,
+.phone.ios-performance .event-socket.rolling {
+  animation: none !important;
+}
+
+.phone.ios-performance .tile.special-candy::before,
+.phone.ios-performance .tile.special-candy::after,
+.phone.ios-performance .tile.multiplier::before,
+.phone.ios-performance .tile.multiplier::after {
+  opacity: 0.28;
+}
+
+.phone.ios-performance .board {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 242, 197, 0.08),
+    inset 0 0 16px rgba(0, 0, 0, 0.58),
+    0 0 0 1px rgba(62, 10, 18, 0.38);
+}
+
+.phone.ios-performance.slot-hype .board {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 242, 197, 0.08),
+    inset 0 0 16px rgba(0, 0, 0, 0.58),
+    0 0 0 1px rgba(255, 201, 91, 0.42),
+    0 0 12px rgba(255, 65, 20, 0.24);
+}
+
+.phone.ios-performance.slot-hype .board::before {
+  box-shadow: none;
+}
+
+.phone.ios-performance.slot-hype .board::after,
+.phone.ios-performance.multiplier-climax .play-area::before {
+  opacity: 0.28;
+  animation: none !important;
+}
+
+.phone.ios-performance .climax-wheel-rotor img {
+  filter: drop-shadow(0 0 5px rgba(255, 210, 69, 0.36));
+}
+
+.phone.ios-performance .climax-wheel-highlight {
+  filter: none;
+  opacity: 0.58;
+}
+
+.phone.ios-performance .climax-lightning-bolt .main {
+  filter: drop-shadow(0 0 5px rgba(52, 231, 255, 0.55));
+  stroke-width: 8;
+}
+
+.phone.ios-performance .climax-lightning-bolt .core {
+  filter: none;
+  stroke-width: 3;
+}

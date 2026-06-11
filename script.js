@@ -7,6 +7,8 @@ const MULTIPLIER_COLS = [0, 2, 4];
 const SYMBOL_VERSION = "event-energy-slot-scale";
 const SLOT_TURN_MAX = 20;
 const PERF_ENABLED = new URLSearchParams(window.location.search).has("perf");
+const IOS_PERFORMANCE_MODE = /iP(hone|ad|od)/.test(navigator.userAgent)
+  || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 const SPECIAL_METER_TARGET = 9;
 const SPECIAL_METER_THRESHOLDS = [9, 21, 40];
 const SPECIAL_METER_MAX = SPECIAL_METER_THRESHOLDS[SPECIAL_METER_THRESHOLDS.length - 1];
@@ -361,6 +363,7 @@ const climaxWheelLabelsEl = document.getElementById("climaxWheelLabels");
 const climaxWheelHighlightEl = document.getElementById("climaxWheelHighlight");
 const climaxCenterLineEl = document.getElementById("climaxCenterLine");
 const climaxChargeTargetsEl = document.getElementById("climaxChargeTargets");
+const phoneShellEl = document.querySelector(".phone");
 
 const state = {
   board: [],
@@ -710,12 +713,14 @@ function winArtAsset(name) {
 }
 
 function allSymbolAssets() {
-  const assets = [
-    ...CANDIES.map(candyAsset),
-    ...MULTIPLIER_VALUES.map(multiplierAsset),
-    ...WIN_TIERS.map((tier) => winArtAsset(tier.art)),
-    flameIconAsset(),
-  ];
+  const assets = IOS_PERFORMANCE_MODE
+    ? CANDIES.map(candyAsset)
+    : [
+      ...CANDIES.map(candyAsset),
+      ...MULTIPLIER_VALUES.map(multiplierAsset),
+      ...WIN_TIERS.map((tier) => winArtAsset(tier.art)),
+      flameIconAsset(),
+    ];
   return Array.from(new Set(assets));
 }
 
@@ -1312,7 +1317,7 @@ function climaxPointerYPercent(phoneEl, linePercent) {
 }
 
 function climaxPointerAngle() {
-  const phoneEl = document.querySelector(".phone");
+  const phoneEl = phoneShellEl;
   const phoneRect = phoneEl?.getBoundingClientRect();
   const wheelRect = climaxWheelRotorEl?.getBoundingClientRect();
   if (!phoneEl || !phoneRect || !wheelRect) return 0;
@@ -3405,6 +3410,10 @@ function loadAudioAsset(name) {
 function preloadAudioAssets() {
   if (state.audioPreloadPromise) return state.audioPreloadPromise;
   if (!ensureAudio()) return null;
+  if (IOS_PERFORMANCE_MODE) {
+    state.audioPreloadPromise = Promise.resolve([]);
+    return state.audioPreloadPromise;
+  }
   state.audioPreloadPromise = Promise.allSettled(Object.keys(AUDIO_ASSETS).map((name) => loadAudioAsset(name)));
   return state.audioPreloadPromise;
 }
@@ -3729,7 +3738,7 @@ function startBackgroundMusic() {
   if (!state.sound || state.musicTimer || state.bgmSource) return;
   const context = ensureAudio();
   if (!context) return;
-  preloadAudioAssets();
+  if (!IOS_PERFORMANCE_MODE) preloadAudioAssets();
   const bgmBuffer = state.audioBuffers.get("bgmNormal");
   if (bgmBuffer) {
     const source = playAudioAsset("bgmNormal", { bus: "bgm", loop: true, music: true, gain: 0.9 });
@@ -3741,7 +3750,7 @@ function startBackgroundMusic() {
       return;
     }
   }
-  if (!state.audioAssetFailures.has("bgmNormal")) {
+  if (!IOS_PERFORMANCE_MODE && !state.audioAssetFailures.has("bgmNormal")) {
     loadAudioAsset("bgmNormal")
       .then(() => {
         if (state.sound && !state.musicTimer && !state.bgmSource) startBackgroundMusic();
@@ -3789,6 +3798,7 @@ function stopBackgroundMusic() {
 
 function armBackgroundMusic() {
   if (!state.sound) return;
+  if (IOS_PERFORMANCE_MODE) return;
   preloadAudioAssets();
   startBackgroundMusic();
 }
@@ -4750,7 +4760,7 @@ function renderHud() {
   document.querySelector(".special-meter-copy span").textContent = "事件收集";
   specialMeterTextEl.textContent = `${Math.min(state.specialMeter, SPECIAL_METER_MAX)}/${SPECIAL_METER_MAX}`;
   specialMeterFillEl.style.width = `${Math.min(100, (state.specialMeter / SPECIAL_METER_MAX) * 100)}%`;
-  const phoneEl = document.querySelector(".phone");
+  const phoneEl = phoneShellEl;
   phoneEl?.classList.toggle("low-balance", !hasEnoughBalanceForMove());
   phoneEl?.classList.toggle("slot-hype", isSlotHypeActive());
   phoneEl?.classList.toggle("multiplier-climax", isMultiplierClimaxActive());
@@ -6337,6 +6347,11 @@ function initClimaxTunePanel() {
   renderHud();
 }
 
+function applyPerformanceMode() {
+  phoneShellEl?.classList.toggle("ios-performance", IOS_PERFORMANCE_MODE);
+}
+
+applyPerformanceMode();
 preloadSymbolAssets();
 initPerfMonitor();
 initClimaxTunePanel();
