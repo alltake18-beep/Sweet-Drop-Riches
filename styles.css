@@ -620,27 +620,29 @@ button {
 }
 
 .tile.selected {
-  transform: translateY(-2px) scale(1.04);
+  transform: translateY(-2px) scale(1.045);
   box-shadow:
-    0 0 0 2px #fff6a5,
-    0 0 18px rgba(255, 230, 87, 0.75);
+    inset 0 0 18px rgba(255, 236, 130, 0.18),
+    0 8px 18px rgba(0, 0, 0, 0.3),
+    0 0 18px rgba(255, 230, 87, 0.62),
+    0 0 28px rgba(255, 97, 211, 0.24);
 }
 
 .tile.dragging {
   z-index: 30;
   transform: translate(var(--drag-x, 0), var(--drag-y, 0)) scale(1.12);
   box-shadow:
-    0 0 0 2px #fff6a5,
-    0 12px 24px rgba(0, 0, 0, 0.42),
-    0 0 22px rgba(255, 230, 87, 0.82);
+    0 14px 26px rgba(0, 0, 0, 0.46),
+    0 0 20px rgba(255, 230, 87, 0.68),
+    0 0 34px rgba(255, 83, 208, 0.28);
 }
 
 .tile.drag-target {
   z-index: 12;
   transform: scale(0.94);
   box-shadow:
-    inset 0 0 0 2px rgba(255, 255, 255, 0.25),
-    0 0 14px rgba(73, 213, 255, 0.58);
+    inset 0 0 18px rgba(91, 224, 255, 0.22),
+    0 0 16px rgba(73, 213, 255, 0.5);
 }
 
 .tile.invalid {
@@ -6183,15 +6185,15 @@ button {
 .board {
   position: absolute;
   z-index: 3;
-  top: 27%;
-  left: 50%;
-  width: 76% !important;
-  height: 50.8% !important;
+  top: var(--play-board-top, 27.6%);
+  left: var(--play-board-left, 50%);
+  width: var(--play-board-width, 73%) !important;
+  height: var(--play-board-height, 50.3%) !important;
   aspect-ratio: auto;
   transform: translateX(-50%);
   padding: 3px;
   gap: 3px;
-  border-radius: 10px;
+  border-radius: var(--play-board-radius, 14px);
   overflow: hidden;
   background:
     linear-gradient(180deg, rgba(42, 4, 18, 0.58), rgba(6, 1, 7, 0.9)),
@@ -7183,21 +7185,212 @@ button {
 }
 
 /* Clean meter and board-object rules. */
+.phone {
+  --normal-candy-size: 90%;
+  --special-candy-size: 116%;
+  --play-board-radius: 14px;
+  --hud-x: 0.3%;
+  --hud-y: -0.2%;
+  --hud-width: 85.4%;
+  --hud-height: 3.6%;
+  --hud-gap: 7.75%;
+  --hud-perspective: 430px;
+  --hud-rotate-x: 25deg;
+  --balance-x: 1%;
+  --balance-y: -4%;
+  --balance-angle: 0deg;
+  --balance-size: 95%;
+  --balance-label-size: 100%;
+  --balance-number-size: 100%;
+  --balance-depth: 0%;
+  --balance-stack: 0px;
+  --bet-x: 0%;
+  --bet-y: -4%;
+  --bet-angle: 0deg;
+  --bet-size: 101%;
+  --bet-text-size: 100%;
+  --bet-arrow-size: 100%;
+  --bet-depth: 100%;
+  --bet-stack: 0px;
+  --fast-icon-x: -4%;
+  --fast-icon-y: 0%;
+  --fast-icon-angle: 5deg;
+  --fast-icon-size: 65%;
+  --fast-icon-skew: 0deg;
+  --fast-icon-depth: 100%;
+  --fast-icon-stack: 0px;
+  --menu-icon-x: 3.5%;
+  --menu-icon-y: -3%;
+  --menu-icon-angle: 0deg;
+  --menu-icon-size: 74%;
+  --menu-icon-skew: 0deg;
+  --menu-icon-bar: 23%;
+  --menu-icon-depth: 0%;
+  --menu-icon-stack: 0px;
+}
+
 .symbol-img {
-  max-width: 100%;
-  max-height: 100%;
+  max-width: none;
+  max-height: none;
+}
+
+.tile.candy,
+.tile.special-candy {
+  overflow: visible;
+  contain: layout style;
 }
 
 .candy-img {
-  width: 96%;
-  height: 96%;
-  transform: translateY(-2%);
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--normal-candy-size, 90%);
+  height: var(--normal-candy-size, 90%);
+  transform: translate(-50%, -50%);
 }
 
 .tile.candy-purple .candy-img {
+  width: var(--normal-candy-size, 90%);
+  height: var(--normal-candy-size, 90%);
+}
+
+.special-img {
+  width: var(--special-candy-size, 116%);
+  height: var(--special-candy-size, 116%);
+}
+
+.board-tune-panel {
+  position: fixed;
+  z-index: 10000;
+  right: 10px;
+  bottom: 10px;
+  width: min(390px, calc(100vw - 20px));
+  max-height: min(58vh, 530px);
+  overflow: auto;
+  padding: 10px;
+  color: #ffeec2;
+  font: 12px/1.25 Arial, sans-serif;
+  background: rgba(14, 4, 9, 0.94);
+  border: 1px solid rgba(255, 213, 103, 0.72);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.48);
+}
+
+.board-tune-title {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 13px;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.board-tune-panel.is-dragging .board-tune-title {
+  cursor: grabbing;
+}
+
+.board-tune-row {
+  display: grid;
+  grid-template-columns: 82px 1fr 58px;
+  gap: 8px;
+  align-items: center;
+  margin: 6px 0;
+}
+
+.board-tune-row input {
   width: 100%;
-  height: 100%;
-  transform: none;
+}
+
+.board-tune-readout {
+  margin: 0 0 8px;
+  color: #8ff7ff;
+  font-variant-numeric: tabular-nums;
+}
+
+.board-tune-control {
+  display: grid;
+  grid-template-columns: 24px 1fr 24px;
+  gap: 5px;
+  align-items: center;
+}
+
+.board-tune-control button {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  color: #301006;
+  font-weight: 900;
+  line-height: 1;
+  background: linear-gradient(180deg, #fff4b0, #d49136);
+  border: 0;
+}
+
+.board-tune-value {
+  color: #8ff7ff;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.board-tune-output {
+  width: 100%;
+  min-height: 74px;
+  margin-top: 8px;
+  padding: 7px;
+  color: #e6fbff;
+  font: 11px/1.35 Consolas, monospace;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  resize: vertical;
+}
+
+/* Keep decorative cabinet art from becoming the easiest annotation target. */
+.stage,
+.phone,
+.phone::before,
+.phone::after,
+.ambient,
+.topbar,
+.brand,
+.brand-logo,
+.play-area,
+.fx-canvas,
+.board-shell,
+.board-shell::before,
+.board-shell::after,
+.drop-arrows,
+.drop-arrows *,
+.status-text,
+.perf-panel,
+.phone img {
+  pointer-events: none;
+}
+
+#board,
+#board .tile,
+.tile,
+.slot,
+.slot *,
+.hud,
+.hud button,
+.menu-panel,
+.menu-panel *,
+.board-tune-panel,
+.board-tune-panel * {
+  pointer-events: auto;
+}
+
+.slots {
+  pointer-events: none;
+}
+
+.hud-panel,
+.bet-panel,
+.bet-panel div {
+  pointer-events: none;
+}
+
+.bet-panel button,
+.icon-button {
+  pointer-events: auto;
 }
 
 .event-socket[data-stage="2"],
@@ -7359,19 +7552,19 @@ button {
 .hud {
   position: absolute !important;
   z-index: 9 !important;
-  top: 94.25% !important;
-  left: 6.5% !important;
+  top: calc(94.25% + var(--hud-y, 0%)) !important;
+  left: calc(6.5% + var(--hud-x, 0%)) !important;
   right: auto !important;
   bottom: auto !important;
-  width: 86.1% !important;
-  height: 3.6% !important;
+  width: var(--hud-width, 86.1%) !important;
+  height: var(--hud-height, 3.6%) !important;
   display: grid !important;
   grid-template-columns: 1.87fr 1.64fr 0.58fr 0.58fr !important;
-  gap: 7.75% !important;
+  gap: var(--hud-gap, 7.75%) !important;
   align-items: center !important;
   padding: 0 !important;
   background: transparent !important;
-  transform: perspective(430px) rotateX(5deg) !important;
+  transform: perspective(var(--hud-perspective, 430px)) rotateX(var(--hud-rotate-x, 5deg)) !important;
   transform-origin: 50% 100% !important;
   pointer-events: none;
 }
@@ -7399,35 +7592,75 @@ button {
   padding: 2px 8px 1px !important;
 }
 
+.hud-panel:first-child {
+  transform: translate(var(--balance-x, 0%), var(--balance-y, 0%)) rotate(var(--balance-angle, 0deg)) scale(calc(var(--balance-size, 100%) / 100%));
+  filter: none;
+}
+
 .hud-panel span {
   align-self: end !important;
   color: rgba(255, 218, 128, 0.88) !important;
-  font-size: clamp(9px, 2.05vw, 15px) !important;
+  font-size: calc(clamp(9px, 2.05vw, 15px) * var(--balance-label-size, 100%) / 100%) !important;
   line-height: 1 !important;
   letter-spacing: 0 !important;
+  position: relative;
+  -webkit-text-stroke: 0;
   text-shadow:
-    0 1px 0 rgba(25, 0, 7, 0.95),
-    0 0 5px rgba(255, 180, 75, 0.42) !important;
+    0 1px 0 rgba(35, 3, 8, 0.92),
+    1px 0 0 rgba(55, 8, 5, 0.48) !important;
 }
 
 .hud-panel strong {
   align-self: start !important;
   margin: -1px 0 0 !important;
   color: #ffe88e !important;
-  font-size: clamp(14px, 3.35vw, 22px) !important;
+  font-size: calc(clamp(14px, 3.35vw, 22px) * var(--balance-number-size, 100%) / 100%) !important;
   line-height: 1 !important;
   letter-spacing: 0 !important;
   white-space: nowrap !important;
-  -webkit-text-stroke: 0.45px rgba(70, 11, 18, 0.78);
+  position: relative;
+  -webkit-text-stroke: 0.25px rgba(56, 5, 10, 0.72);
   text-shadow:
-    0 2px 0 rgba(45, 2, 10, 0.9),
-    0 0 8px rgba(255, 216, 97, 0.58) !important;
+    0 1px 0 rgba(76, 19, 4, 0.9),
+    0 2px 0 rgba(28, 1, 6, 0.84),
+    1px 0 0 rgba(255, 246, 172, 0.18) !important;
+}
+
+.hud-panel span::before,
+.hud-panel strong::before,
+.bet-panel strong::before {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: -1;
+}
+
+.hud-panel span::before {
+  color: #360507;
+  transform: translate(1px, calc(var(--balance-stack, 2px) * -1));
+  text-shadow:
+    0 calc(var(--balance-stack, 2px) * -0.55) 0 #4d1404,
+    1px calc(var(--balance-stack, 2px) * -1.05) 0 #170004;
+}
+
+.hud-panel strong::before {
+  color: #360507;
+  -webkit-text-stroke: 0.25px #190004;
+  transform: translate(1px, calc(var(--balance-stack, 2px) * -1));
+  text-shadow:
+    0 calc(var(--balance-stack, 2px) * -0.75) 0 #5d1d04,
+    1px calc(var(--balance-stack, 2px) * -1.5) 0 #2b0305,
+    1px calc(var(--balance-stack, 2px) * -2.15) 0 #100003;
 }
 
 .bet-panel {
   position: relative !important;
   display: block !important;
   padding: 0 !important;
+  transform: translate(var(--bet-x, 0%), var(--bet-y, 0%)) rotate(var(--bet-angle, 0deg)) scale(calc(var(--bet-size, 100%) / 100%));
+  filter: none;
 }
 
 .bet-panel div {
@@ -7449,15 +7682,28 @@ button {
 .bet-panel strong {
   margin: 0 !important;
   color: #ffe88e !important;
-  font-size: clamp(16px, 3.75vw, 24px) !important;
+  font-size: calc(clamp(16px, 3.75vw, 24px) * var(--bet-text-size, 100%) / 100%) !important;
   line-height: 1 !important;
   letter-spacing: 0 !important;
   white-space: nowrap !important;
-  -webkit-text-stroke: 0.45px rgba(70, 11, 18, 0.78);
+  position: relative;
+  -webkit-text-stroke: 0.25px rgba(56, 5, 10, 0.72);
   text-shadow:
-    0 2px 0 rgba(45, 2, 10, 0.9),
-    0 0 8px rgba(255, 216, 97, 0.58) !important;
+    0 1px 0 rgba(76, 19, 4, 0.9),
+    0 2px 0 rgba(28, 1, 6, 0.84),
+    1px 0 0 rgba(255, 246, 172, 0.18) !important;
 }
+
+.bet-panel strong::before {
+  color: #360507;
+  -webkit-text-stroke: 0.25px #190004;
+  transform: translate(1px, calc(var(--bet-stack, 2px) * -1));
+  text-shadow:
+    0 calc(var(--bet-stack, 2px) * -0.75) 0 #5d1d04,
+    1px calc(var(--bet-stack, 2px) * -1.5) 0 #2b0305,
+    1px calc(var(--bet-stack, 2px) * -2.15) 0 #100003;
+}
+
 
 .bet-panel button {
   position: absolute !important;
@@ -7495,12 +7741,17 @@ button {
   width: 64%;
   height: 66%;
   border-radius: 0;
-  background: #ffc955;
-  transform: translate(-50%, -50%);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 224, 0.9) 0 18%, rgba(255, 222, 103, 0.92) 19% 56%, rgba(146, 70, 12, 0.98) 57% 100%);
+  transform: translate(-50%, -50%) scale(calc(var(--bet-arrow-size, 100%) / 100%));
   clip-path: polygon(82% 3%, 12% 50%, 82% 97%);
+  z-index: 2;
   box-shadow:
-    0 2px 0 rgba(48, 3, 10, 0.82),
-    0 0 7px rgba(255, 219, 105, 0.7);
+    inset 0 1px 0 rgba(255, 255, 221, 0.88),
+    inset 0 -2px 0 rgba(72, 16, 3, 0.68),
+    0 calc(1px + 2px * var(--bet-depth, 100%) / 100%) 0 rgba(48, 3, 10, 0.94),
+    1px calc(3px + 2px * var(--bet-depth, 100%) / 100%) 0 rgba(103, 42, 7, 0.72),
+    1px calc(4px + 3px * var(--bet-depth, 100%) / 100%) 0 rgba(16, 0, 4, 0.68);
 }
 
 .bet-panel #betUp::before {
@@ -7508,8 +7759,22 @@ button {
 }
 
 .bet-panel button::after {
-  content: none;
-  display: none;
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 64%;
+  height: 66%;
+  border-radius: 0;
+  background: #411007;
+  transform: translate(calc(-50% + 1px), calc(-50% - var(--bet-stack, 2px) - 2px * var(--bet-depth, 100%) / 100%)) scale(calc(var(--bet-arrow-size, 100%) / 100%));
+  clip-path: polygon(82% 3%, 12% 50%, 82% 97%);
+  display: block;
+  z-index: 1;
+}
+
+.bet-panel #betUp::after {
+  clip-path: polygon(18% 3%, 88% 50%, 18% 97%);
 }
 
 .icon-button {
@@ -7532,21 +7797,41 @@ button {
   filter:
     drop-shadow(0 2px 0 rgba(36, 2, 9, 0.92))
     drop-shadow(0 0 6px rgba(255, 219, 105, 0.46));
+  z-index: 2;
+}
+
+.icon-button::after {
+  content: "";
+  position: absolute;
+  display: block;
+  pointer-events: none;
+  z-index: 1;
 }
 
 #fastButton::before {
-  left: 53%;
-  top: 49%;
+  left: calc(53% + var(--fast-icon-x, 0%));
+  top: calc(49% + var(--fast-icon-y, 0%));
   width: clamp(38px, 10.8vw, 70px);
   height: clamp(42px, 12vw, 76px);
+  transform: translate(-50%, -50%) rotate(var(--fast-icon-angle, 0deg)) skewX(var(--fast-icon-skew, 0deg)) scale(calc(var(--fast-icon-size, 100%) / 100%));
   clip-path: polygon(61% 0, 4% 52%, 40% 52%, 21% 100%, 100% 26%, 62% 26%);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.34), transparent 28%),
-    linear-gradient(180deg, #8e7650 0%, #3e7f88 52%, #7c5321 100%);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.58), transparent 24%),
+    linear-gradient(120deg, rgba(255, 240, 146, 0.7), transparent 38%),
+    linear-gradient(180deg, #b99a58 0%, #3e7f88 52%, #5b3512 100%);
   opacity: 0.58;
-  filter:
-    drop-shadow(0 2px 0 rgba(19, 1, 5, 0.95))
-    drop-shadow(0 0 3px rgba(255, 190, 88, 0.2));
+  filter: none;
+}
+
+#fastButton::after {
+  left: calc(53% + var(--fast-icon-x, 0%));
+  top: calc(49% + var(--fast-icon-y, 0%));
+  width: clamp(38px, 10.8vw, 70px);
+  height: clamp(42px, 12vw, 76px);
+  transform: translate(calc(-50% + 1px), calc(-50% - var(--fast-icon-stack, 6px))) rotate(var(--fast-icon-angle, 0deg)) skewX(var(--fast-icon-skew, 0deg)) scale(calc(var(--fast-icon-size, 100%) / 100%));
+  clip-path: polygon(61% 0, 4% 52%, 40% 52%, 21% 100%, 100% 26%, 62% 26%);
+  background: #321006;
+  opacity: 0.82;
 }
 
 #fastButton[aria-pressed="true"]::before {
@@ -7554,31 +7839,48 @@ button {
     linear-gradient(180deg, rgba(255, 255, 255, 0.9), transparent 24%),
     linear-gradient(180deg, #fff8be 0%, #9dfff9 42%, #ff4fc4 100%);
   opacity: 1;
-  filter:
-    drop-shadow(0 2px 0 rgba(36, 2, 9, 0.92))
-    drop-shadow(0 0 9px rgba(111, 244, 255, 0.92))
-    drop-shadow(0 0 13px rgba(255, 217, 94, 0.58));
+  filter: none;
+}
+
+#fastButton[aria-pressed="true"]::after {
+  background: #451024;
+  opacity: 0.9;
 }
 
 #menuButton::before {
-  left: 48%;
-  top: 51%;
+  left: calc(48% + var(--menu-icon-x, 0%));
+  top: calc(51% + var(--menu-icon-y, 0%));
   width: clamp(34px, 9vw, 58px);
   height: clamp(26px, 6.9vw, 44px);
+  transform: translate(-50%, -50%) rotate(var(--menu-icon-angle, 0deg)) skewX(var(--menu-icon-skew, 0deg)) scale(calc(var(--menu-icon-size, 100%) / 100%));
   background:
-    linear-gradient(#ffe591, #ffe591) 0 0 / 100% 30% no-repeat,
-    linear-gradient(#ffe591, #ffe591) 0 50% / 100% 30% no-repeat,
-    linear-gradient(#ffe591, #ffe591) 0 100% / 100% 30% no-repeat;
+    linear-gradient(180deg, #fffbd1 0 18%, #ffe591 19% 52%, #b8641b 53% 78%, #5a1808 79% 100%) 0 0 / 100% var(--menu-icon-bar, 30%) no-repeat,
+    linear-gradient(180deg, #fffbd1 0 18%, #ffe591 19% 52%, #b8641b 53% 78%, #5a1808 79% 100%) 0 50% / 100% var(--menu-icon-bar, 30%) no-repeat,
+    linear-gradient(180deg, #fffbd1 0 18%, #ffe591 19% 52%, #b8641b 53% 78%, #5a1808 79% 100%) 0 100% / 100% var(--menu-icon-bar, 30%) no-repeat;
+  filter: none;
+}
+
+#menuButton::after {
+  left: calc(48% + var(--menu-icon-x, 0%));
+  top: calc(51% + var(--menu-icon-y, 0%));
+  width: clamp(34px, 9vw, 58px);
+  height: clamp(26px, 6.9vw, 44px);
+  transform: translate(calc(-50% + 1px), calc(-50% - var(--menu-icon-stack, 4px))) rotate(var(--menu-icon-angle, 0deg)) skewX(var(--menu-icon-skew, 0deg)) scale(calc(var(--menu-icon-size, 100%) / 100%));
+  background:
+    linear-gradient(#3e0f06, #3e0f06) 0 0 / 100% var(--menu-icon-bar, 30%) no-repeat,
+    linear-gradient(#3e0f06, #3e0f06) 0 50% / 100% var(--menu-icon-bar, 30%) no-repeat,
+    linear-gradient(#3e0f06, #3e0f06) 0 100% / 100% var(--menu-icon-bar, 30%) no-repeat;
 }
 
 @media (max-width: 430px) {
   .hud {
-    top: 94.25% !important;
-    left: 6.55% !important;
-    width: 85.9% !important;
-    height: 3.55% !important;
+    top: calc(94.25% + var(--hud-y, 0%)) !important;
+    left: calc(6.55% + var(--hud-x, 0%)) !important;
+    width: var(--hud-width, 85.9%) !important;
+    height: var(--hud-height, 3.55%) !important;
     grid-template-columns: 1.87fr 1.64fr 0.58fr 0.58fr !important;
-    gap: 7.7% !important;
+    gap: var(--hud-gap, 7.7%) !important;
+    transform: perspective(var(--hud-perspective, 430px)) rotateX(var(--hud-rotate-x, 5deg)) !important;
   }
 
   .hud-panel {

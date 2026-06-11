@@ -343,7 +343,9 @@ const specialMiniSlotEl = document.getElementById("specialMiniSlot");
 const miniSlotIconEl = document.getElementById("miniSlotIcon");
 const stageSlotsEl = document.getElementById("stageSlots");
 const stageSlotEls = Array.from(document.querySelectorAll(".event-socket"));
+const balanceLabelEl = document.querySelector(".hud-panel span");
 const balanceEl = document.getElementById("balance");
+const betLabelEl = document.querySelector(".bet-panel span");
 const betEl = document.getElementById("bet");
 const statusTextEl = document.getElementById("statusText");
 const fastButton = document.getElementById("fastButton");
@@ -4791,8 +4793,14 @@ function renderHud() {
   });
   state.miniSlotPreview = state.stagePreviews[0] || state.miniSlotPreview;
   miniSlotIconEl.src = eventPreviewAsset(state.miniSlotPreview);
-  balanceEl.textContent = formatBalance(state.balance);
-  betEl.textContent = currentBet().toLocaleString("en-US");
+  const balanceText = formatBalance(state.balance);
+  const betText = currentBet().toLocaleString("en-US");
+  balanceLabelEl?.setAttribute("data-text", balanceLabelEl.textContent || "");
+  betLabelEl?.setAttribute("data-text", betLabelEl.textContent || "");
+  balanceEl.textContent = balanceText;
+  balanceEl.setAttribute("data-text", balanceText);
+  betEl.textContent = betText;
+  betEl.setAttribute("data-text", betText);
   fastButton.setAttribute("aria-pressed", String(state.fast));
   soundMenuButton.textContent = state.sound ? "音效開啟" : "音效關閉";
   specialOddsButton.textContent = state.specialOdds ? "特殊機率開啟" : "特殊機率關閉";
@@ -6350,6 +6358,174 @@ function initClimaxTunePanel() {
   renderHud();
 }
 
+function initBoardTunePanel() {
+  const params = new URLSearchParams(window.location.search);
+  if (!params.has("boardTune")) return;
+  if (!phoneShellEl || !boardEl) return;
+
+  phoneShellEl.classList.add("board-tune");
+
+  const controls = [
+    { label: "一般糖尺寸", name: "--normal-candy-size", min: 40, max: 500, step: 1, value: 90, unit: "%" },
+    { label: "特殊糖尺寸", name: "--special-candy-size", min: 40, max: 500, step: 1, value: 116, unit: "%" },
+    { label: "盤面圓角", name: "--play-board-radius", min: 0, max: 80, step: 1, value: 14, unit: "px" },
+    { label: "底排 X", name: "--hud-x", min: -50, max: 50, step: 0.1, value: 0.3, unit: "%" },
+    { label: "底排 Y", name: "--hud-y", min: -50, max: 50, step: 0.1, value: -0.2, unit: "%" },
+    { label: "底排寬", name: "--hud-width", min: 20, max: 180, step: 0.1, value: 85.4, unit: "%" },
+    { label: "底排高", name: "--hud-height", min: 1, max: 20, step: 0.1, value: 3.6, unit: "%" },
+    { label: "底排間距", name: "--hud-gap", min: 0, max: 50, step: 0.1, value: 7.75, unit: "%" },
+    { label: "底排透視", name: "--hud-perspective", min: 80, max: 1200, step: 1, value: 430, unit: "px" },
+    { label: "底排仰角", name: "--hud-rotate-x", min: -45, max: 45, step: 1, value: 25, unit: "deg" },
+    { label: "餘額 X", name: "--balance-x", min: -100, max: 100, step: 0.5, value: 1, unit: "%" },
+    { label: "餘額 Y", name: "--balance-y", min: -100, max: 100, step: 0.5, value: -4, unit: "%" },
+    { label: "餘額角度", name: "--balance-angle", min: -45, max: 45, step: 1, value: 0, unit: "deg" },
+    { label: "餘額大小", name: "--balance-size", min: 40, max: 300, step: 1, value: 95, unit: "%" },
+    { label: "餘額標題字", name: "--balance-label-size", min: 40, max: 300, step: 1, value: 100, unit: "%" },
+    { label: "餘額數字字", name: "--balance-number-size", min: 40, max: 300, step: 1, value: 100, unit: "%" },
+    { label: "餘額厚度", name: "--balance-depth", min: 0, max: 200, step: 1, value: 0, unit: "%" },
+    { label: "餘額疊層", name: "--balance-stack", min: 0, max: 8, step: 1, value: 0, unit: "px" },
+    { label: "下注 X", name: "--bet-x", min: -100, max: 100, step: 0.5, value: 0, unit: "%" },
+    { label: "下注 Y", name: "--bet-y", min: -100, max: 100, step: 0.5, value: -4, unit: "%" },
+    { label: "下注角度", name: "--bet-angle", min: -45, max: 45, step: 1, value: 0, unit: "deg" },
+    { label: "下注大小", name: "--bet-size", min: 40, max: 300, step: 1, value: 101, unit: "%" },
+    { label: "下注文字", name: "--bet-text-size", min: 40, max: 300, step: 1, value: 100, unit: "%" },
+    { label: "下注箭頭", name: "--bet-arrow-size", min: 40, max: 300, step: 1, value: 100, unit: "%" },
+    { label: "下注厚度", name: "--bet-depth", min: 0, max: 200, step: 1, value: 100, unit: "%" },
+    { label: "下注疊層", name: "--bet-stack", min: 0, max: 8, step: 1, value: 0, unit: "px" },
+    { label: "閃電 X", name: "--fast-icon-x", min: -100, max: 100, step: 0.5, value: -4, unit: "%" },
+    { label: "閃電 Y", name: "--fast-icon-y", min: -100, max: 100, step: 0.5, value: 0, unit: "%" },
+    { label: "閃電角度", name: "--fast-icon-angle", min: -90, max: 90, step: 1, value: 5, unit: "deg" },
+    { label: "閃電大小", name: "--fast-icon-size", min: 40, max: 300, step: 1, value: 65, unit: "%" },
+    { label: "閃電斜切", name: "--fast-icon-skew", min: -45, max: 45, step: 1, value: 0, unit: "deg" },
+    { label: "閃電厚度", name: "--fast-icon-depth", min: 0, max: 200, step: 1, value: 100, unit: "%" },
+    { label: "閃電疊層", name: "--fast-icon-stack", min: 0, max: 12, step: 1, value: 0, unit: "px" },
+    { label: "選單 X", name: "--menu-icon-x", min: -100, max: 100, step: 0.5, value: 3.5, unit: "%" },
+    { label: "選單 Y", name: "--menu-icon-y", min: -100, max: 100, step: 0.5, value: -3, unit: "%" },
+    { label: "選單角度", name: "--menu-icon-angle", min: -90, max: 90, step: 1, value: 0, unit: "deg" },
+    { label: "選單大小", name: "--menu-icon-size", min: 40, max: 300, step: 1, value: 74, unit: "%" },
+    { label: "選單斜切", name: "--menu-icon-skew", min: -45, max: 45, step: 1, value: 0, unit: "deg" },
+    { label: "選單線厚", name: "--menu-icon-bar", min: 8, max: 80, step: 1, value: 23, unit: "%" },
+    { label: "選單厚度", name: "--menu-icon-depth", min: 0, max: 200, step: 1, value: 0, unit: "%" },
+    { label: "選單疊層", name: "--menu-icon-stack", min: 0, max: 12, step: 1, value: 0, unit: "px" },
+  ];
+
+  const panel = document.createElement("div");
+  panel.className = "board-tune-panel";
+  panel.innerHTML = `
+    <strong class="board-tune-title">物件調整</strong>
+    <div class="board-tune-readout"></div>
+    <div class="board-tune-controls"></div>
+    <textarea class="board-tune-output" readonly></textarea>
+  `;
+
+  const titleEl = panel.querySelector(".board-tune-title");
+  const readoutEl = panel.querySelector(".board-tune-readout");
+  const controlsEl = panel.querySelector(".board-tune-controls");
+  const outputEl = panel.querySelector(".board-tune-output");
+  let panelDrag = null;
+
+  function outputText() {
+    const lines = controls.map(({ name }) => `  ${name}: ${phoneShellEl.style.getPropertyValue(name)};`);
+    return `.phone {\n${lines.join("\n")}\n}`;
+  }
+
+  function refreshOutput() {
+    const boardRect = boardEl.getBoundingClientRect();
+    const tileRect = boardEl.querySelector(".tile")?.getBoundingClientRect();
+    const imgRect = boardEl.querySelector(".tile.candy .candy-img")?.getBoundingClientRect();
+    const specialRect = boardEl.querySelector(".tile.special-candy .special-img")?.getBoundingClientRect();
+    readoutEl.textContent = tileRect
+      ? `board ${Math.round(boardRect.width)} x ${Math.round(boardRect.height)} / tile ${Math.round(tileRect.width)} x ${Math.round(tileRect.height)}${imgRect ? ` / normal ${Math.round(imgRect.width)} x ${Math.round(imgRect.height)}` : ""}${specialRect ? ` / special ${Math.round(specialRect.width)} x ${Math.round(specialRect.height)}` : ""}`
+      : `board ${Math.round(boardRect.width)} x ${Math.round(boardRect.height)}`;
+    outputEl.value = outputText();
+  }
+
+  controls.forEach((control) => {
+    const row = document.createElement("div");
+    row.className = "board-tune-row";
+    row.innerHTML = `
+      <span>${control.label}</span>
+      <div class="board-tune-control">
+        <button type="button" data-step="-1" aria-label="${control.label} 減少">-</button>
+        <input type="range" min="${control.min}" max="${control.max}" step="${control.step}" value="${control.value}">
+        <button type="button" data-step="1" aria-label="${control.label} 增加">+</button>
+      </div>
+      <span class="board-tune-value">${control.value}${control.unit}</span>
+    `;
+
+    const input = row.querySelector("input");
+    const valueEl = row.querySelector(".board-tune-value");
+
+    const setValue = (raw) => {
+      const numeric = Number(raw);
+      const value = `${+numeric.toFixed(2)}${control.unit}`;
+      input.value = String(numeric);
+      phoneShellEl.style.setProperty(control.name, value);
+      valueEl.textContent = value;
+      scheduleBoardSizeSync(true);
+      refreshOutput();
+    };
+
+    input.addEventListener("input", () => setValue(input.value));
+    row.querySelectorAll("[data-step]").forEach((button) => {
+      button.addEventListener("pointerdown", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        setValue(Number(input.value) + Number(button.dataset.step) * Number(control.step));
+      });
+    });
+    setValue(control.value);
+    controlsEl.appendChild(row);
+  });
+
+  const movePanel = (clientX, clientY) => {
+    if (!panelDrag) return;
+    const width = panel.offsetWidth;
+    const height = panel.offsetHeight;
+    const maxLeft = Math.max(0, window.innerWidth - width);
+    const maxTop = Math.max(0, window.innerHeight - height);
+    const left = Math.min(maxLeft, Math.max(0, clientX - panelDrag.offsetX));
+    const top = Math.min(maxTop, Math.max(0, clientY - panelDrag.offsetY));
+    panel.style.left = `${left}px`;
+    panel.style.top = `${top}px`;
+    panel.style.right = "auto";
+    panel.style.bottom = "auto";
+  };
+
+  titleEl?.addEventListener("pointerdown", (event) => {
+    if (event.button !== 0) return;
+    const rect = panel.getBoundingClientRect();
+    panelDrag = {
+      pointerId: event.pointerId,
+      offsetX: event.clientX - rect.left,
+      offsetY: event.clientY - rect.top,
+    };
+    panel.classList.add("is-dragging");
+    titleEl.setPointerCapture?.(event.pointerId);
+    event.preventDefault();
+    event.stopPropagation();
+  });
+
+  const endPanelDrag = (event) => {
+    if (!panelDrag || event.pointerId !== panelDrag.pointerId) return;
+    titleEl?.releasePointerCapture?.(event.pointerId);
+    panelDrag = null;
+    panel.classList.remove("is-dragging");
+  };
+
+  document.addEventListener("pointermove", (event) => {
+    if (!panelDrag || event.pointerId !== panelDrag.pointerId) return;
+    movePanel(event.clientX, event.clientY);
+    event.preventDefault();
+  });
+  document.addEventListener("pointerup", endPanelDrag);
+  document.addEventListener("pointercancel", endPanelDrag);
+
+  panel.addEventListener("click", (event) => event.stopPropagation());
+  document.body.appendChild(panel);
+  refreshOutput();
+}
+
 function applyPerformanceMode() {
   phoneShellEl?.classList.toggle("ios-performance", IOS_PERFORMANCE_MODE);
 }
@@ -6386,4 +6562,5 @@ preventImageSelection();
 preloadSymbolAssets();
 initPerfMonitor();
 initClimaxTunePanel();
+initBoardTunePanel();
 startNewBoard();
