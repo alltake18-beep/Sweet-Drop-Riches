@@ -23,7 +23,7 @@ const AUDIO_CATEGORY_GAINS = {
   movement: 0.68,
   match: 0.86,
   meter: 1.16,
-  eventRoll: 1.24,
+  eventRoll: 0.92,
   coin: 1.18,
   multiplier: 1.28,
   transition: 1.34,
@@ -34,7 +34,7 @@ const AUDIO_CATEGORY_GAINS = {
   voice: 0.72,
   error: 0.62,
 };
-const AUDIO_ASSET_VERSION = "casino-audio-pack-20260611-stage-audio-retune";
+const AUDIO_ASSET_VERSION = "casino-audio-pack-20260611-fire-roll-win-retune";
 const AUDIO_ASSETS = {
   bgmNormal: "assets/audio/bgm-normal.wav",
   button: "assets/audio/button.wav",
@@ -75,7 +75,7 @@ const AUDIO_ASSET_CATEGORY_GAINS = {
   movement: 0.16,
   match: 0.27,
   meter: 0.5,
-  eventRoll: 0.58,
+  eventRoll: 0.36,
   coin: 0.5,
   multiplier: 0.62,
   transition: 0.66,
@@ -1336,9 +1336,6 @@ function startClimaxIdleSpin() {
     if (climaxWheelHighlightEl) {
       const index = Math.floor(normalizeAngle(pointerAngle - state.climaxWheelRotation) / sliceAngle) % FULL_DROP_WHEEL_LABEL_ORDER.length;
       climaxWheelHighlightEl.style.setProperty("--highlight-angle", `${index * sliceAngle + sliceAngle * 0.5}deg`);
-      if (state.climaxIntroPhase !== "wheel" && index !== state.climaxIdleLastTickIndex) {
-        playSound("wheelSpin");
-      }
       state.climaxIdleLastTickIndex = index;
     }
     state.climaxIdleFrame = requestAnimationFrame(tick);
