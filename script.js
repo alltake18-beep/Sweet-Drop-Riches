@@ -34,6 +34,58 @@ const AUDIO_CATEGORY_GAINS = {
   voice: 0.72,
   error: 0.62,
 };
+const AUDIO_ASSET_VERSION = "casino-audio-pack-20260611-asset-bus";
+const AUDIO_ASSETS = {
+  bgmNormal: "assets/audio/bgm-normal.wav",
+  button: "assets/audio/button.wav",
+  swap: "assets/audio/swap.wav",
+  drop: "assets/audio/drop.wav",
+  error: "assets/audio/error.wav",
+  match: "assets/audio/match.wav",
+  cascade: "assets/audio/cascade.wav",
+  meterGain: "assets/audio/meter-gain.wav",
+  meterReady: "assets/audio/meter-ready.wav",
+  eventRollStart: "assets/audio/event-roll-start.wav",
+  eventRollTick: "assets/audio/event-roll-tick.wav",
+  eventRollLock: "assets/audio/event-roll-lock.wav",
+  flameScan: "assets/audio/flame-scan.wav",
+  flameBurn: "assets/audio/flame-burn.wav",
+  flameResist: "assets/audio/flame-resist.wav",
+  multiplierCollect: "assets/audio/multiplier-collect.wav",
+  multiplierHigh: "assets/audio/multiplier-high.wav",
+  slotFull: "assets/audio/slot-full.wav",
+  climaxIntro: "assets/audio/climax-intro.wav",
+  climaxLift: "assets/audio/climax-lift.wav",
+  logoReturn: "assets/audio/logo-return.wav",
+  wheelStart: "assets/audio/wheel-start.wav",
+  wheelTick: "assets/audio/wheel-tick.wav",
+  wheelStop: "assets/audio/wheel-stop.wav",
+  wheelHighStop: "assets/audio/wheel-high-stop.wav",
+  winBig: "assets/audio/win-big.wav",
+  winSuper: "assets/audio/win-super.wav",
+  winJackpot: "assets/audio/win-jackpot.wav",
+  payoutLoop: "assets/audio/payout-loop.wav",
+  payoutSnap: "assets/audio/payout-snap.wav",
+  nearMiss: "assets/audio/near-miss.wav",
+  specialSpawn: "assets/audio/special-spawn.wav",
+  specialBlast: "assets/audio/special-blast.wav",
+};
+const AUDIO_ASSET_CATEGORY_GAINS = {
+  button: 0.14,
+  movement: 0.16,
+  match: 0.42,
+  meter: 0.5,
+  eventRoll: 0.58,
+  coin: 0.5,
+  multiplier: 0.62,
+  transition: 0.66,
+  payout: 0.76,
+  special: 0.64,
+  wheel: 0.68,
+  nearMiss: 0.34,
+  voice: 0.54,
+  error: 0.18,
+};
 const MUSIC_BPM = 128;
 const MUSIC_STEP_MS = 60000 / MUSIC_BPM / 2;
 const MUSIC_SWING = 0.62;
@@ -304,8 +356,14 @@ const state = {
   lowCutFilter: null,
   limiter: null,
   musicTimer: null,
+  bgmSource: null,
+  payoutLoopSource: null,
   musicStep: 0,
   musicDuckingUntil: 0,
+  audioBuffers: new Map(),
+  audioAssetPromises: new Map(),
+  audioAssetFailures: new Set(),
+  audioPreloadPromise: null,
   activeTones: 0,
   lastSoundAt: {},
   soundVoiceState: {},
@@ -2579,6 +2637,29 @@ function animateWinAmount(target, duration) {
 function playWinCountLoop(duration, volume = 0.04) {
   if (!state.sound) return;
   duckBackgroundMusic(duration + 520, BGM_DUCK_PAYOUT);
+  const payoutLoop = playAudioAsset("payoutLoop", { category: "payout", gain: 0.95, loop: true });
+  if (payoutLoop) {
+    if (state.payoutLoopSource) {
+      try {
+        state.payoutLoopSource.stop();
+      } catch (error) {
+        // Source may already have ended.
+      }
+    }
+    state.payoutLoopSource = payoutLoop;
+    window.setTimeout(() => {
+      if (state.payoutLoopSource === payoutLoop) {
+        try {
+          payoutLoop.stop();
+        } catch (error) {
+          // Source may already have ended.
+        }
+        state.payoutLoopSource = null;
+      }
+      playAudioAsset("payoutSnap", { category: "payout", gain: 1.08 });
+    }, duration);
+    return;
+  }
   const started = performance.now();
   let step = 0;
   const timer = window.setInterval(() => {
@@ -2646,7 +2727,6 @@ async function playFullDropWheel() {
   const finalRotation = wheelRotationDeltaToLand(landingAngle, climaxPointerAngle(), spinProfile.turns);
   slotTotals.forEach((value, index) => spawnSlotClimaxEnergy(index, value, 12 + index * 85));
   playWheelStartPerformance();
-  playSound("slotProgress");
   await wait(980);
 
   state.climaxSpinning = true;
@@ -2655,7 +2735,6 @@ async function playFullDropWheel() {
 
   duckBackgroundMusic(1300, BGM_DUCK_DEEP);
   playWheelStopPerformance(prize.multiplier);
-  playSound("wheelStop");
   if (isWheelHighNearMiss(prizeIndex, prize)) playNearMissPerformance("wheel");
   addWin(award);
   state.climaxSpinning = false;
@@ -3055,6 +3134,82 @@ function ensureAudio() {
   return state.audioContext;
 }
 
+function audioAssetUrl(name) {
+  const path = AUDIO_ASSETS[name];
+  if (!path) return null;
+  return `${path}?v=${AUDIO_ASSET_VERSION}`;
+}
+
+function decodeAudioAsset(context, arrayBuffer) {
+  try {
+    const decodeResult = context.decodeAudioData(arrayBuffer.slice(0));
+    if (decodeResult && typeof decodeResult.then === "function") return decodeResult;
+  } catch (error) {
+    // Older WebAudio implementations require callbacks.
+  }
+  return new Promise((resolve, reject) => {
+    context.decodeAudioData(arrayBuffer.slice(0), resolve, reject);
+  });
+}
+
+function loadAudioAsset(name) {
+  const context = ensureAudio();
+  const url = audioAssetUrl(name);
+  if (!context || !url) return Promise.reject(new Error(`Missing audio asset: ${name}`));
+  if (state.audioBuffers.has(name)) return Promise.resolve(state.audioBuffers.get(name));
+  if (state.audioAssetPromises.has(name)) return state.audioAssetPromises.get(name);
+  const promise = fetch(url, { cache: "force-cache" })
+    .then((response) => {
+      if (!response.ok) throw new Error(`Audio asset ${name} failed: ${response.status}`);
+      return response.arrayBuffer();
+    })
+    .then((arrayBuffer) => decodeAudioAsset(context, arrayBuffer))
+    .then((buffer) => {
+      state.audioBuffers.set(name, buffer);
+      return buffer;
+    })
+    .catch((error) => {
+      state.audioAssetFailures.add(name);
+      throw error;
+    });
+  state.audioAssetPromises.set(name, promise);
+  return promise;
+}
+
+function preloadAudioAssets() {
+  if (state.audioPreloadPromise) return state.audioPreloadPromise;
+  if (!ensureAudio()) return null;
+  state.audioPreloadPromise = Promise.allSettled(Object.keys(AUDIO_ASSETS).map((name) => loadAudioAsset(name)));
+  return state.audioPreloadPromise;
+}
+
+function playAudioAsset(name, options = {}) {
+  if (!state.sound) return false;
+  const context = ensureAudio();
+  if (!context) return false;
+  const buffer = state.audioBuffers.get(name);
+  if (!buffer) {
+    if (!state.audioAssetFailures.has(name)) loadAudioAsset(name).catch(() => {});
+    return false;
+  }
+
+  const source = context.createBufferSource();
+  const gain = context.createGain();
+  const isMusic = options.bus === "bgm" || options.music;
+  const category = options.category || "match";
+  const categoryGain = isMusic ? 0.88 : (AUDIO_ASSET_CATEGORY_GAINS[category] || 0.42);
+  const gainValue = Math.min(isMusic ? 1 : 0.96, categoryGain * (options.gain ?? 1));
+
+  source.buffer = buffer;
+  source.loop = Boolean(options.loop);
+  source.playbackRate.value = options.playbackRate || 1;
+  gain.gain.value = gainValue;
+  source.connect(gain);
+  gain.connect(isMusic ? state.bgmGain : state.sfxGain);
+  source.start(context.currentTime + (options.delay || 0));
+  return source;
+}
+
 function normalizeToneVolume(volume, group, category) {
   const categoryGain = group === "sfx" ? (AUDIO_CATEGORY_GAINS[category] || 0.65) : 1;
   const peakLimit = group === "bgm" ? AUDIO_BGM_PEAK_LIMIT : AUDIO_SFX_PEAK_LIMIT;
@@ -3345,9 +3500,31 @@ function playHypeMusicBeat(beat) {
 }
 
 function startBackgroundMusic() {
-  if (!state.sound || state.musicTimer) return;
+  if (!state.sound || state.musicTimer || state.bgmSource) return;
   const context = ensureAudio();
   if (!context) return;
+  preloadAudioAssets();
+  const bgmBuffer = state.audioBuffers.get("bgmNormal");
+  if (bgmBuffer) {
+    const source = playAudioAsset("bgmNormal", { bus: "bgm", loop: true, music: true, gain: 0.9 });
+    if (source) {
+      state.bgmSource = source;
+      source.onended = () => {
+        if (state.bgmSource === source) state.bgmSource = null;
+      };
+      return;
+    }
+  }
+  if (!state.audioAssetFailures.has("bgmNormal")) {
+    loadAudioAsset("bgmNormal")
+      .then(() => {
+        if (state.sound && !state.musicTimer && !state.bgmSource) startBackgroundMusic();
+      })
+      .catch(() => {
+        if (state.sound && !state.musicTimer && !state.bgmSource) startBackgroundMusic();
+      });
+    return;
+  }
   const tick = () => {
     if (!state.sound) {
       state.musicTimer = null;
@@ -3370,13 +3547,23 @@ function startBackgroundMusic() {
 }
 
 function stopBackgroundMusic() {
-  if (!state.musicTimer) return;
-  window.clearTimeout(state.musicTimer);
-  state.musicTimer = null;
+  if (state.musicTimer) {
+    window.clearTimeout(state.musicTimer);
+    state.musicTimer = null;
+  }
+  if (state.bgmSource) {
+    try {
+      state.bgmSource.stop();
+    } catch (error) {
+      // Source may already have ended.
+    }
+    state.bgmSource = null;
+  }
 }
 
 function armBackgroundMusic() {
   if (!state.sound) return;
+  preloadAudioAssets();
   startBackgroundMusic();
 }
 
@@ -3492,6 +3679,7 @@ function playSuspenseInhale(options = {}) {
 
 function playNearMissPerformance(kind = "meter") {
   duckBackgroundMusic(680, BGM_DUCK_LIGHT);
+  if (playAudioAsset("nearMiss", { category: "nearMiss", gain: kind === "wheel" ? 1.08 : 0.9 })) return true;
   const endNote = kind === "wheel" ? hz("Db", 4) : kind === "slot" ? hz("F", 3) : hz("Bb", 3);
   playSuspenseInhale({ end: endNote, duration: kind === "wheel" ? 0.62 : 0.46, volume: kind === "wheel" ? 0.032 : 0.024 });
   withSoundScope("nearMiss", kind === "wheel" ? 1.08 : 0.9, () => {
@@ -3499,9 +3687,11 @@ function playNearMissPerformance(kind = "meter") {
     playTone(endNote, 0.07, { delay: 0.42, type: "triangle", volume: 0.026, filter: { type: "bandpass", from: 520, to: 1500, q: 2.4 } });
     playNoise(0.04, { delay: 0.5, frequency: 3600, filterType: "highpass", volume: 0.008 });
   });
+  return false;
 }
 
 function playEventRollStepSound(stage, index, total) {
+  if (playAudioAsset("eventRollTick", { category: "eventRoll", gain: stage >= 3 ? 1.18 : 1 })) return true;
   withSoundScope("eventRoll", stage >= 3 ? 1.28 : 1.08, () => {
     const progress = total <= 1 ? 1 : index / (total - 1);
     const base = hz(stage >= 3 ? "F" : "Db", 4) * (1 + progress * 0.18);
@@ -3509,28 +3699,35 @@ function playEventRollStepSound(stage, index, total) {
     playNoise(0.022, { delay: 0.006, frequency: 5200 + progress * 1800, filterType: "highpass", volume: 0.018 });
     if (index === 0 || index === total - 1) playCommercialHit(hz("Bb", 1), { delay: 0.014, size: 0.72, low: 0.056, body: 0.022, noise: 0.012 });
   });
+  return false;
 }
 
 function playEventRollStartPerformance(stage) {
   duckBackgroundMusic(stage >= 3 ? 920 : 720, BGM_DUCK_MEDIUM);
+  if (playAudioAsset("eventRollStart", { category: "eventRoll", gain: stage >= 3 ? 1.18 : 1 })) return true;
   withSoundScope("eventRoll", stage >= 3 ? 1.35 : 1.14, () => {
     playCommercialHit(hz("Bb", 1), { size: stage >= 3 ? 1 : 0.82, low: 0.072, body: 0.034, noise: 0.018 });
     playRiser(hz("Bb", 2), stage >= 3 ? hz("F", 5) : hz("Db", 5), 0.32, { delay: 0.03, volume: 0.052, q: 3.2, noiseFreq: 3800 });
     playCasinoShine(hz("F", 5), { delay: 0.12, count: 3, volume: 0.032 });
   });
+  return false;
 }
 
 function playEventRollLockPerformance(stage, event) {
   duckBackgroundMusic(stage >= 3 ? 820 : 620, stage >= 3 ? BGM_DUCK_DEEP : BGM_DUCK_MEDIUM);
+  if (playAudioAsset("eventRollLock", { category: "eventRoll", gain: stage >= 3 ? 1.18 : 1 })) return true;
   withSoundScope("eventRoll", stage >= 3 ? 1.42 : 1.22, () => {
     playCommercialHit(hz("Bb", 1), { size: stage >= 3 ? 1.14 : 0.95, low: 0.078, body: 0.042, noise: 0.024, noiseFreq: 1300 });
     playTone(event?.kind === "flame" ? hz("F", 5) : hz("Db", 5), 0.08, { delay: 0.08, type: "square", volume: 0.064, filter: { type: "bandpass", from: 1200, to: 2600, q: 3.6 } });
     playCasinoShine(stage >= 3 ? hz("Bb", 5) : hz("F", 5), { delay: 0.17, count: stage >= 3 ? 5 : 3, volume: stage >= 3 ? 0.052 : 0.04 });
   });
+  return false;
 }
 
 function playMatchClearPerformance(cellCount, cascade = 0, hasSpecialBlast = false) {
   const bigClear = cellCount >= 8 || hasSpecialBlast;
+  const matchAsset = hasSpecialBlast ? "specialBlast" : cascade > 0 ? "cascade" : "match";
+  if (playAudioAsset(matchAsset, { category: hasSpecialBlast ? "special" : "match", gain: bigClear ? 1.16 : 1 })) return true;
   withSoundScope(hasSpecialBlast ? "special" : "match", bigClear ? 1.18 : 1.02, () => {
     const base = cascade > 0 ? hz("Db", 5) : hz("Bb", 4);
     playCommercialHit(hz("Bb", 2), { size: bigClear ? 0.72 : 0.46, low: 0.04, body: 0.02, noise: 0.012, noiseFreq: 2100 });
@@ -3540,29 +3737,35 @@ function playMatchClearPerformance(cellCount, cascade = 0, hasSpecialBlast = fal
       playBrassStab(hasSpecialBlast ? "dominant" : "bright", { delay: 0.13, volume: 0.044, duration: 0.09, voices: 3 });
     }
   });
+  return false;
 }
 
 function playMeterGainPerformance(count, before, after) {
   const progress = SPECIAL_METER_MAX ? after / SPECIAL_METER_MAX : 0;
+  if (playAudioAsset("meterGain", { category: "meter", gain: count >= 5 ? 1.18 : 0.96 })) return true;
   withSoundScope("meter", 0.96 + Math.min(0.24, count * 0.018), () => {
     playTone(hz("Db", 5) * (1 + progress * 0.08), 0.042, { type: "triangle", volume: 0.036, filter: { type: "highpass", from: 900, q: 0.8 } });
     playNoise(0.018, { delay: 0.018, frequency: 4400 + progress * 1800, filterType: "highpass", volume: 0.012 });
     playCasinoShine(hz("Ab", 5) * (1 + progress * 0.05), { delay: 0.046, count: 2, spacing: 0.035, volume: 0.026 });
     if (count >= 5) playBassThump(hz("Bb", 2), { delay: 0.035, duration: 0.07, volume: 0.028, toRatio: 0.72 });
   });
+  return false;
 }
 
 function playMeterThresholdPerformance(stage) {
   duckBackgroundMusic(760, BGM_DUCK_MEDIUM);
+  if (playAudioAsset("meterReady", { category: "meter", gain: stage >= 3 ? 1.2 : 1 })) return true;
   withSoundScope("meter", stage >= 3 ? 1.36 : 1.16, () => {
     playRiser(hz("Bb", 3), stage >= 3 ? hz("F", 6) : hz("Db", 6), 0.28, { volume: 0.058, q: 3.2, noiseFreq: 5200 });
     playCommercialHit(hz("Bb", 1), { delay: 0.2, size: stage >= 3 ? 1.04 : 0.82, low: 0.07, body: 0.04, noise: 0.022, noiseFreq: 1600 });
     playCasinoShine(stage >= 3 ? hz("Bb", 5) : hz("F", 5), { delay: 0.24, count: stage >= 3 ? 6 : 4, spacing: 0.038, volume: stage >= 3 ? 0.058 : 0.046 });
     playBrassStab(stage >= 3 ? "tonic" : "bright", { delay: 0.36, volume: stage >= 3 ? 0.058 : 0.044, duration: 0.12, voices: 3 });
   });
+  return false;
 }
 
 function playFlameSweepPerformance(index, total) {
+  if (playAudioAsset("flameScan", { category: "special", gain: index === 0 ? 1.05 : 0.92 })) return true;
   withSoundScope("special", 1.05, () => {
     const progress = total <= 1 ? 1 : index / (total - 1);
     playFlameWhoosh({
@@ -3575,22 +3778,27 @@ function playFlameSweepPerformance(index, total) {
     });
     if (index === 0 || index >= total - 2) playBassThump(hz("Bb", 1), { delay: 0.03, duration: 0.1, volume: 0.04, toRatio: 0.58 });
   });
+  return false;
 }
 
 function playFlameBurnPerformance() {
+  if (playAudioAsset("flameBurn", { category: "special", gain: 1.18 })) return true;
   withSoundScope("special", 1.3, () => {
     playRiser(hz("Bb", 1), hz("F", 5), 0.24, { volume: 0.07, q: 3.2, noiseFreq: 3600 });
     playMachineRumble({ delay: 0.02, duration: 0.52, root: hz("Bb", 1), to: hz("F", 1), volume: 0.066, noiseFreq: 520 });
     playFireCrackle({ delay: 0.08, count: 9, spacing: 0.035, volume: 0.034, frequency: 2200 });
     playCommercialHit(hz("F", 1), { delay: 0.18, size: 1.3, low: 0.095, body: 0.045, noise: 0.034, noiseFreq: 820 });
   });
+  return false;
 }
 
 function playMultiplierCollectPerformance(collected, shouldPlayClimaxIntro = false) {
-  if (!state.sound || collected.length === 0) return;
+  if (!state.sound || collected.length === 0) return false;
   const highValue = Math.max(...collected.map((item) => item.value));
   const isFull = state.filledSlots.size >= SLOT_COUNT;
   const tierGain = shouldPlayClimaxIntro || isFull ? 1.35 : collected.length >= 2 ? 1.18 : 1;
+  const assetName = shouldPlayClimaxIntro || isFull ? "slotFull" : collected.length >= 2 || highValue >= 50 ? "multiplierHigh" : "multiplierCollect";
+  if (playAudioAsset(assetName, { category: "multiplier", gain: tierGain })) return true;
   withSoundScope("multiplier", tierGain, () => {
     playTone(hz("F", 4), 0.08, { type: "sawtooth", volume: 0.052, filter: { type: "bandpass", from: 720, to: 1900, q: 4.4 } });
     playCasinoShine(hz("Db", 5), { delay: 0.04, count: Math.min(7, collected.length + 3), spacing: 0.043, volume: 0.056 });
@@ -3609,9 +3817,12 @@ function playMultiplierCollectPerformance(collected, shouldPlayClimaxIntro = fal
       playMachineRumble({ delay: 0.58, duration: 0.5, root: hz("Bb", 1), to: hz("Db", 2), volume: 0.052, noiseFreq: 740 });
     }
   });
+  return false;
 }
 
 function playClimaxIntroPerformance(phase) {
+  const assetName = phase === "lift" ? "climaxLift" : "climaxIntro";
+  if (playAudioAsset(assetName, { category: "transition", gain: phase === "lift" ? 1.12 : 1 })) return true;
   withSoundScope("transition", phase === "lift" ? 1.34 : 1.24, () => {
     if (phase === "logo") {
       playMachineRumble({ duration: 1.2, root: hz("Bb", 1), to: hz("F", 1), volume: 0.075, from: 520, lowTo: 120, noiseFreq: 520 });
@@ -3625,34 +3836,47 @@ function playClimaxIntroPerformance(phase) {
     playHydraulicClank({ delay: 0.38, root: hz("Bb", 1), low: 0.066, noise: 0.032, stab: 0.034, chord: "shadow" });
     playHydraulicClank({ delay: 1.02, root: hz("F", 1), low: 0.08, noise: 0.04, stab: 0.044, chord: "tonic" });
   });
+  return false;
 }
 
 function playWheelStartPerformance() {
+  if (playAudioAsset("wheelStart", { category: "wheel", gain: 1.12 })) return true;
   withSoundScope("wheel", 1.24, () => {
     playMachineRumble({ duration: 0.9, root: hz("Bb", 1), to: hz("F", 1), volume: 0.065, noiseFreq: 620 });
     playRiser(hz("F", 2), hz("Db", 5), 0.58, { delay: 0.08, volume: 0.052, q: 3, noiseFreq: 3400 });
     playCommercialHit(hz("Bb", 1), { delay: 0.54, size: 1.05, low: 0.082, body: 0.038, noise: 0.024, noiseFreq: 980 });
     playHydraulicClank({ delay: 0.6, root: hz("Bb", 1), low: 0.052, noise: 0.022, stab: 0.028, chord: "dominant" });
   });
+  return false;
 }
 
 function playWheelStopPerformance(multiplier) {
+  if (playAudioAsset(multiplier >= 5 ? "wheelHighStop" : "wheelStop", { category: "wheel", gain: multiplier >= 5 ? 1.18 : 1 })) return true;
   withSoundScope("wheel", multiplier >= 5 ? 1.48 : 1.22, () => {
     playCommercialHit(hz("Bb", 1), { size: multiplier >= 5 ? 1.42 : 1.1, low: 0.104, body: 0.052, noise: 0.03, noiseFreq: 950 });
     playNoise(0.05, { delay: 0.045, frequency: 7600, filterType: "highpass", volume: 0.026 });
     playBrassStab(multiplier >= 5 ? "tonic" : "resolve", { delay: 0.1, volume: multiplier >= 5 ? 0.076 : 0.062, duration: 0.18, voices: 4 });
     if (multiplier >= 1) playCasinoShine(hz("Bb", 4), { delay: 0.18, count: multiplier >= 5 ? 7 : 4, spacing: 0.04, volume: multiplier >= 5 ? 0.064 : 0.046 });
   });
+  return false;
 }
 
 function playWinCardPerformance(tier) {
+  const assetName = tier.ratio >= 50 ? "winJackpot" : tier.ratio >= 20 ? "winSuper" : "winBig";
+  const playedAsset = playAudioAsset(assetName, {
+    category: "payout",
+    gain: tier.ratio >= 50 ? 1.14 : tier.ratio >= 20 ? 1.06 : 1,
+  });
+  if (!playedAsset) {
   withSoundScope("payout", tier.ratio >= 50 ? 1.45 : tier.ratio >= 20 ? 1.28 : 1.1, () => {
     playCommercialHit(hz("Bb", 1), { size: tier.ratio >= 50 ? 1.55 : 1.2, low: 0.11, body: 0.052, noise: 0.032, noiseFreq: 1300 });
     playRiser(hz("Bb", 2), tier.ratio >= 50 ? hz("F", 6) : hz("Db", 6), 0.34, { delay: 0.02, volume: 0.068, q: 3.3, noiseFreq: 5200 });
     playCoinSpray({ delay: 0.08, count: tier.ratio >= 50 ? 12 : 8, spacing: 0.034, volume: tier.ratio >= 50 ? 0.052 : 0.044 });
   });
+  }
   playSound(tier.voice || "voiceBigWin");
-  window.setTimeout(() => playSound(tier.sound || "win"), 120);
+  if (!playedAsset) window.setTimeout(() => playSound(tier.sound || "win"), 120);
+  return playedAsset;
 }
 
 function playMultiplierCollectSound(value, collectedCount = 1, filledSlotCount = state.filledSlots.size) {
@@ -3874,6 +4098,46 @@ function reserveSoundVoice(kind, profile, now) {
   return attenuation;
 }
 
+function playAssetForSound(kind, profile, attenuation = 1) {
+  const assetMap = {
+    button: "button",
+    move: "swap",
+    match: "match",
+    cascade: "cascade",
+    drop: "drop",
+    meterTick: "meterGain",
+    specialReady: "meterReady",
+    specialSpawn: "specialSpawn",
+    specialBlast: "specialBlast",
+    candyClearEvent: "specialBlast",
+    flameSweep: "flameScan",
+    flameBurn: "flameBurn",
+    flameResist: "flameResist",
+    multiplierMerge: "slotFull",
+    multiplierHigh: "multiplierHigh",
+    multiplierCollect: "multiplierCollect",
+    multiplierCollectHigh: "multiplierHigh",
+    multiplierEpicCollect: "multiplierHigh",
+    multiplierJackpotCollect: "slotFull",
+    slotProgress: "eventRollStart",
+    win: "winBig",
+    superWin: "winSuper",
+    jackpot: "winJackpot",
+    wheelSpin: "wheelTick",
+    wheelStop: "wheelStop",
+    climaxIntro: "climaxIntro",
+    climaxLift: "climaxLift",
+    logoReturn: "logoReturn",
+    error: "error",
+  };
+  const assetName = assetMap[kind];
+  if (!assetName) return false;
+  return Boolean(playAudioAsset(assetName, {
+    category: profile.category,
+    gain: (profile.gain || 1) * attenuation,
+  }));
+}
+
 function playSound(kind) {
   if (!state.sound) return;
   recordPerf(`sound.${kind}`, 0);
@@ -3888,6 +4152,10 @@ function playSound(kind) {
     category: profile.category,
     gain: (profile.gain || 1) * attenuation,
   };
+  if (playAssetForSound(kind, profile, attenuation)) {
+    state.soundScope = null;
+    return;
+  }
 
   const soundMap = {
     button: () => {
@@ -4556,8 +4824,8 @@ async function presentCollectedMultipliers(collected) {
   spawnParticles(collected.length * 12);
   collected.forEach((item, index) => spawnSlotClimaxEnergy(item.col, item.payout, index * 80));
   const highCollect = Math.max(...collected.map((item) => item.value));
-  playMultiplierCollectPerformance(collected, shouldPlayClimaxIntro);
-  playMultiplierCollectSound(highCollect, collected.length, state.filledSlots.size);
+  const usedCollectAsset = playMultiplierCollectPerformance(collected, shouldPlayClimaxIntro);
+  if (!usedCollectAsset) playMultiplierCollectSound(highCollect, collected.length, state.filledSlots.size);
   if (highCollect >= 100) triggerScreenFx("fx-jackpot", 780);
   else if (highCollect >= 20) triggerScreenFx("fx-bump", 420);
   if (!isFullCollect && !shouldPlayClimaxIntro && state.filledSlots.size === SLOT_COUNT - 1) {
@@ -4573,13 +4841,11 @@ async function presentCollectedMultipliers(collected) {
 async function playClimaxIntroSequence() {
   duckBackgroundMusic(4300, BGM_DUCK_DEEP);
   playClimaxIntroPerformance("logo");
-  playSound("climaxIntro");
   await wait(1800);
 
   state.climaxIntroPhase = "wheel";
   render();
   playClimaxIntroPerformance("lift");
-  playSound("climaxLift");
   await wait(1800);
 
   state.climaxIntroPhase = null;
@@ -4781,7 +5047,6 @@ async function playFlameEvent(stage = currentSpecialStageIndex()) {
     render();
     if (i === 0 || i === steps - 1 || i % 3 === 0) {
       playFlameSweepPerformance(i, steps);
-      playSound("flameSweep");
     }
     await wait(stepDelays[i]);
   }
@@ -4792,7 +5057,6 @@ async function playFlameEvent(stage = currentSpecialStageIndex()) {
   render();
   triggerScreenFx("fx-blast", 360);
   playFlameBurnPerformance();
-  playSound("flameBurn");
   await wait(resolveDelay(260, 120));
 
   const clearedCells = new Set();
@@ -5221,7 +5485,6 @@ async function processSpecialAwards() {
       render();
       triggerStageRollStep(stage);
       playEventRollStepSound(stage, i, rollDelays.length);
-      playSound("wheelSpin");
       await wait(rollDelays[i]);
     }
 
@@ -5232,7 +5495,6 @@ async function processSpecialAwards() {
     setEventPulse(true);
     render();
     playEventRollLockPerformance(stage, event);
-    playSound("specialReady");
     await wait(resolveDelay(stage === 3 ? 620 : 460, 180));
 
     if (event.kind === "flame") {
