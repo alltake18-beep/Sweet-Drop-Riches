@@ -201,6 +201,8 @@ const FULL_DROP_WHEEL_TURNS_MIN = 2;
 const FULL_DROP_WHEEL_TURNS_MAX = 4;
 const FULL_DROP_WHEEL_FALLBACK_POINTER_Y = 7.5;
 const CLIMAX_IDLE_SLICE_MS = 1000;
+const CLIMAX_INTRO_PUSH_DELAY_MS = 650;
+const CLIMAX_INTRO_WHEEL_RISE_MS = 2000;
 const BGM_DUCK_IMPORTANT_MS = 1400;
 const BGM_DUCK_LIGHT = 0.64;
 const BGM_DUCK_MEDIUM = 0.42;
@@ -371,6 +373,7 @@ const state = {
   climaxIdleFrame: null,
   climaxIdleLastAt: 0,
   climaxIdleLastTickIndex: null,
+  climaxIntroWheelStartedAt: 0,
   fx: {
     context: null,
     dpr: 1,
@@ -1318,7 +1321,7 @@ function stopClimaxIdleSpin() {
 function startClimaxIdleSpin() {
   if (state.climaxIdleFrame || state.climaxSpinning || !isMultiplierClimaxActive()) return;
   const sliceAngle = wheelLabelSliceAngle();
-  const degreesPerMs = sliceAngle / CLIMAX_IDLE_SLICE_MS;
+  const baseDegreesPerMs = sliceAngle / CLIMAX_IDLE_SLICE_MS;
   const pointerAngle = climaxPointerAngle();
 
   const tick = (now) => {
@@ -1329,7 +1332,12 @@ function startClimaxIdleSpin() {
     if (!state.climaxIdleLastAt) state.climaxIdleLastAt = now;
     const delta = Math.min(34, now - state.climaxIdleLastAt);
     state.climaxIdleLastAt = now;
-    state.climaxWheelRotation += delta * degreesPerMs;
+    let speedFactor = 1;
+    if (state.climaxIntroPhase === "push" && state.climaxIntroWheelStartedAt) {
+      const progress = clamp((now - state.climaxIntroWheelStartedAt) / CLIMAX_INTRO_WHEEL_RISE_MS, 0, 1);
+      speedFactor = 1 + 4.2 * (1 - progress) ** 2.2;
+    }
+    state.climaxWheelRotation += delta * baseDegreesPerMs * speedFactor;
     if (climaxWheelRotorEl) {
       climaxWheelRotorEl.style.setProperty("--wheel-rotation", `${state.climaxWheelRotation || 0}deg`);
     }
@@ -3819,7 +3827,8 @@ function playMultiplierCollectPerformance(collected, shouldPlayClimaxIntro = fal
 
 function playClimaxIntroPerformance(phase) {
   const assetName = phase === "lift" ? "climaxLift" : "climaxIntro";
-  if (playAudioAsset(assetName, { category: "transition", gain: phase === "lift" ? 1.12 : 1 })) return true;
+  const useAsset = phase !== "lift" && playAudioAsset(assetName, { category: "transition", gain: 1 });
+  if (useAsset) return true;
   withSoundScope("transition", phase === "lift" ? 1.34 : 1.24, () => {
     if (phase === "logo") {
       playMachineRumble({ duration: 1.2, root: hz("Bb", 1), to: hz("F", 1), volume: 0.075, from: 520, lowTo: 120, noiseFreq: 520 });
@@ -3828,10 +3837,23 @@ function playClimaxIntroPerformance(phase) {
       playNoise(0.12, { delay: 0.9, frequency: 4800, filterType: "highpass", volume: 0.028 });
       return;
     }
-    playRiser(hz("Bb", 1), hz("Bb", 3), 1.05, { volume: 0.078, q: 2.5, noiseFreq: 1700 });
-    playMachineRumble({ delay: 0.04, duration: 1.08, root: hz("F", 1), to: hz("Db", 2), volume: 0.056, noiseFreq: 760 });
-    playHydraulicClank({ delay: 0.38, root: hz("Bb", 1), low: 0.066, noise: 0.032, stab: 0.034, chord: "shadow" });
-    playHydraulicClank({ delay: 1.02, root: hz("F", 1), low: 0.08, noise: 0.04, stab: 0.044, chord: "tonic" });
+    playMachineRumble({ duration: 1.95, root: hz("Bb", 1), to: hz("F", 1), volume: 0.082, from: 420, lowTo: 150, noiseFreq: 560 });
+    playTone(hz("F", 1), 1.9, { to: hz("Bb", 1), type: "sawtooth", volume: 0.05, filter: { type: "bandpass", from: 180, to: 520, q: 2.2 } });
+    playNoise(1.75, { delay: 0.05, frequency: 760, filterType: "bandpass", q: 5.2, volume: 0.052 });
+    playNoise(1.4, { delay: 0.18, frequency: 1800, filterType: "bandpass", q: 3.6, volume: 0.026 });
+    playRiser(hz("Bb", 1), hz("F", 3), 1.55, { delay: 0.14, volume: 0.044, q: 2.8, noiseFreq: 1200 });
+    [0.1, 0.28, 0.52, 0.86, 1.24, 1.62].forEach((delay, index) => {
+      playHydraulicClank({
+        delay,
+        root: index > 3 ? hz("F", 1) : hz("Bb", 1),
+        low: index > 3 ? 0.062 : 0.048,
+        noise: 0.022,
+        noiseFreq: 620 + index * 120,
+        stab: 0.014,
+        chord: index > 3 ? "tonic" : "shadow",
+      });
+    });
+    playHydraulicClank({ delay: 1.92, root: hz("F", 1), low: 0.092, noise: 0.04, noiseFreq: 880, stab: 0.044, chord: "tonic" });
   });
   return false;
 }
@@ -4513,8 +4535,8 @@ function renderHud() {
   phoneEl?.classList.toggle("multiplier-climax", isMultiplierClimaxActive());
   phoneEl?.classList.toggle("flame-active", Boolean(state.flameCells?.size));
   phoneEl?.classList.toggle("climax-spinning", state.climaxSpinning);
-  phoneEl?.classList.toggle("climax-intro-logo", state.climaxIntroPhase === "logo");
-  phoneEl?.classList.toggle("climax-intro-wheel", state.climaxIntroPhase === "wheel");
+  phoneEl?.classList.toggle("climax-intro-logo", state.climaxIntroPhase === "logo" || state.climaxIntroPhase === "push");
+  phoneEl?.classList.toggle("climax-intro-wheel", state.climaxIntroPhase === "wheel" || state.climaxIntroPhase === "push");
   phoneEl?.classList.toggle("climax-logo-return", state.climaxLogoReturn);
   if (!state.stagePreviews.length) state.stagePreviews = initialStagePreviews();
   const currentStage = currentSpecialStageIndex();
@@ -4836,16 +4858,18 @@ async function presentCollectedMultipliers(collected) {
 }
 
 async function playClimaxIntroSequence() {
-  duckBackgroundMusic(6600, BGM_DUCK_DEEP);
+  duckBackgroundMusic(4200, BGM_DUCK_DEEP);
   playClimaxIntroPerformance("logo");
-  await wait(3000);
+  await wait(CLIMAX_INTRO_PUSH_DELAY_MS);
 
-  state.climaxIntroPhase = "wheel";
+  state.climaxIntroPhase = "push";
+  state.climaxIntroWheelStartedAt = performance.now();
   render();
   playClimaxIntroPerformance("lift");
-  await wait(3000);
+  await wait(CLIMAX_INTRO_WHEEL_RISE_MS);
 
   state.climaxIntroPhase = null;
+  state.climaxIntroWheelStartedAt = 0;
   render();
 }
 
