@@ -9011,13 +9011,15 @@ html.ios-performance .event-socket {
 
 /* Phone stability lock: keep the 720x1280 art proportional while making HUD text readable. */
 .hud {
-  transform: scale(var(--hud-scale, 1)) !important;
+  overflow: visible !important;
+  transform: perspective(var(--hud-perspective, 430px)) rotateX(var(--hud-rotate-x, 5deg)) !important;
   transform-origin: 50% 100% !important;
 }
 
 .hud-panel,
 .bet-panel {
   transform: none !important;
+  overflow: visible !important;
 }
 
 .hud-panel span,
@@ -9037,8 +9039,9 @@ html.ios-performance .event-socket {
 }
 
 .hud-panel span {
-  font-size: calc(18px * var(--balance-label-size, 100%) / 100%) !important;
-  line-height: 0.9 !important;
+  display: block !important;
+  font-size: min(20px, calc(18px * var(--hud-scale, 1) * var(--balance-label-size, 100%) / 100%)) !important;
+  line-height: 0.84 !important;
   color: #ffe6a6 !important;
   text-shadow:
     0 1px 0 rgba(42, 4, 7, 0.95),
@@ -9046,8 +9049,9 @@ html.ios-performance .event-socket {
 }
 
 .hud-panel strong {
-  font-size: calc(25px * var(--balance-number-size, 100%) / 100%) !important;
-  line-height: 0.95 !important;
+  display: block !important;
+  font-size: min(27px, calc(25px * var(--hud-scale, 1) * var(--balance-number-size, 100%) / 100%)) !important;
+  line-height: 0.9 !important;
   color: #fff1a8 !important;
   -webkit-text-stroke: 0.45px rgba(53, 5, 8, 0.82) !important;
   text-shadow:
@@ -9057,8 +9061,9 @@ html.ios-performance .event-socket {
 }
 
 .bet-panel strong {
-  font-size: calc(28px * var(--bet-text-size, 100%) / 100%) !important;
-  line-height: 0.95 !important;
+  display: block !important;
+  font-size: min(30px, calc(28px * var(--hud-scale, 1) * var(--bet-text-size, 100%) / 100%)) !important;
+  line-height: 0.9 !important;
   color: #fff1a8 !important;
   -webkit-text-stroke: 0.45px rgba(53, 5, 8, 0.82) !important;
   text-shadow:
