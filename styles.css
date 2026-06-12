@@ -8996,3 +8996,84 @@ html.ios-performance .event-socket {
     inset 0 0 20px rgba(0, 0, 0, 0.62),
     0 0 0 1px rgba(96, 14, 29, 0.42);
 }
+
+/* Game-surface proportion lock: no viewport-relative sizing inside the scaled cabinet. */
+.hud {
+  top: calc(94.25% + var(--hud-y, 0%)) !important;
+  left: calc(6.5% + var(--hud-x, 0%)) !important;
+  width: var(--hud-width, 85.4%) !important;
+  height: var(--hud-height, 3.6%) !important;
+  grid-template-columns: 1.87fr 1.64fr 0.58fr 0.58fr !important;
+  gap: var(--hud-gap, 7.75%) !important;
+}
+
+.hud-panel {
+  padding: 2px 8px 1px !important;
+}
+
+.hud-panel span {
+  font-size: calc(11.9515px * var(--balance-label-size, 100%) / 100%) !important;
+}
+
+.hud-panel strong {
+  font-size: calc(19.5305px * var(--balance-number-size, 100%) / 100%) !important;
+}
+
+.bet-panel strong {
+  font-size: calc(21.8625px * var(--bet-text-size, 100%) / 100%) !important;
+}
+
+#fastButton::before,
+#fastButton::after {
+  width: 62.964px !important;
+  height: 69.96px !important;
+}
+
+#menuButton::before,
+#menuButton::after {
+  width: 52.47px !important;
+  height: 40.227px !important;
+}
+
+.slot strong {
+  font-size: 36px !important;
+}
+
+.slot.score-length-4 strong {
+  font-size: 32px !important;
+}
+
+.slot.score-length-5 strong {
+  font-size: 28px !important;
+}
+
+.slot.score-length-6 strong {
+  font-size: 24px !important;
+}
+
+.full-drop-wheel {
+  width: 330px !important;
+}
+
+.full-drop-wheel-pointer {
+  top: calc(49% - 165px - 13px) !important;
+}
+
+.full-drop-wheel-labels span {
+  font-size: 21px !important;
+  transform: rotate(var(--angle)) translateY(-126px) rotate(calc(var(--angle) * -1)) !important;
+}
+
+.full-drop-wheel-core span,
+.full-drop-wheel-result span {
+  font-size: 12px !important;
+}
+
+.full-drop-wheel-core strong,
+.full-drop-wheel-result strong {
+  font-size: 28px !important;
+}
+
+.full-drop-fly-chip {
+  font-size: 22px !important;
+}
