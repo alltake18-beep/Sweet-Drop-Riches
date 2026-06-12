@@ -9079,11 +9079,13 @@ html.ios-performance .event-socket {
   -webkit-text-stroke: 0 !important;
 }
 
+.hud-canvas-host {
+  overflow: visible !important;
+}
+
 .hud-text-canvas {
   position: absolute;
   z-index: 2;
-  left: 50%;
-  top: 50%;
   display: block;
   max-width: none;
   max-height: none;

@@ -4780,6 +4780,11 @@ function canvasHudColor(element) {
   return element === balanceLabelEl ? "#ffe6a6" : "#fff1a8";
 }
 
+function hudCanvasParent(element) {
+  if (!element) return null;
+  return element === betEl ? element.parentElement : element.parentElement;
+}
+
 function drawHudCanvasText(element, text) {
   const canvas = element?._hudCanvas;
   if (!canvas || !text) return;
@@ -4795,11 +4800,29 @@ function drawHudCanvasText(element, text) {
   const measureContext = measureCanvas.getContext("2d");
   measureContext.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
   const measuredWidth = measureContext.measureText(text).width;
-  const rect = element.getBoundingClientRect();
-  const logicalWidth = Math.ceil(Math.max(rect.width, measuredWidth + 10, 24));
-  const logicalHeight = Math.ceil(Math.max(rect.height, fontSize * 1.32, 18));
+  const parent = hudCanvasParent(element);
+  const parentWidth = parent?.offsetWidth || element.offsetWidth || measuredWidth + 14;
+  const parentHeight = parent?.offsetHeight || element.offsetHeight || fontSize * 1.32;
+  const elementWidth = element.offsetWidth || parentWidth;
+  const elementHeight = element.offsetHeight || fontSize * 1.32;
+  const logicalWidth = Math.ceil(Math.max(elementWidth + 14, measuredWidth + 16, 24));
+  const logicalHeight = Math.ceil(Math.max(elementHeight + 8, fontSize * 1.42, 18));
+  const centerLeft = Math.round((element.offsetLeft || 0) + elementWidth / 2);
+  const centerTop = Math.round((element.offsetTop || 0) + elementHeight / 2);
   const ratio = Math.min(2, window.devicePixelRatio || 1);
-  const signature = [text, fontSize, fontFamily, fontWeight, logicalWidth, logicalHeight, ratio].join("|");
+  const signature = [
+    text,
+    fontSize,
+    fontFamily,
+    fontWeight,
+    logicalWidth,
+    logicalHeight,
+    centerLeft,
+    centerTop,
+    parentWidth,
+    parentHeight,
+    ratio,
+  ].join("|");
   if (canvas._hudSignature === signature) return;
   canvas._hudSignature = signature;
 
@@ -4807,6 +4830,8 @@ function drawHudCanvasText(element, text) {
   canvas.height = Math.ceil(logicalHeight * ratio);
   canvas.style.width = `${logicalWidth}px`;
   canvas.style.height = `${logicalHeight}px`;
+  canvas.style.left = `${centerLeft}px`;
+  canvas.style.top = `${centerTop}px`;
 
   context.setTransform(ratio, 0, 0, ratio, 0, 0);
   context.clearRect(0, 0, logicalWidth, logicalHeight);
@@ -4832,16 +4857,23 @@ function drawHudCanvasText(element, text) {
 
 function setHudCanvasText(element, text) {
   if (!element) return;
+  const parent = hudCanvasParent(element);
+  if (!parent) return;
   let textNode = element._hudTextNode;
   let canvas = element._hudCanvas;
-  if (!textNode || textNode.parentNode !== element || !canvas || canvas.parentNode !== element) {
+  if (!textNode || textNode.parentNode !== element) {
     element.textContent = "";
     textNode = document.createTextNode("");
+    element.append(textNode);
+    element._hudTextNode = textNode;
+  }
+  if (!canvas || canvas.parentNode !== parent) {
+    canvas?.remove();
     canvas = document.createElement("canvas");
     canvas.className = "hud-text-canvas";
     canvas.setAttribute("aria-hidden", "true");
-    element.append(textNode, canvas);
-    element._hudTextNode = textNode;
+    parent.append(canvas);
+    parent.classList.add("hud-canvas-host");
     element._hudCanvas = canvas;
   }
   textNode.nodeValue = text;
