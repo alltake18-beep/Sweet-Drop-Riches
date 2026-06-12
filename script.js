@@ -4776,6 +4776,86 @@ function specialEffectCells(row, col, tile) {
   return new Set();
 }
 
+function canvasHudColor(element) {
+  return element === balanceLabelEl ? "#ffe6a6" : "#fff1a8";
+}
+
+function drawHudCanvasText(element, text) {
+  const canvas = element?._hudCanvas;
+  if (!canvas || !text) return;
+  const context = canvas.getContext("2d");
+  if (!context) return;
+
+  const style = getComputedStyle(element);
+  const fontSize = Number.parseFloat(style.fontSize) || 24;
+  const fontFamily = style.fontFamily || "Arial, sans-serif";
+  const fontWeight = style.fontWeight || "700";
+  const measureCanvas = drawHudCanvasText.measureCanvas || document.createElement("canvas");
+  drawHudCanvasText.measureCanvas = measureCanvas;
+  const measureContext = measureCanvas.getContext("2d");
+  measureContext.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
+  const measuredWidth = measureContext.measureText(text).width;
+  const rect = element.getBoundingClientRect();
+  const logicalWidth = Math.ceil(Math.max(rect.width, measuredWidth + 10, 24));
+  const logicalHeight = Math.ceil(Math.max(rect.height, fontSize * 1.32, 18));
+  const ratio = Math.min(2, window.devicePixelRatio || 1);
+  const signature = [text, fontSize, fontFamily, fontWeight, logicalWidth, logicalHeight, ratio].join("|");
+  if (canvas._hudSignature === signature) return;
+  canvas._hudSignature = signature;
+
+  canvas.width = Math.ceil(logicalWidth * ratio);
+  canvas.height = Math.ceil(logicalHeight * ratio);
+  canvas.style.width = `${logicalWidth}px`;
+  canvas.style.height = `${logicalHeight}px`;
+
+  context.setTransform(ratio, 0, 0, ratio, 0, 0);
+  context.clearRect(0, 0, logicalWidth, logicalHeight);
+  context.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
+  context.textAlign = "center";
+  context.textBaseline = "middle";
+  context.lineJoin = "round";
+  context.miterLimit = 2;
+
+  const centerX = logicalWidth / 2;
+  const centerY = logicalHeight / 2;
+  context.shadowColor = "rgba(24, 1, 5, 0.78)";
+  context.shadowBlur = element === balanceLabelEl ? 4 : 5;
+  context.shadowOffsetY = 2;
+  context.strokeStyle = "rgba(53, 5, 8, 0.78)";
+  context.lineWidth = element === balanceLabelEl ? 1.2 : 1.8;
+  context.strokeText(text, centerX, centerY);
+  context.shadowColor = "transparent";
+  context.fillStyle = canvasHudColor(element);
+  context.fillText(text, centerX, centerY);
+  element.classList.add("hud-canvas-ready");
+}
+
+function setHudCanvasText(element, text) {
+  if (!element) return;
+  let textNode = element._hudTextNode;
+  let canvas = element._hudCanvas;
+  if (!textNode || textNode.parentNode !== element || !canvas || canvas.parentNode !== element) {
+    element.textContent = "";
+    textNode = document.createTextNode("");
+    canvas = document.createElement("canvas");
+    canvas.className = "hud-text-canvas";
+    canvas.setAttribute("aria-hidden", "true");
+    element.append(textNode, canvas);
+    element._hudTextNode = textNode;
+    element._hudCanvas = canvas;
+  }
+  textNode.nodeValue = text;
+  element.setAttribute("data-text", text);
+  drawHudCanvasText(element, text);
+}
+
+function redrawHudCanvasText() {
+  [balanceLabelEl, balanceEl, betEl].forEach((element) => {
+    if (!element?._hudTextNode) return;
+    drawHudCanvasText(element, element._hudTextNode.nodeValue || "");
+  });
+}
+
 function renderHud() {
   document.querySelector(".special-meter-copy span").textContent = "事件收集";
   specialMeterTextEl.textContent = `${Math.min(state.specialMeter, SPECIAL_METER_MAX)}/${SPECIAL_METER_MAX}`;
@@ -4825,12 +4905,10 @@ function renderHud() {
   }
   const balanceText = formatBalance(state.balance);
   const betText = currentBet().toLocaleString("en-US");
-  balanceLabelEl?.setAttribute("data-text", balanceLabelEl.textContent || "");
+  setHudCanvasText(balanceLabelEl, "BALANCE");
   betLabelEl?.setAttribute("data-text", betLabelEl.textContent || "");
-  balanceEl.textContent = balanceText;
-  balanceEl.setAttribute("data-text", balanceText);
-  betEl.textContent = betText;
-  betEl.setAttribute("data-text", betText);
+  setHudCanvasText(balanceEl, balanceText);
+  setHudCanvasText(betEl, betText);
   fastButton.setAttribute("aria-pressed", String(state.fast));
   soundMenuButton.textContent = state.sound ? "音效開啟" : "音效關閉";
   specialOddsButton.textContent = state.specialOdds ? "特殊機率開啟" : "特殊機率關閉";
@@ -6587,6 +6665,7 @@ function syncCabinetScale() {
   cabinetScaleEl.style.setProperty("--hud-scale", String(+hudScale.toFixed(5)));
   document.documentElement.style.setProperty("--app-viewport-width", `${viewport.width}px`);
   document.documentElement.style.setProperty("--app-viewport-height", `${viewport.height}px`);
+  redrawHudCanvasText();
 }
 
 function scheduleCabinetScaleSync() {

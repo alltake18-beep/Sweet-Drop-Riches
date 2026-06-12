@@ -9072,6 +9072,25 @@ html.ios-performance .event-socket {
     0 0 6px rgba(255, 219, 105, 0.34) !important;
 }
 
+.hud-canvas-ready {
+  color: transparent !important;
+  text-shadow: none !important;
+  -webkit-text-fill-color: transparent !important;
+  -webkit-text-stroke: 0 !important;
+}
+
+.hud-text-canvas {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  top: 50%;
+  display: block;
+  max-width: none;
+  max-height: none;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
 .phone.fx-lite,
 html.ios-performance .phone {
   background:
