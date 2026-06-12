@@ -6,10 +6,12 @@ const MULTIPLIER_SIZES = [1, 2];
 const MULTIPLIER_COLS = [0, 2, 4];
 const SYMBOL_VERSION = "normal-candy-scale-20260611-225819";
 const SLOT_TURN_MAX = 20;
-const PERF_ENABLED = new URLSearchParams(window.location.search).has("perf");
+const SEARCH_PARAMS = new URLSearchParams(window.location.search);
+const PERF_ENABLED = SEARCH_PARAMS.has("perf");
+const LITE_ENABLED = SEARCH_PARAMS.has("lite");
 const IOS_DEVICE = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 const IOS_PERFORMANCE_MODE = PERF_ENABLED;
-const FX_PERFORMANCE_MODE = PERF_ENABLED || IOS_DEVICE;
+const FX_PERFORMANCE_MODE = PERF_ENABLED || LITE_ENABLED || IOS_DEVICE;
 const SPECIAL_METER_TARGET = 9;
 const SPECIAL_METER_THRESHOLDS = [9, 21, 40];
 const SPECIAL_METER_MAX = SPECIAL_METER_THRESHOLDS[SPECIAL_METER_THRESHOLDS.length - 1];
@@ -722,7 +724,7 @@ function winArtAsset(name) {
 }
 
 function allSymbolAssets() {
-  const assets = IOS_PERFORMANCE_MODE
+  const assets = FX_PERFORMANCE_MODE
     ? CANDIES.map(candyAsset)
     : [
       ...CANDIES.map(candyAsset),
@@ -734,6 +736,7 @@ function allSymbolAssets() {
 }
 
 function preloadSymbolAssets() {
+  if (document.hidden) return;
   const done = startPerfSpan("assets.preload");
   const promises = allSymbolAssets().map((src) => {
     const image = new Image();
@@ -3774,7 +3777,7 @@ function startBackgroundMusic() {
   if (!state.sound || state.musicTimer || state.bgmSource) return;
   const context = ensureAudio();
   if (!context) return;
-  if (!IOS_PERFORMANCE_MODE) preloadAudioAssets();
+  if (!FX_PERFORMANCE_MODE) preloadAudioAssets();
   const bgmBuffer = state.audioBuffers.get("bgmNormal");
   if (bgmBuffer) {
     const source = playAudioAsset("bgmNormal", { bus: "bgm", loop: true, music: true, gain: 0.9 });
@@ -3786,7 +3789,7 @@ function startBackgroundMusic() {
       return;
     }
   }
-  if (!IOS_PERFORMANCE_MODE && !state.audioAssetFailures.has("bgmNormal")) {
+  if (!FX_PERFORMANCE_MODE && !state.audioAssetFailures.has("bgmNormal")) {
     loadAudioAsset("bgmNormal")
       .then(() => {
         if (state.sound && !state.musicTimer && !state.bgmSource) startBackgroundMusic();
@@ -3834,8 +3837,7 @@ function stopBackgroundMusic() {
 
 function armBackgroundMusic() {
   if (!state.sound) return;
-  if (IOS_PERFORMANCE_MODE) return;
-  preloadAudioAssets();
+  if (!FX_PERFORMANCE_MODE) preloadAudioAssets();
   startBackgroundMusic();
 }
 
@@ -4813,7 +4815,14 @@ function renderHud() {
     const stage = index + 1;
     const preview = state.stagePreviews[index] || randomBoardEvent(stage);
     const img = slot.querySelector("img");
-    if (img) img.src = eventPreviewAsset(preview);
+    if (img) {
+      const nextSrc = eventPreviewAsset(preview);
+      if (img.getAttribute("src") !== nextSrc) {
+        img.decoding = "async";
+        img.loading = "lazy";
+        img.src = nextSrc;
+      }
+    }
     slot.classList.toggle("active", stage === currentStage && state.specialMeter < SPECIAL_METER_MAX);
     slot.classList.toggle("complete", state.specialMeter >= SPECIAL_METER_THRESHOLDS[index]);
     slot.classList.toggle("rolling", state.miniSlotRolling && (!state.rollingStage || state.rollingStage === stage));
@@ -4826,7 +4835,12 @@ function renderHud() {
     slot.dataset.digits = stagePreviewDigitCount(previewLabel);
   });
   state.miniSlotPreview = state.stagePreviews[0] || state.miniSlotPreview;
-  miniSlotIconEl.src = eventPreviewAsset(state.miniSlotPreview);
+  const miniSlotSrc = eventPreviewAsset(state.miniSlotPreview);
+  if (miniSlotIconEl.getAttribute("src") !== miniSlotSrc) {
+    miniSlotIconEl.decoding = "async";
+    miniSlotIconEl.loading = "lazy";
+    miniSlotIconEl.src = miniSlotSrc;
+  }
   const balanceText = formatBalance(state.balance);
   const betText = currentBet().toLocaleString("en-US");
   balanceLabelEl?.setAttribute("data-text", balanceLabelEl.textContent || "");
@@ -5839,12 +5853,13 @@ async function processSpecialAwards() {
 window.addEventListener("resize", () => scheduleBoardSizeSync(true));
 window.visualViewport?.addEventListener("resize", () => scheduleBoardSizeSync(true));
 
+const STAGE_PREVIEW_IDLE_MS = FX_PERFORMANCE_MODE ? 5000 : 1300;
 window.setInterval(() => {
-  if (state.resolving || state.miniSlotRolling || state.miniSlotWin) return;
+  if (document.hidden || state.resolving || state.miniSlotRolling || state.miniSlotWin) return;
   state.stagePreviews = state.stagePreviews.map((_, index) => randomBoardEvent(index + 1));
   state.miniSlotPreview = state.stagePreviews[0] || randomSpecialReward();
   renderHud();
-}, 1300);
+}, STAGE_PREVIEW_IDLE_MS);
 
 function initClimaxTunePanel() {
   const params = new URLSearchParams(window.location.search);
@@ -6539,6 +6554,7 @@ function initBoardTunePanel() {
 
 function applyPerformanceMode() {
   phoneShellEl?.classList.toggle("ios-performance", IOS_PERFORMANCE_MODE);
+  phoneShellEl?.classList.toggle("fx-lite", FX_PERFORMANCE_MODE);
 }
 
 function viewportNumber(value) {
@@ -6590,7 +6606,7 @@ function scheduleCabinetScaleSync() {
 
 function ensureClimaxWheelImageLoaded() {
   if (!climaxWheelImageEl || climaxWheelImageEl.dataset.loaded === "true") return;
-  const src = IOS_PERFORMANCE_MODE
+  const src = FX_PERFORMANCE_MODE
     ? climaxWheelImageEl.dataset.iosSrc || climaxWheelImageEl.dataset.src
     : climaxWheelImageEl.dataset.src;
   if (!src) return;
@@ -6615,6 +6631,58 @@ function preventImageSelection() {
   });
 }
 
+function clearFxQueue() {
+  if (state.fx.frame) cancelAnimationFrame(state.fx.frame);
+  state.fx.frame = null;
+  state.fx.items = [];
+  if (state.fx.context && fxCanvas) {
+    state.fx.context.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
+  }
+}
+
+function pauseHiddenWork() {
+  if (!document.hidden) return;
+  clearFxQueue();
+  stopClimaxIdleSpin();
+  if (state.layoutFrame) {
+    cancelAnimationFrame(state.layoutFrame);
+    state.layoutFrame = null;
+    state.layoutDirty = true;
+  }
+}
+
+function initAuditPanel() {
+  const params = new URLSearchParams(window.location.search);
+  const audit = params.get("audit") || "";
+  if (!audit.includes("scale") && !audit.includes("perf")) return;
+  const panel = document.createElement("pre");
+  panel.className = "audit-panel";
+  document.body.appendChild(panel);
+  const update = () => {
+    const viewport = currentViewportSize();
+    const phoneRect = phoneShellEl?.getBoundingClientRect();
+    const hudRect = document.querySelector(".hud")?.getBoundingClientRect();
+    const boardRect = boardEl?.getBoundingClientRect();
+    const balanceStyle = balanceEl ? getComputedStyle(balanceEl) : null;
+    const betStyle = betEl ? getComputedStyle(betEl) : null;
+    panel.textContent = [
+      `viewport ${viewport.width} x ${viewport.height}`,
+      `scale ${cabinetScaleEl?.style.getPropertyValue("--cabinet-scale") || ""}`,
+      `phone ${Math.round(phoneRect?.width || 0)} x ${Math.round(phoneRect?.height || 0)}`,
+      `board ${Math.round(boardRect?.width || 0)} x ${Math.round(boardRect?.height || 0)}`,
+      `hud ${Math.round(hudRect?.width || 0)} x ${Math.round(hudRect?.height || 0)}`,
+      `balance font ${balanceStyle?.fontSize || ""}`,
+      `bet font ${betStyle?.fontSize || ""}`,
+      `fx ${state.fx.items.length} dpr ${state.fx.dpr}`,
+      `lite ${FX_PERFORMANCE_MODE}`,
+    ].join("\n");
+  };
+  update();
+  window.setInterval(() => {
+    if (!document.hidden) update();
+  }, 1000);
+}
+
 syncCabinetScale();
 window.addEventListener("resize", scheduleCabinetScaleSync);
 window.addEventListener("orientationchange", scheduleCabinetScaleSync);
@@ -6623,6 +6691,7 @@ window.addEventListener("pageshow", scheduleCabinetScaleSync);
 window.visualViewport?.addEventListener("resize", scheduleCabinetScaleSync);
 window.visualViewport?.addEventListener("scroll", scheduleCabinetScaleSync);
 document.addEventListener("visibilitychange", scheduleCabinetScaleSync);
+document.addEventListener("visibilitychange", pauseHiddenWork);
 [60, 180, 420, 900, 1600].forEach((delay) => {
   window.setTimeout(scheduleCabinetScaleSync, delay);
 });
@@ -6630,6 +6699,7 @@ applyPerformanceMode();
 preventImageSelection();
 preloadSymbolAssets();
 initPerfMonitor();
+initAuditPanel();
 initClimaxTunePanel();
 initBoardTunePanel();
 startNewBoard();

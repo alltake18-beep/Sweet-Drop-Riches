@@ -25,10 +25,13 @@
 html,
 body {
   margin: 0;
+  width: 100%;
+  height: 100%;
   min-height: 100%;
   font-family: "Arial Black", "Microsoft JhengHei", Arial, sans-serif;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  overflow: hidden;
 }
 
 body {
@@ -39,7 +42,7 @@ body {
     radial-gradient(circle at 52% 88%, rgba(43, 206, 255, 0.16), transparent 20rem),
     linear-gradient(160deg, #0f0529 0%, #101b42 52%, #05020f 100%);
   color: var(--ink);
-  overflow-x: hidden;
+  overflow: hidden;
 }
 
 button {
@@ -9079,4 +9082,141 @@ html.ios-performance .event-socket {
 
 .full-drop-fly-chip {
   font-size: 22px !important;
+}
+
+/* Phone stability lock: keep the 720x1280 art proportional while making HUD text readable. */
+.hud {
+  transform: none !important;
+}
+
+.hud-panel,
+.bet-panel {
+  transform: none !important;
+}
+
+.hud-panel span,
+.hud-panel strong,
+.bet-panel strong {
+  transform: none !important;
+  filter: none !important;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: geometricPrecision;
+}
+
+.hud-panel span::before,
+.hud-panel strong::before,
+.bet-panel strong::before {
+  content: none !important;
+  display: none !important;
+}
+
+.hud-panel span {
+  font-size: calc(18px * var(--balance-label-size, 100%) / 100%) !important;
+  line-height: 0.9 !important;
+  color: #ffe6a6 !important;
+  text-shadow:
+    0 1px 0 rgba(42, 4, 7, 0.95),
+    0 0 5px rgba(255, 219, 105, 0.34) !important;
+}
+
+.hud-panel strong {
+  font-size: calc(25px * var(--balance-number-size, 100%) / 100%) !important;
+  line-height: 0.95 !important;
+  color: #fff1a8 !important;
+  -webkit-text-stroke: 0.45px rgba(53, 5, 8, 0.82) !important;
+  text-shadow:
+    0 1px 0 rgba(82, 19, 4, 0.95),
+    0 2px 0 rgba(24, 1, 5, 0.76),
+    0 0 6px rgba(255, 219, 105, 0.34) !important;
+}
+
+.bet-panel strong {
+  font-size: calc(28px * var(--bet-text-size, 100%) / 100%) !important;
+  line-height: 0.95 !important;
+  color: #fff1a8 !important;
+  -webkit-text-stroke: 0.45px rgba(53, 5, 8, 0.82) !important;
+  text-shadow:
+    0 1px 0 rgba(82, 19, 4, 0.95),
+    0 2px 0 rgba(24, 1, 5, 0.76),
+    0 0 6px rgba(255, 219, 105, 0.34) !important;
+}
+
+.phone.fx-lite,
+html.ios-performance .phone {
+  background:
+    url("assets/ui/candy-machine-final-bg.jpg") center / 100% 100% no-repeat,
+    linear-gradient(180deg, #170408, #070205) !important;
+}
+
+.phone.fx-lite .ambient {
+  display: none !important;
+}
+
+.phone.fx-lite .brand,
+.phone.fx-lite .candy-img,
+.phone.fx-lite .special-img,
+.phone.fx-lite .tile.multiplier .multiplier-symbol,
+.phone.fx-lite .event-socket img,
+.phone.fx-lite .stage-slot img,
+.phone.fx-lite .multiplier-art {
+  filter: none !important;
+}
+
+.phone.fx-lite .board,
+.phone.fx-lite .board-bar,
+.phone.fx-lite .special-meter,
+.phone.fx-lite .stage-slot,
+.phone.fx-lite .event-socket,
+.phone.fx-lite .tile,
+.phone.fx-lite .climax-charge-target {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.phone.fx-lite .special-img,
+.phone.fx-lite .tile.special-candy::before,
+.phone.fx-lite .tile.special-candy::after,
+.phone.fx-lite .tile.special-bomb .special-img,
+.phone.fx-lite .tile.special-colorbomb::before,
+.phone.fx-lite .tile.special-chocolate::before,
+.phone.fx-lite .tile.special-chocolate .special-img,
+.phone.fx-lite .tile.special-fish .special-img,
+.phone.fx-lite .tile.multiplier::before,
+.phone.fx-lite .tile.multiplier::after,
+.phone.fx-lite .tile.multiplier.value-100,
+.phone.fx-lite .tile.multiplier.tier-legend,
+.phone.fx-lite .tile.multiplier.tier-ultimate,
+.phone.fx-lite .tile.multiplier.value-100 .multiplier-gem,
+.phone.fx-lite .tile.multiplier.tier-legend .multiplier-gem,
+.phone.fx-lite .tile.multiplier.tier-ultimate .multiplier-gem,
+.phone.fx-lite .stage-slot.active,
+.phone.fx-lite .stage-slot.rolling,
+.phone.fx-lite .event-socket.active,
+.phone.fx-lite .event-socket.rolling,
+.phone.fx-lite.slot-hype .board::after,
+.phone.fx-lite.multiplier-climax .play-area::before {
+  animation: none !important;
+}
+
+.phone.fx-lite .tile.special-candy::before,
+.phone.fx-lite .tile.special-candy::after,
+.phone.fx-lite .tile.multiplier::before,
+.phone.fx-lite .tile.multiplier::after {
+  opacity: 0.22 !important;
+}
+
+.audit-panel {
+  position: fixed;
+  z-index: 10000;
+  left: 8px;
+  top: 8px;
+  max-width: calc(100vw - 16px);
+  padding: 8px;
+  margin: 0;
+  color: #8ff7ff;
+  font: 12px/1.35 Consolas, monospace;
+  background: rgba(0, 0, 0, 0.78);
+  border: 1px solid rgba(143, 247, 255, 0.5);
+  pointer-events: none;
+  white-space: pre-wrap;
 }
