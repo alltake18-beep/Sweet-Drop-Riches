@@ -9011,7 +9011,8 @@ html.ios-performance .event-socket {
 
 /* Phone stability lock: keep the 720x1280 art proportional while making HUD text readable. */
 .hud {
-  transform: none !important;
+  transform: scale(var(--hud-scale, 1)) !important;
+  transform-origin: 50% 100% !important;
 }
 
 .hud-panel,

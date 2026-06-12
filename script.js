@@ -373,6 +373,8 @@ const cabinetScaleEl = document.getElementById("cabinetScale");
 const phoneShellEl = document.querySelector(".phone");
 const CABINET_DESIGN_WIDTH = 720;
 const CABINET_DESIGN_HEIGHT = 1280;
+const HUD_READABLE_BASE_WIDTH = 412;
+const HUD_SCALE_MAX = 1.14;
 let cabinetScaleFrame = 0;
 
 const state = {
@@ -6558,9 +6560,13 @@ function syncCabinetScale() {
   const heightScale = viewport.height / CABINET_DESIGN_HEIGHT;
   const scale = Math.max(0.1, Math.min(1, widthScale, heightScale));
   const roundedScale = +scale.toFixed(5);
+  const widthCompensation = Math.max(1, widthScale / scale);
+  const narrowCompensation = Math.max(1, HUD_READABLE_BASE_WIDTH / viewport.width);
+  const hudScale = Math.min(HUD_SCALE_MAX, widthCompensation * narrowCompensation);
   cabinetScaleEl.style.width = `${CABINET_DESIGN_WIDTH * roundedScale}px`;
   cabinetScaleEl.style.height = `${CABINET_DESIGN_HEIGHT * roundedScale}px`;
   cabinetScaleEl.style.setProperty("--cabinet-scale", String(roundedScale));
+  cabinetScaleEl.style.setProperty("--hud-scale", String(+hudScale.toFixed(5)));
   document.documentElement.style.setProperty("--app-viewport-width", `${viewport.width}px`);
   document.documentElement.style.setProperty("--app-viewport-height", `${viewport.height}px`);
 }
@@ -6637,6 +6643,7 @@ function initAuditPanel() {
     panel.textContent = [
       `viewport ${viewport.width} x ${viewport.height}`,
       `scale ${cabinetScaleEl?.style.getPropertyValue("--cabinet-scale") || ""}`,
+      `hud scale ${cabinetScaleEl?.style.getPropertyValue("--hud-scale") || ""}`,
       `phone ${Math.round(phoneRect?.width || 0)} x ${Math.round(phoneRect?.height || 0)}`,
       `board ${Math.round(boardRect?.width || 0)} x ${Math.round(boardRect?.height || 0)}`,
       `hud ${Math.round(hudRect?.width || 0)} x ${Math.round(hudRect?.height || 0)}`,
