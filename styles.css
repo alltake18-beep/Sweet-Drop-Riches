@@ -8066,9 +8066,7 @@ button {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  filter:
-    drop-shadow(0 0 8px rgba(255, 82, 33, 0.72))
-    drop-shadow(0 0 12px rgba(255, 210, 69, 0.45));
+  filter: none;
 }
 
 .climax-wheel-highlight {
@@ -8078,14 +8076,14 @@ button {
   border-radius: 50%;
   background:
     conic-gradient(from calc(var(--highlight-angle, 15deg) - 15deg), transparent 0deg, rgba(255, 238, 119, 0.0) 0.5deg, rgba(255, 239, 122, 0.5) 11deg, rgba(255, 78, 186, 0.24) 25deg, transparent 30deg 360deg);
-  mix-blend-mode: screen;
-  opacity: 0.72;
-  filter: blur(1px) drop-shadow(0 0 12px rgba(255, 215, 89, 0.65));
+  mix-blend-mode: normal;
+  opacity: 0;
+  filter: none;
   pointer-events: none;
 }
 
 .phone.climax-spinning .climax-wheel-highlight {
-  opacity: 0.95;
+  opacity: 0.36;
 }
 
 .climax-wheel-labels {
@@ -8234,12 +8232,9 @@ button {
   inset: 0;
   z-index: 6;
   pointer-events: none;
-  background:
-    radial-gradient(ellipse at 0% 38%, rgba(255, 65, 17, 0.24), transparent 28%),
-    radial-gradient(ellipse at 100% 39%, rgba(255, 54, 22, 0.22), transparent 28%),
-    linear-gradient(90deg, rgba(255, 89, 14, 0.18), transparent 12% 88%, rgba(255, 83, 10, 0.16));
-  mix-blend-mode: screen;
-  animation: climax-edge-fire 760ms ease-in-out infinite alternate;
+  background: url("assets/fx/flame-heat-overlay.png?v=wheel-lite-20260613-050918") center / 100% 100% no-repeat;
+  opacity: 0.22;
+  mix-blend-mode: normal;
 }
 
 .phone.climax-spinning {
@@ -8283,7 +8278,7 @@ button {
 }
 
 .phone.climax-intro-wheel .climax-wheel-highlight {
-  animation: climax-highlight-wake 2000ms ease-out both;
+  animation: none;
 }
 
 .phone.climax-logo-return .brand-logo {
@@ -8365,17 +8360,6 @@ button {
   }
 }
 
-@keyframes climax-edge-fire {
-  0% {
-    opacity: 0.56;
-    filter: blur(0.2px);
-  }
-  100% {
-    opacity: 0.9;
-    filter: blur(0.8px);
-  }
-}
-
 @keyframes climax-screen-shake {
   0% { transform: translate(0, 0); }
   25% { transform: translate(1px, -1px); }
@@ -8449,18 +8433,6 @@ button {
   100% {
     transform: translate(-50%, -50%) rotate(var(--wheel-rotation, 0deg)) scale(1);
     opacity: 1;
-  }
-}
-
-@keyframes climax-highlight-wake {
-  0% {
-    opacity: 0;
-  }
-  55% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0.72;
   }
 }
 
@@ -8880,12 +8852,16 @@ html.ios-performance .event-socket {
 }
 
 .phone.ios-performance .climax-wheel-rotor img {
-  filter: drop-shadow(0 0 5px rgba(255, 210, 69, 0.36));
+  filter: none;
 }
 
 .phone.ios-performance .climax-wheel-highlight {
   filter: none;
-  opacity: 0.58;
+  opacity: 0;
+}
+
+.phone.ios-performance.climax-spinning .climax-wheel-highlight {
+  opacity: 0.36;
 }
 
 /* Local-first viewport lock: phones should scale the same cabinet instead of reflowing internals. */
@@ -9170,7 +9146,11 @@ html.ios-performance .phone {
 }
 
 .phone.fx-lite .climax-wheel-highlight {
-  opacity: 0.34 !important;
+  opacity: 0 !important;
+}
+
+.phone.fx-lite.climax-spinning .climax-wheel-highlight {
+  opacity: 0.28 !important;
 }
 
 .phone.fx-lite .climax-lightning-bolt {

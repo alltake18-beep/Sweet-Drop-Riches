@@ -207,8 +207,6 @@ const FULL_DROP_WHEEL_SPIN_MAX_MS = 7000;
 const FULL_DROP_WHEEL_TURNS_MIN = 2;
 const FULL_DROP_WHEEL_TURNS_MAX = 4;
 const FULL_DROP_WHEEL_FALLBACK_POINTER_Y = 7.5;
-const CLIMAX_IDLE_SLICE_MS = 1000;
-const CLIMAX_IDLE_VISUAL_MS = 33;
 const CLIMAX_INTRO_PUSH_DELAY_MS = 650;
 const CLIMAX_INTRO_WHEEL_RISE_MS = 2000;
 const CLIMAX_LIGHTNING_DURATION_MS = 1000;
@@ -1390,44 +1388,7 @@ function stopClimaxIdleSpin() {
 }
 
 function startClimaxIdleSpin() {
-  if (isReducedClimaxFx()) return;
-  if (state.climaxIdleFrame || state.climaxSpinning || !isMultiplierClimaxActive()) return;
-  const sliceAngle = wheelLabelSliceAngle();
-  const baseDegreesPerMs = sliceAngle / CLIMAX_IDLE_SLICE_MS;
-  const pointerAngle = climaxPointerAngle();
-  let lastVisualAt = 0;
-
-  const tick = (now) => {
-    if (!isMultiplierClimaxActive() || state.climaxSpinning || document.hidden) {
-      stopClimaxIdleSpin();
-      return;
-    }
-    if (lastVisualAt && now - lastVisualAt < CLIMAX_IDLE_VISUAL_MS) {
-      state.climaxIdleFrame = requestAnimationFrame(tick);
-      return;
-    }
-    if (!state.climaxIdleLastAt) state.climaxIdleLastAt = now;
-    const delta = Math.min(34, now - state.climaxIdleLastAt);
-    state.climaxIdleLastAt = now;
-    lastVisualAt = now;
-    let speedFactor = 1;
-    if (state.climaxIntroPhase === "push" && state.climaxIntroWheelStartedAt) {
-      const progress = clamp((now - state.climaxIntroWheelStartedAt) / CLIMAX_INTRO_WHEEL_RISE_MS, 0, 1);
-      speedFactor = 1 + 4.2 * (1 - progress) ** 2.2;
-    }
-    state.climaxWheelRotation += delta * baseDegreesPerMs * speedFactor;
-    if (climaxWheelRotorEl) {
-      climaxWheelRotorEl.style.setProperty("--wheel-rotation", `${state.climaxWheelRotation || 0}deg`);
-    }
-    if (climaxWheelHighlightEl) {
-      const index = Math.floor(normalizeAngle(pointerAngle - state.climaxWheelRotation) / sliceAngle) % FULL_DROP_WHEEL_LABEL_ORDER.length;
-      climaxWheelHighlightEl.style.setProperty("--highlight-angle", `${index * sliceAngle + sliceAngle * 0.5}deg`);
-      state.climaxIdleLastTickIndex = index;
-    }
-    state.climaxIdleFrame = requestAnimationFrame(tick);
-  };
-
-  state.climaxIdleFrame = requestAnimationFrame(tick);
+  stopClimaxIdleSpin();
 }
 
 function updateClimaxWheelVisual(sliceAngle = wheelLabelSliceAngle(), pointerAngle = climaxPointerAngle()) {
