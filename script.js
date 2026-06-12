@@ -366,6 +366,7 @@ const climaxWheelLabelsEl = document.getElementById("climaxWheelLabels");
 const climaxWheelHighlightEl = document.getElementById("climaxWheelHighlight");
 const climaxCenterLineEl = document.getElementById("climaxCenterLine");
 const climaxChargeTargetsEl = document.getElementById("climaxChargeTargets");
+const cabinetScaleEl = document.getElementById("cabinetScale");
 const phoneShellEl = document.querySelector(".phone");
 const CABINET_DESIGN_WIDTH = 720;
 const CABINET_DESIGN_HEIGHT = 1280;
@@ -6516,11 +6517,17 @@ function applyPerformanceMode() {
 }
 
 function syncCabinetScale() {
-  if (!phoneShellEl) return;
-  const widthScale = window.innerWidth / CABINET_DESIGN_WIDTH;
-  const heightScale = window.innerHeight / CABINET_DESIGN_HEIGHT;
+  if (!cabinetScaleEl || !phoneShellEl) return;
+  const viewport = window.visualViewport;
+  const viewportWidth = Math.floor(viewport?.width || document.documentElement.clientWidth || window.innerWidth);
+  const viewportHeight = Math.floor(viewport?.height || document.documentElement.clientHeight || window.innerHeight);
+  const widthScale = viewportWidth / CABINET_DESIGN_WIDTH;
+  const heightScale = viewportHeight / CABINET_DESIGN_HEIGHT;
   const scale = Math.max(0.1, Math.min(1, widthScale, heightScale));
-  phoneShellEl.style.setProperty("--cabinet-scale", String(+scale.toFixed(5)));
+  const roundedScale = +scale.toFixed(5);
+  cabinetScaleEl.style.width = `${CABINET_DESIGN_WIDTH * roundedScale}px`;
+  cabinetScaleEl.style.height = `${CABINET_DESIGN_HEIGHT * roundedScale}px`;
+  cabinetScaleEl.style.setProperty("--cabinet-scale", String(roundedScale));
 }
 
 function scheduleCabinetScaleSync() {

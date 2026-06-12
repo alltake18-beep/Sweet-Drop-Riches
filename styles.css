@@ -8946,6 +8946,22 @@ html.ios-performance .event-socket {
   width: 100vw;
 }
 
+.cabinet-scale {
+  position: relative;
+  width: 720px;
+  height: 1280px;
+  flex: none;
+}
+
+.cabinet-transform {
+  position: absolute;
+  inset: 0;
+  width: 720px;
+  height: 1280px;
+  transform: scale(var(--cabinet-scale, 1));
+  transform-origin: top left;
+}
+
 .phone,
 html.ios-performance .phone {
   width: 720px;
@@ -8955,7 +8971,6 @@ html.ios-performance .phone {
   max-width: none;
   aspect-ratio: 720 / 1280;
   flex: none;
-  zoom: var(--cabinet-scale, 1);
   background:
     url("assets/ui/candy-machine-final-bg.jpg") center / 100% 100% no-repeat,
     linear-gradient(180deg, #170408, #070205);
