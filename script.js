@@ -6516,18 +6516,43 @@ function applyPerformanceMode() {
   phoneShellEl?.classList.toggle("ios-performance", IOS_PERFORMANCE_MODE);
 }
 
+function viewportNumber(value) {
+  const number = Number(value);
+  return Number.isFinite(number) && number > 0 ? number : null;
+}
+
+function smallestViewportValue(values, fallback) {
+  const valid = values.map(viewportNumber).filter(Boolean);
+  if (!valid.length) return fallback;
+  return Math.floor(Math.min(...valid));
+}
+
+function currentViewportSize() {
+  const viewport = window.visualViewport;
+  const root = document.documentElement;
+  const width = smallestViewportValue(
+    [viewport?.width, root?.clientWidth, window.innerWidth],
+    CABINET_DESIGN_WIDTH,
+  );
+  const height = smallestViewportValue(
+    [viewport?.height, root?.clientHeight, window.innerHeight],
+    CABINET_DESIGN_HEIGHT,
+  );
+  return { width, height };
+}
+
 function syncCabinetScale() {
   if (!cabinetScaleEl || !phoneShellEl) return;
-  const viewport = window.visualViewport;
-  const viewportWidth = Math.floor(viewport?.width || document.documentElement.clientWidth || window.innerWidth);
-  const viewportHeight = Math.floor(viewport?.height || document.documentElement.clientHeight || window.innerHeight);
-  const widthScale = viewportWidth / CABINET_DESIGN_WIDTH;
-  const heightScale = viewportHeight / CABINET_DESIGN_HEIGHT;
+  const viewport = currentViewportSize();
+  const widthScale = viewport.width / CABINET_DESIGN_WIDTH;
+  const heightScale = viewport.height / CABINET_DESIGN_HEIGHT;
   const scale = Math.max(0.1, Math.min(1, widthScale, heightScale));
   const roundedScale = +scale.toFixed(5);
   cabinetScaleEl.style.width = `${CABINET_DESIGN_WIDTH * roundedScale}px`;
   cabinetScaleEl.style.height = `${CABINET_DESIGN_HEIGHT * roundedScale}px`;
   cabinetScaleEl.style.setProperty("--cabinet-scale", String(roundedScale));
+  document.documentElement.style.setProperty("--app-viewport-width", `${viewport.width}px`);
+  document.documentElement.style.setProperty("--app-viewport-height", `${viewport.height}px`);
 }
 
 function scheduleCabinetScaleSync() {
@@ -6568,7 +6593,14 @@ function preventImageSelection() {
 syncCabinetScale();
 window.addEventListener("resize", scheduleCabinetScaleSync);
 window.addEventListener("orientationchange", scheduleCabinetScaleSync);
+window.addEventListener("load", scheduleCabinetScaleSync);
+window.addEventListener("pageshow", scheduleCabinetScaleSync);
 window.visualViewport?.addEventListener("resize", scheduleCabinetScaleSync);
+window.visualViewport?.addEventListener("scroll", scheduleCabinetScaleSync);
+document.addEventListener("visibilitychange", scheduleCabinetScaleSync);
+[60, 180, 420, 900, 1600].forEach((delay) => {
+  window.setTimeout(scheduleCabinetScaleSync, delay);
+});
 applyPerformanceMode();
 preventImageSelection();
 preloadSymbolAssets();
