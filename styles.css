@@ -8238,7 +8238,7 @@ button {
 }
 
 .phone.climax-spinning {
-  animation: climax-screen-shake 90ms linear infinite;
+  animation: none;
 }
 
 .phone.climax-intro-logo {
@@ -9155,8 +9155,12 @@ html.ios-performance .phone {
 }
 
 .phone.fx-lite .climax-lightning-bolt {
-  display: none !important;
-  animation: none !important;
+  display: block !important;
+  animation: climax-lightning-bolt var(--duration, 520ms) linear var(--delay, 0ms) forwards !important;
+}
+
+.phone.fx-lite .climax-lightning-segment {
+  animation-duration: 180ms !important;
 }
 
 .phone.fx-lite .climax-charge-target.is-charged {

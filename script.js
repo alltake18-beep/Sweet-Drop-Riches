@@ -210,6 +210,7 @@ const FULL_DROP_WHEEL_FALLBACK_POINTER_Y = 7.5;
 const CLIMAX_INTRO_PUSH_DELAY_MS = 650;
 const CLIMAX_INTRO_WHEEL_RISE_MS = 2000;
 const CLIMAX_LIGHTNING_DURATION_MS = 1000;
+const CLIMAX_REDUCED_LIGHTNING_DURATION_MS = 520;
 const CLIMAX_CHARGE_TARGETS = [
   { x: 42, y: 12.5, d: 7 },
   { x: 50, y: 12.5, d: 7 },
@@ -1428,8 +1429,8 @@ function animateClimaxWheel(finalRotation, profile) {
     const sliceAngle = wheelLabelSliceAngle();
     const pointerAngle = climaxPointerAngle();
     const reducedFx = isReducedClimaxFx();
-    const visualStepMs = reducedFx ? 66 : 0;
-    const soundStepMs = reducedFx ? 180 : 42;
+    const visualStepMs = 33;
+    const soundStepMs = reducedFx ? 180 : 66;
     let lastVisualAt = 0;
     let lastHighlightIndex = currentClimaxHighlightIndex(sliceAngle, pointerAngle);
     let lastTickAt = 0;
@@ -3263,16 +3264,6 @@ function spawnSlotClimaxEnergy(col, value, baseDelay = 0) {
   const target = climaxChargeTargetsEl?.querySelector(`.climax-charge-target[data-slot="${col}"]`);
   if (!host || !climaxStageEl || !source || !target) return Promise.resolve();
 
-  if (isReducedClimaxFx()) {
-    window.setTimeout(() => {
-      state.climaxChargedSlots.add(col);
-      target.classList.add("is-hit");
-      renderClimaxStage();
-      window.setTimeout(() => target.classList.remove("is-hit"), 120);
-    }, baseDelay + 80);
-    return wait(baseDelay + 160);
-  }
-
   const hostRect = host.getBoundingClientRect();
   const sourceRect = source.getBoundingClientRect();
   const stageRect = climaxStageEl.getBoundingClientRect();
@@ -3281,6 +3272,33 @@ function spawnSlotClimaxEnergy(col, value, baseDelay = 0) {
   const startY = sourceRect.top - hostRect.top;
   const endX = targetRect.left + targetRect.width * 0.5 - hostRect.left;
   const endY = targetRect.top + targetRect.height * 0.5 - hostRect.top;
+
+  if (isReducedClimaxFx()) {
+    const bolt = document.createElement("div");
+    const midX = startX + (endX - startX) * 0.52 + (col - 1) * 18;
+    const midY = startY + (endY - startY) * 0.58;
+    bolt.className = "climax-lightning-bolt is-bitmap is-lite";
+    bolt.style.setProperty("--delay", `${baseDelay}ms`);
+    bolt.style.setProperty("--duration", `${CLIMAX_REDUCED_LIGHTNING_DURATION_MS}ms`);
+    [
+      { x: startX, y: startY },
+      { x: midX, y: midY },
+      { x: endX, y: endY },
+    ].forEach((point, index, route) => {
+      const next = route[index + 1];
+      if (next) appendBitmapLightningSegment(bolt, point, next, baseDelay + index * 28);
+    });
+    host.appendChild(bolt);
+    window.setTimeout(() => {
+      state.climaxChargedSlots.add(col);
+      target.classList.add("is-hit");
+      renderClimaxStage();
+      window.setTimeout(() => target.classList.remove("is-hit"), 180);
+    }, baseDelay + CLIMAX_REDUCED_LIGHTNING_DURATION_MS);
+    window.setTimeout(() => bolt.remove(), baseDelay + CLIMAX_REDUCED_LIGHTNING_DURATION_MS + 160);
+    return wait(baseDelay + CLIMAX_REDUCED_LIGHTNING_DURATION_MS);
+  }
+
   const route = lightningRoutePoints(col, { x: startX, y: startY }, { x: endX, y: endY }, hostRect, stageRect);
   const bolt = document.createElement("div");
   bolt.className = "climax-lightning-bolt is-bitmap";
