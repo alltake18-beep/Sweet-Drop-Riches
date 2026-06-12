@@ -7,7 +7,9 @@ const MULTIPLIER_COLS = [0, 2, 4];
 const SYMBOL_VERSION = "normal-candy-scale-20260611-225819";
 const SLOT_TURN_MAX = 20;
 const PERF_ENABLED = new URLSearchParams(window.location.search).has("perf");
+const IOS_DEVICE = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 const IOS_PERFORMANCE_MODE = PERF_ENABLED;
+const FX_PERFORMANCE_MODE = PERF_ENABLED || IOS_DEVICE;
 const SPECIAL_METER_TARGET = 9;
 const SPECIAL_METER_THRESHOLDS = [9, 21, 40];
 const SPECIAL_METER_MAX = SPECIAL_METER_THRESHOLDS[SPECIAL_METER_THRESHOLDS.length - 1];
@@ -183,12 +185,13 @@ const MULTIPLIER_ANCHOR_ROW_WEIGHTS_2X2 = [
   { row: 6, weight: 0 },
   { row: 7, weight: 0 },
 ];
+// FX-TUNE: 現行事件 - 大獎字卡粒子改成少量大星芒，避免手機長時間灑小粒子。
 const WIN_TIERS = [
-  { ratio: 100, label: "LEGENDARY WIN", art: "legendary", sound: "jackpot", voice: "voiceLegendaryWin", className: "tier-legendary", duration: 3400, quick: 2800, particles: 96, countVolume: 0.105 },
-  { ratio: 50, label: "EPIC WIN", art: "epic", sound: "jackpot", voice: "voiceEpicWin", className: "tier-epic", duration: 3000, quick: 2600, particles: 78, countVolume: 0.092 },
-  { ratio: 30, label: "SUPER MEGA WIN", art: "super-mega", sound: "superWin", voice: "voiceSuperMegaWin", className: "tier-super", duration: 2700, quick: 2400, particles: 62, countVolume: 0.082 },
-  { ratio: 20, label: "MEGA WIN", art: "mega", sound: "superWin", voice: "voiceMegaWin", className: "tier-mega", duration: 2300, quick: 2100, particles: 48, countVolume: 0.072 },
-  { ratio: 5, label: "BIG WIN", art: "big", sound: "win", voice: "voiceBigWin", className: "tier-big", duration: 1850, quick: 1750, particles: 32, countVolume: 0.058 },
+  { ratio: 100, label: "LEGENDARY WIN", art: "legendary", sound: "jackpot", voice: "voiceLegendaryWin", className: "tier-legendary", duration: 3400, quick: 2800, particles: 22, countVolume: 0.105 },
+  { ratio: 50, label: "EPIC WIN", art: "epic", sound: "jackpot", voice: "voiceEpicWin", className: "tier-epic", duration: 3000, quick: 2600, particles: 18, countVolume: 0.092 },
+  { ratio: 30, label: "SUPER MEGA WIN", art: "super-mega", sound: "superWin", voice: "voiceSuperMegaWin", className: "tier-super", duration: 2700, quick: 2400, particles: 16, countVolume: 0.082 },
+  { ratio: 20, label: "MEGA WIN", art: "mega", sound: "superWin", voice: "voiceMegaWin", className: "tier-mega", duration: 2300, quick: 2100, particles: 14, countVolume: 0.072 },
+  { ratio: 5, label: "BIG WIN", art: "big", sound: "win", voice: "voiceBigWin", className: "tier-big", duration: 1850, quick: 1750, particles: 10, countVolume: 0.058 },
 ];
 const EVENT_ROLL_STEPS = 5;
 const EVENT_ROLL_TOTAL = 1398;
@@ -2095,6 +2098,7 @@ async function processSpecialAwards() {
       state.board[target.row][target.col] = specialRewardTile(reward);
       setStatus(`抽中${specialName(reward.special)}`);
       render();
+      // FX-TUNE: 舊版殘留，不在目前事件池 - 舊版特殊糖生成粒子。
       spawnParticles(18);
       playSound("specialSpawn");
       await wait(resolveDelay(520, 220));
@@ -2581,6 +2585,7 @@ async function resolveMove(initialMatches, preferredSpawn = null) {
     playMatchClearPerformance(expandedCells.size, cascades, hasSpecialBlast);
     playSound(hasSpecialBlast ? "specialBlast" : cascades === 0 ? "match" : "cascade");
     if (hasSpecialBlast) triggerScreenFx("fx-blast", 460);
+    // FX-TUNE: 現行事件 - 一般消除 / 特殊消除粒子改造。
     spawnClearBursts(expandedCells, hasSpecialBlast);
     spawnCollectEnergy(expandedCells);
     await wait(resolveDelay(hasSpecialBlast ? 430 : 380, 150));
@@ -2608,6 +2613,7 @@ async function resolveMove(initialMatches, preferredSpawn = null) {
       };
       setStatus(`${specialName(createdSpecial.special)} 生成`);
       render();
+      // FX-TUNE: 現行事件 - 特殊糖生成粒子改造。
       spawnParticles(12);
       playSound("specialSpawn");
       triggerScreenFx("fx-pop", 300);
@@ -2694,6 +2700,7 @@ async function maybeShowWinCard() {
   const countDuration = Math.max(1450, tier.duration - 340);
   animateWinAmount(state.currentWin, countDuration);
   playWinCountLoop(countDuration, tier.countVolume || 0.04);
+  // FX-TUNE: 現行事件 - Big Win 以上字卡粒子改造。
   spawnParticles(tier.particles);
   triggerScreenFx(ratio >= 50 ? "fx-jackpot" : ratio >= 20 ? "fx-blast" : "fx-bump", ratio >= 50 ? 980 : 640);
   playWinCardPerformance(tier);
@@ -2867,40 +2874,45 @@ function reshuffleBoard() {
   setStatus("盤面已洗牌");
 }
 
+// FX-TUNE: 現行事件 - 通用爆發粒子改造；用少量大星芒取代大量小粒子。
 function spawnParticles(count) {
   const colors = ["#ffdf5f", "#ff58c8", "#35c8ff", "#83ff58", "#ff8138", "#ffffff"];
   const host = document.querySelector(".play-area");
   if (!host || document.hidden) return;
 
   const hostRect = host.getBoundingClientRect();
-  const limit = window.innerWidth <= 520 ? 20 : 34;
+  const limit = FX_PERFORMANCE_MODE || window.innerWidth <= 520 ? 10 : 16;
   const actualCount = Math.min(count, limit);
   const now = performance.now();
   const items = Array.from({ length: actualCount }, () => ({
     kind: "burst",
     start: now,
-    delay: Math.random() * 70,
-    duration: 620 + Math.random() * 180,
+    delay: Math.random() * 45,
+    duration: 430 + Math.random() * 120,
     x: hostRect.width * (0.36 + Math.random() * 0.28),
     y: hostRect.height * (0.44 + Math.random() * 0.24),
     angle: Math.random() * Math.PI * 2,
-    distance: 46 + Math.random() * 116,
-    radius: 3.5 + Math.random() * 5,
+    distance: 24 + Math.random() * 64,
+    radius: 7 + Math.random() * 8,
     rotation: Math.random() * Math.PI,
-    spin: (Math.random() - 0.5) * 5,
+    spin: (Math.random() - 0.5) * 3,
     color: randomItem(colors),
     hot: "#fff8a5",
-    alpha: 0.95,
+    alpha: 0.9,
+    streak: Math.random() > 0.45,
+    streakLength: 18 + Math.random() * 18,
+    streakWidth: 2.4,
   }));
   enqueueFx(items);
 }
 
+// FX-TUNE: 現行事件 - 一般消除粒子改造；每格少量光爆，不再每格噴多顆小點。
 function spawnClearBursts(cells, intense = false) {
   const host = document.querySelector(".play-area");
   if (!host || document.hidden) return;
 
   const hostRect = host.getBoundingClientRect();
-  const maxCells = window.innerWidth <= 520 ? 18 : 28;
+  const maxCells = FX_PERFORMANCE_MODE || window.innerWidth <= 520 ? 10 : 16;
   const points = Array.from(cells).slice(0, maxCells);
   const now = performance.now();
   const colors = ["#ffdf5f", "#ff58c8", "#35c8ff", "#83ff58", "#ff8138", "#ffffff"];
@@ -2912,23 +2924,23 @@ function spawnClearBursts(cells, intense = false) {
     const rect = tile.getBoundingClientRect();
     const x = rect.left + rect.width * 0.5 - hostRect.left;
     const y = rect.top + rect.height * 0.5 - hostRect.top;
-    const sparks = intense ? 5 : 3;
+    const sparks = intense ? 2 : 1;
     for (let i = 0; i < sparks; i += 1) {
       items.push({
         kind: "burst",
         start: now,
-        delay: Math.random() * 60,
-        duration: intense ? 520 + Math.random() * 160 : 420 + Math.random() * 120,
+        delay: Math.random() * 38,
+        duration: intense ? 420 + Math.random() * 120 : 340 + Math.random() * 90,
         x,
         y,
         angle: Math.random() * Math.PI * 2,
-        distance: (intense ? 32 : 22) + Math.random() * (intense ? 64 : 42),
-        radius: (intense ? 4.5 : 3.2) + Math.random() * 3,
+        distance: (intense ? 20 : 14) + Math.random() * (intense ? 38 : 24),
+        radius: (intense ? 6.5 : 5.2) + Math.random() * 3.5,
         rotation: Math.random() * Math.PI,
-        spin: (Math.random() - 0.5) * 5,
+        spin: (Math.random() - 0.5) * 2.8,
         color: randomItem(colors),
         hot: "#fff8a5",
-        alpha: intense ? 1 : 0.88,
+        alpha: intense ? 0.95 : 0.82,
       });
     }
   }
@@ -2948,7 +2960,7 @@ function triggerScreenFx(className, duration = 420) {
 function resizeFxCanvas() {
   if (!fxCanvas) return;
   const rect = fxCanvas.getBoundingClientRect();
-  const dpr = Math.min(window.devicePixelRatio || 1, IOS_PERFORMANCE_MODE ? 1.25 : 2);
+  const dpr = Math.min(window.devicePixelRatio || 1, FX_PERFORMANCE_MODE ? 1.25 : 2);
   const width = Math.max(1, Math.floor(rect.width * dpr));
   const height = Math.max(1, Math.floor(rect.height * dpr));
   if (fxCanvas.width !== width || fxCanvas.height !== height) {
@@ -2963,7 +2975,7 @@ function enqueueFx(items) {
   if (!fxCanvas || document.hidden) return;
   resizeFxCanvas();
   state.fx.items.push(...items);
-  const maxFxItems = IOS_PERFORMANCE_MODE ? 48 : 90;
+  const maxFxItems = FX_PERFORMANCE_MODE ? 36 : 64;
   if (state.fx.items.length > maxFxItems) {
     state.fx.items.splice(0, state.fx.items.length - maxFxItems);
   }
@@ -3049,6 +3061,7 @@ function drawFx(now) {
   perfEnd();
 }
 
+// FX-TUNE: 現行事件 - 收集能量粒子改造；改成少量光線飛行，不再每個格子都生一顆。
 function spawnCollectEnergy(cells) {
   const host = document.querySelector(".play-area");
   const target = document.querySelector(".special-meter-track");
@@ -3059,8 +3072,10 @@ function spawnCollectEnergy(cells) {
   const targetX = targetRect.left + targetRect.width * 0.5 - hostRect.left;
   const targetY = targetRect.top + targetRect.height * 0.68 - hostRect.top;
 
-  const maxEnergy = window.innerWidth <= 520 ? 20 : 30;
-  const points = Array.from(cells).slice(0, maxEnergy);
+  const maxEnergy = FX_PERFORMANCE_MODE || window.innerWidth <= 520 ? 5 : 8;
+  const allPoints = Array.from(cells);
+  const step = Math.max(1, Math.ceil(allPoints.length / maxEnergy));
+  const points = allPoints.filter((_, index) => index % step === 0).slice(0, maxEnergy);
   const now = performance.now();
   const items = [];
   for (const key of points) {
@@ -3072,25 +3087,26 @@ function spawnCollectEnergy(cells) {
     items.push({
       kind: "fly",
       start: now,
-      delay: Math.random() * 150,
-      duration: 860 + Math.random() * 180,
+      delay: Math.random() * 80,
+      duration: 560 + Math.random() * 120,
       x: startX,
       y: startY,
       tx: targetX - startX,
       ty: targetY - startY,
-      arc: 42 + Math.random() * 34,
-      radius: 6.2 + Math.random() * 2.4,
+      arc: 30 + Math.random() * 22,
+      radius: 4.8 + Math.random() * 1.6,
       color: Math.random() > 0.5 ? "#35f4ff" : "#ff58d4",
       hot: "#fff7a8",
-      alpha: 1,
+      alpha: 0.9,
       streak: true,
-      streakLength: 30 + Math.random() * 18,
-      streakWidth: 3.2,
+      streakLength: 28 + Math.random() * 14,
+      streakWidth: 2.6,
     });
   }
   enqueueFx(items);
 }
 
+// FX-TUNE: 現行事件 - 倍數槽能量粒子改造；保留方向感但降低飛行點數。
 function spawnSlotEnergy(col, value) {
   const host = document.querySelector(".play-area");
   const target = document.querySelector(".special-meter");
@@ -3102,7 +3118,7 @@ function spawnSlotEnergy(col, value) {
   const startY = hostRect.height * 0.48;
   const targetX = targetRect.left + targetRect.width * 0.5 - hostRect.left;
   const targetY = targetRect.top + targetRect.height * 0.46 - hostRect.top;
-  const count = value >= 100 ? 12 : value >= 50 ? 9 : value >= 20 ? 6 : 4;
+  const count = value >= 100 ? 5 : value >= 50 ? 4 : value >= 20 ? 3 : 2;
   const now = performance.now();
   const items = [];
 
@@ -4930,6 +4946,7 @@ async function playSniperEvent() {
   setStatus(radius === 2 ? "狙擊槍 24 格" : "狙擊槍 8 格");
   render();
   markSniperTarget(finalTarget);
+  // FX-TUNE: 舊版殘留，不在目前事件池 - 狙擊事件粒子。
   spawnParticles(radius === 2 ? 44 : 24);
   triggerScreenFx(radius === 2 ? "fx-blast" : "fx-bump", radius === 2 ? 560 : 420);
   playSound(targetTile?.kind === "multiplier" ? "multiplierHigh" : "specialBlast");
@@ -4982,6 +4999,7 @@ async function processSpecialAwards() {
         }
         setStatus(`抽中${eventName(event)}`);
         render();
+        // FX-TUNE: 舊版殘留，不在目前事件池 - 舊版收集槽事件粒子。
         spawnParticles(event.kind === "multiplier" && event.value >= 50 ? 28 : 18);
         triggerScreenFx(event.kind === "multiplier" && event.value >= 50 ? "fx-bump" : "fx-pop", 360);
         playSound(event.kind === "multiplier" ? "multiplierHigh" : "specialSpawn");
@@ -5100,6 +5118,7 @@ async function presentCollectedMultipliers(collected) {
     state.climaxIntroPhase = "logo";
   }
   render();
+  // FX-TUNE: 現行事件 - 倍數糖收集進槽粒子改造。
   spawnParticles(collected.length * 12);
   const highCollect = Math.max(...collected.map((item) => item.value));
   const usedCollectAsset = playMultiplierCollectPerformance(collected, shouldPlayClimaxIntro);
@@ -5373,6 +5392,7 @@ async function playFlameEvent(stage = currentSpecialStageIndex()) {
 
   state.clearing = new Set(clearedCells);
   render();
+  // FX-TUNE: 現行事件 - 火焰事件清除粒子改造。
   spawnParticles(Math.min(48, Math.max(18, clearedCells.size * 2 + destroyedIds.size * 8)));
   if (destroyedIds.size) triggerScreenFx("fx-blast", 520);
   await wait(resolveDelay(420, 160));
@@ -5438,6 +5458,7 @@ async function playCandyClearEvent(type) {
   setEventPulse(true);
   setStatus(`CLEAR ${type.toUpperCase()}`);
   render();
+  // FX-TUNE: 現行事件 - 指定糖果清除事件粒子改造。
   spawnClearBursts(clearedCells, true);
   spawnCollectEnergy(clearedCells);
   spawnParticles(Math.min(42, Math.max(18, clearedCells.size * 2)));
@@ -5597,6 +5618,7 @@ async function playSniperEvent() {
   setEventPulse(true);
   render();
   markSniperTarget(finalTarget);
+  // FX-TUNE: 舊版殘留，不在目前事件池 - 狙擊事件粒子。
   spawnParticles(targetMultiplier ? 44 : 24);
   triggerScreenFx(targetMultiplier ? "fx-blast" : "fx-bump", targetMultiplier ? 560 : 420);
   playSound(targetMultiplier ? "multiplierHigh" : "specialBlast");
@@ -5647,6 +5669,7 @@ async function processSpecialAwards() {
         clearMultiplierFootprint(state.board, multiplier);
         setStatus(`?賭葉${eventName(event)}`);
         render();
+        // FX-TUNE: 舊版殘留，不在目前事件池 - 舊版倍數糖事件粒子。
         spawnParticles(event.value >= 50 ? 28 : 18);
         triggerScreenFx(event.value >= 50 ? "fx-bump" : "fx-pop", 360);
         playSound("multiplierHigh");
@@ -5658,6 +5681,7 @@ async function processSpecialAwards() {
       if (false) {
         setStatus(`?賭葉${eventName(event)}`);
         render();
+        // FX-TUNE: 舊版殘留，不在目前事件池 - 舊版清糖事件粒子。
         spawnParticles(18);
         triggerScreenFx("fx-pop", 360);
         playSound("specialSpawn");
@@ -5732,6 +5756,7 @@ async function processSpecialAwards() {
         clearMultiplierFootprint(state.board, multiplier);
         setStatus(`收集${eventName(event)}`);
         render();
+        // FX-TUNE: 舊版殘留，不在目前事件池 - 舊版倍數糖事件粒子。
         spawnParticles(event.value >= 50 ? 28 : 18);
         triggerScreenFx(event.value >= 50 ? "fx-bump" : "fx-pop", 360);
         playSound("multiplierHigh");
@@ -5790,6 +5815,7 @@ async function processSpecialAwards() {
         clearMultiplierFootprint(state.board, multiplier);
         setStatus(`收集${eventName(event)}`);
         render();
+        // FX-TUNE: 現行事件 - 輪播倍數糖落盤粒子改造。
         spawnParticles(stage === 3 || event.value >= 50 ? 34 : 18);
         triggerScreenFx(stage === 3 || event.value >= 50 ? "fx-bump" : "fx-pop", 420);
         playSound(event.value >= 50 ? "multiplierHigh" : "specialSpawn");
