@@ -1272,6 +1272,10 @@ function isMultiplierClimaxActive() {
   return state.filledSlots.size > 0 || state.climaxSpinning || Boolean(state.climaxIntroPhase);
 }
 
+function isReducedClimaxFx() {
+  return FX_PERFORMANCE_MODE;
+}
+
 function wheelLabelIndexByKey(key) {
   return FULL_DROP_WHEEL_LABEL_ORDER.findIndex((item) => item.key === key);
 }
@@ -1373,8 +1377,8 @@ function wheelRotationDeltaToLand(landingAngle, pointerAngle, turns) {
   return 360 * turns + normalizeAngle(desiredRotation - currentRotation);
 }
 
-function currentClimaxHighlightIndex(sliceAngle = wheelLabelSliceAngle()) {
-  return Math.floor(normalizeAngle(climaxPointerAngle() - state.climaxWheelRotation) / sliceAngle) % FULL_DROP_WHEEL_LABEL_ORDER.length;
+function currentClimaxHighlightIndex(sliceAngle = wheelLabelSliceAngle(), pointerAngle = climaxPointerAngle()) {
+  return Math.floor(normalizeAngle(pointerAngle - state.climaxWheelRotation) / sliceAngle) % FULL_DROP_WHEEL_LABEL_ORDER.length;
 }
 
 function stopClimaxIdleSpin() {
@@ -1385,6 +1389,7 @@ function stopClimaxIdleSpin() {
 }
 
 function startClimaxIdleSpin() {
+  if (isReducedClimaxFx()) return;
   if (state.climaxIdleFrame || state.climaxSpinning || !isMultiplierClimaxActive()) return;
   const sliceAngle = wheelLabelSliceAngle();
   const baseDegreesPerMs = sliceAngle / CLIMAX_IDLE_SLICE_MS;
@@ -1418,6 +1423,16 @@ function startClimaxIdleSpin() {
   state.climaxIdleFrame = requestAnimationFrame(tick);
 }
 
+function updateClimaxWheelVisual(sliceAngle = wheelLabelSliceAngle(), pointerAngle = climaxPointerAngle()) {
+  if (climaxWheelRotorEl) {
+    climaxWheelRotorEl.style.setProperty("--wheel-rotation", `${state.climaxWheelRotation || 0}deg`);
+  }
+  if (climaxWheelHighlightEl) {
+    const index = Math.floor(normalizeAngle(pointerAngle - state.climaxWheelRotation) / sliceAngle) % FULL_DROP_WHEEL_LABEL_ORDER.length;
+    climaxWheelHighlightEl.style.setProperty("--highlight-angle", `${index * sliceAngle + sliceAngle * 0.5}deg`);
+  }
+}
+
 function createWheelSpinProfile() {
   const duration = randomInt(FULL_DROP_WHEEL_SPIN_MIN_MS, FULL_DROP_WHEEL_SPIN_MAX_MS);
   const turns = randomInt(FULL_DROP_WHEEL_TURNS_MIN, FULL_DROP_WHEEL_TURNS_MAX);
@@ -1441,7 +1456,12 @@ function animateClimaxWheel(finalRotation, profile) {
     const started = performance.now();
     const startRotation = state.climaxWheelRotation || 0;
     const sliceAngle = wheelLabelSliceAngle();
-    let lastHighlightIndex = currentClimaxHighlightIndex(sliceAngle);
+    const pointerAngle = climaxPointerAngle();
+    const reducedFx = isReducedClimaxFx();
+    const visualStepMs = reducedFx ? 66 : 0;
+    const soundStepMs = reducedFx ? 180 : 42;
+    let lastVisualAt = 0;
+    let lastHighlightIndex = currentClimaxHighlightIndex(sliceAngle, pointerAngle);
     let lastTickAt = 0;
     const previousTransition = climaxWheelRotorEl?.style.transition || "";
     if (climaxWheelRotorEl) climaxWheelRotorEl.style.transition = "none";
@@ -1449,10 +1469,14 @@ function animateClimaxWheel(finalRotation, profile) {
     const tick = (now) => {
       const progress = clamp((now - started) / profile.duration, 0, 1);
       state.climaxWheelRotation = startRotation + finalRotation * wheelSpinProgress(progress, profile);
-      renderClimaxStage();
+      const shouldDraw = !visualStepMs || now - lastVisualAt >= visualStepMs || progress >= 1;
+      if (shouldDraw) {
+        updateClimaxWheelVisual(sliceAngle, pointerAngle);
+        lastVisualAt = now;
+      }
 
-      const highlightIndex = currentClimaxHighlightIndex(sliceAngle);
-      if (highlightIndex !== lastHighlightIndex && now - lastTickAt > 42) {
+      const highlightIndex = currentClimaxHighlightIndex(sliceAngle, pointerAngle);
+      if (!reducedFx && highlightIndex !== lastHighlightIndex && now - lastTickAt > soundStepMs) {
         playSound("wheelSpin");
         lastHighlightIndex = highlightIndex;
         lastTickAt = now;
@@ -3297,6 +3321,16 @@ function spawnSlotClimaxEnergy(col, value, baseDelay = 0) {
   const source = slotsEl?.children[col];
   const target = climaxChargeTargetsEl?.querySelector(`.climax-charge-target[data-slot="${col}"]`);
   if (!host || !climaxStageEl || !source || !target) return Promise.resolve();
+
+  if (isReducedClimaxFx()) {
+    window.setTimeout(() => {
+      state.climaxChargedSlots.add(col);
+      target.classList.add("is-hit");
+      renderClimaxStage();
+      window.setTimeout(() => target.classList.remove("is-hit"), 120);
+    }, baseDelay + 80);
+    return wait(baseDelay + 160);
+  }
 
   const hostRect = host.getBoundingClientRect();
   const sourceRect = source.getBoundingClientRect();
@@ -5151,6 +5185,13 @@ async function presentCollectedMultipliers(collected) {
 }
 
 async function playClimaxIntroSequence() {
+  if (isReducedClimaxFx()) {
+    duckBackgroundMusic(900, BGM_DUCK_MEDIUM);
+    state.climaxIntroPhase = null;
+    state.climaxIntroWheelStartedAt = 0;
+    render();
+    return;
+  }
   duckBackgroundMusic(4200, BGM_DUCK_DEEP);
   playClimaxIntroPerformance("logo");
   await wait(CLIMAX_INTRO_PUSH_DELAY_MS);
@@ -6675,6 +6716,8 @@ function initAuditPanel() {
       `bet font ${betStyle?.fontSize || ""}`,
       `fx ${state.fx.items.length} dpr ${state.fx.dpr}`,
       `lite ${FX_PERFORMANCE_MODE}`,
+      `climax ${isMultiplierClimaxActive()} spin ${state.climaxSpinning}`,
+      `idle ${Boolean(state.climaxIdleFrame)} phase ${state.climaxIntroPhase || "none"}`,
     ].join("\n");
   };
   update();

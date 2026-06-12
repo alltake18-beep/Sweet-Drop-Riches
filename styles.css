@@ -9205,6 +9205,106 @@ html.ios-performance .phone {
   opacity: 0.22 !important;
 }
 
+.phone.fx-lite.climax-spinning,
+.phone.fx-lite.climax-intro-logo,
+.phone.fx-lite.climax-intro-wheel,
+.phone.fx-lite.climax-logo-return,
+.phone.fx-lite .climax-wheel-rotor,
+.phone.fx-lite .climax-wheel-highlight,
+.phone.fx-lite .climax-charge-target.is-hit::after {
+  animation: none !important;
+}
+
+.phone.fx-lite .climax-wheel-rotor img,
+.phone.fx-lite .climax-wheel-highlight,
+.phone.fx-lite .climax-lightning-bolt .main,
+.phone.fx-lite .climax-lightning-bolt .core {
+  filter: none !important;
+}
+
+.phone.fx-lite .climax-wheel-highlight {
+  opacity: 0.34 !important;
+}
+
+.phone.fx-lite .climax-lightning-bolt {
+  display: none !important;
+  animation: none !important;
+}
+
+.phone.fx-lite .climax-lightning-bolt polyline {
+  animation: none !important;
+}
+
+.phone.fx-lite .climax-charge-target.is-charged {
+  filter: none !important;
+  box-shadow:
+    inset 0 0 8px rgba(255, 255, 255, 0.34),
+    0 0 10px rgba(255, 231, 140, 0.42) !important;
+}
+
+.phone.fx-lite .hud {
+  z-index: 40 !important;
+  top: 90.9% !important;
+  left: 5.3% !important;
+  width: 89.4% !important;
+  height: 6.15% !important;
+  grid-template-columns: 1.78fr 1.58fr 0.68fr 0.68fr !important;
+  gap: 5.1% !important;
+  transform: none !important;
+}
+
+.phone.fx-lite .hud-panel {
+  grid-template-rows: 36% 64% !important;
+  padding: 0 5px !important;
+}
+
+.phone.fx-lite .hud-panel span {
+  font-size: calc(24px * var(--balance-label-size, 100%) / 100%) !important;
+  line-height: 0.88 !important;
+}
+
+.phone.fx-lite .hud-panel strong {
+  font-size: calc(34px * var(--balance-number-size, 100%) / 100%) !important;
+  line-height: 0.92 !important;
+}
+
+.phone.fx-lite .bet-panel strong {
+  font-size: calc(38px * var(--bet-text-size, 100%) / 100%) !important;
+  line-height: 0.92 !important;
+}
+
+.phone.fx-lite .bet-panel button {
+  width: 21% !important;
+  height: 92% !important;
+}
+
+.phone.fx-lite .bet-panel div {
+  left: 20% !important;
+  right: 20% !important;
+  height: 94% !important;
+}
+
+.phone.fx-lite .bet-panel button::before,
+.phone.fx-lite .bet-panel button::after {
+  width: 82% !important;
+  height: 84% !important;
+  opacity: 1 !important;
+}
+
+.phone.fx-lite #fastButton::before,
+.phone.fx-lite #fastButton::after {
+  width: 78px !important;
+  height: 86px !important;
+  opacity: 0.96 !important;
+}
+
+.phone.fx-lite #menuButton::before,
+.phone.fx-lite #menuButton::after {
+  width: 68px !important;
+  height: 52px !important;
+  opacity: 1 !important;
+}
+
 .audit-panel {
   position: fixed;
   z-index: 10000;
