@@ -9,12 +9,12 @@ const SLOT_TURN_MAX = 20;
 const SEARCH_PARAMS = new URLSearchParams(window.location.search);
 const PERF_ENABLED = SEARCH_PARAMS.has("perf");
 const LITE_ENABLED = SEARCH_PARAMS.has("lite");
-const IOS_DEVICE = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 const IOS_PERFORMANCE_MODE = PERF_ENABLED;
-const FX_PERFORMANCE_MODE = PERF_ENABLED || LITE_ENABLED || IOS_DEVICE;
+const FX_PERFORMANCE_MODE = PERF_ENABLED || LITE_ENABLED;
 const SPECIAL_METER_TARGET = 9;
 const SPECIAL_METER_THRESHOLDS = [9, 21, 40];
 const SPECIAL_METER_MAX = SPECIAL_METER_THRESHOLDS[SPECIAL_METER_THRESHOLDS.length - 1];
+const SLOT_COUNTDOWN_MARKUP_CACHE = new Map();
 const AUDIO_MASTER_VOLUME = 0.9;
 const AUDIO_SFX_VOLUME = 0.9;
 const AUDIO_BGM_VOLUME = 0.48;
@@ -208,6 +208,7 @@ const FULL_DROP_WHEEL_TURNS_MIN = 2;
 const FULL_DROP_WHEEL_TURNS_MAX = 4;
 const FULL_DROP_WHEEL_FALLBACK_POINTER_Y = 7.5;
 const CLIMAX_IDLE_SLICE_MS = 1000;
+const CLIMAX_IDLE_VISUAL_MS = 33;
 const CLIMAX_INTRO_PUSH_DELAY_MS = 650;
 const CLIMAX_INTRO_WHEEL_RISE_MS = 2000;
 const CLIMAX_LIGHTNING_DURATION_MS = 1000;
@@ -1394,15 +1395,21 @@ function startClimaxIdleSpin() {
   const sliceAngle = wheelLabelSliceAngle();
   const baseDegreesPerMs = sliceAngle / CLIMAX_IDLE_SLICE_MS;
   const pointerAngle = climaxPointerAngle();
+  let lastVisualAt = 0;
 
   const tick = (now) => {
     if (!isMultiplierClimaxActive() || state.climaxSpinning || document.hidden) {
       stopClimaxIdleSpin();
       return;
     }
+    if (lastVisualAt && now - lastVisualAt < CLIMAX_IDLE_VISUAL_MS) {
+      state.climaxIdleFrame = requestAnimationFrame(tick);
+      return;
+    }
     if (!state.climaxIdleLastAt) state.climaxIdleLastAt = now;
     const delta = Math.min(34, now - state.climaxIdleLastAt);
     state.climaxIdleLastAt = now;
+    lastVisualAt = now;
     let speedFactor = 1;
     if (state.climaxIntroPhase === "push" && state.climaxIntroWheelStartedAt) {
       const progress = clamp((now - state.climaxIntroWheelStartedAt) / CLIMAX_INTRO_WHEEL_RISE_MS, 0, 1);
@@ -1552,6 +1559,10 @@ function render() {
   scheduleBoardSizeSync();
 }
 
+function renderBoardSurface() {
+  measurePerf("render.board", renderBoard);
+}
+
 function slotRingPoint(angleDeg, rx = 82, ry = 43, cx = 92, cy = 49) {
   const angle = (angleDeg * Math.PI) / 180;
   return {
@@ -1568,6 +1579,8 @@ function slotRingPath(startAngle, sweepAngle) {
 }
 
 function slotCountdownMarkup(turns, col) {
+  const cacheKey = `${col}:${turns}`;
+  if (SLOT_COUNTDOWN_MARKUP_CACHE.has(cacheKey)) return SLOT_COUNTDOWN_MARKUP_CACHE.get(cacheKey);
   const maskId = `slot-ring-mask-${col}`;
   const filterId = `slot-ring-glow-${col}`;
   const segmentAngle = 360 / SLOT_TURN_MAX;
@@ -1580,7 +1593,7 @@ function slotCountdownMarkup(turns, col) {
     return `<path class="ring-segment ${stateClass}" d="${path}" pathLength="1"></path>`;
   }).join("");
 
-  return `
+  const markup = `
     <svg class="slot-countdown" viewBox="0 0 184 98" preserveAspectRatio="none" aria-hidden="true">
       <defs>
         <filter id="${filterId}" x="-18%" y="-24%" width="136%" height="148%">
@@ -1603,6 +1616,8 @@ function slotCountdownMarkup(turns, col) {
       </g>
     </svg>
   `;
+  SLOT_COUNTDOWN_MARKUP_CACHE.set(cacheKey, markup);
+  return markup;
 }
 
 function scheduleBoardSizeSync(force = false) {
@@ -2978,8 +2993,9 @@ function spawnClearBursts(cells, intense = false) {
 function triggerScreenFx(className, duration = 420) {
   const phone = document.querySelector(".phone");
   if (!phone) return;
+  const shouldRestart = phone.classList.contains(className);
   phone.classList.remove("fx-bump", "fx-pop", "fx-blast", "fx-jackpot");
-  void phone.offsetWidth;
+  if (shouldRestart) void phone.offsetWidth;
   phone.classList.add(className);
   window.setTimeout(() => phone.classList.remove(className), duration);
 }
@@ -3225,59 +3241,21 @@ function lightningRoutePoints(col, start, end, phoneRect, stageRect) {
   ];
 }
 
-function curvedLightningRoute(route) {
-  if (route.length < 3) return route;
-  const points = [route[0]];
-  for (let index = 0; index < route.length - 1; index += 1) {
-    const current = route[index];
-    const next = route[index + 1];
-    const previous = route[index - 1] || current;
-    const after = route[index + 2] || next;
-    const cp1 = {
-      x: current.x + (next.x - previous.x) / 6,
-      y: current.y + (next.y - previous.y) / 6,
-    };
-    const cp2 = {
-      x: next.x - (after.x - current.x) / 6,
-      y: next.y - (after.y - current.y) / 6,
-    };
-    const steps = 5;
-    for (let step = 1; step <= steps; step += 1) {
-      const t = step / steps;
-      const mt = 1 - t;
-      points.push({
-        x: mt ** 3 * current.x + 3 * mt ** 2 * t * cp1.x + 3 * mt * t ** 2 * cp2.x + t ** 3 * next.x,
-        y: mt ** 3 * current.y + 3 * mt ** 2 * t * cp1.y + 3 * mt * t ** 2 * cp2.y + t ** 3 * next.y,
-      });
-    }
-  }
-  return points;
-}
-
-function jaggedLightningPoints(route, intensity = 8) {
-  const points = [];
-  for (let index = 0; index < route.length - 1; index += 1) {
-    const a = route[index];
-    const b = route[index + 1];
-    if (index === 0) points.push(a);
-    const segments = 4;
-    for (let step = 1; step <= segments; step += 1) {
-      const t = step / segments;
-      const jitter = step === segments ? 0 : (Math.random() - 0.5) * intensity;
-      const perpX = b.y - a.y;
-      const perpY = a.x - b.x;
-      const len = Math.hypot(perpX, perpY) || 1;
-      points.push({
-        x: a.x + (b.x - a.x) * t + (perpX / len) * jitter,
-        y: a.y + (b.y - a.y) * t + (perpY / len) * jitter,
-      });
-    }
-  }
-  return points;
-}
-
-function pointsAttribute(points) {
-  return points.map((point) => `${point.x.toFixed(1)},${point.y.toFixed(1)}`).join(" ");
+function appendBitmapLightningSegment(host, start, end, delay) {
+  const dx = end.x - start.x;
+  const dy = end.y - start.y;
+  const length = Math.hypot(dx, dy);
+  if (length < 8) return;
+  const segment = document.createElement("i");
+  segment.className = "climax-lightning-segment";
+  segment.style.left = `${start.x}px`;
+  segment.style.top = `${start.y}px`;
+  segment.style.width = `${length}px`;
+  segment.style.height = `${Math.min(92, Math.max(34, length * 0.16))}px`;
+  segment.style.setProperty("--segment-angle", `${Math.atan2(dy, dx)}rad`);
+  segment.style.transform = `translateY(-50%) rotate(var(--segment-angle))`;
+  segment.style.animationDelay = `${delay}ms`;
+  host.appendChild(segment);
 }
 
 function curvePathData(points) {
@@ -3340,26 +3318,15 @@ function spawnSlotClimaxEnergy(col, value, baseDelay = 0) {
   const startY = sourceRect.top - hostRect.top;
   const endX = targetRect.left + targetRect.width * 0.5 - hostRect.left;
   const endY = targetRect.top + targetRect.height * 0.5 - hostRect.top;
-  const route = curvedLightningRoute(lightningRoutePoints(col, { x: startX, y: startY }, { x: endX, y: endY }, hostRect, stageRect));
-  const primary = jaggedLightningPoints(route, col === 1 ? 5 : 9);
-  const secondary = jaggedLightningPoints(route, col === 1 ? 3 : 6);
-  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  const polyA = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
-  const polyB = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+  const route = lightningRoutePoints(col, { x: startX, y: startY }, { x: endX, y: endY }, hostRect, stageRect);
   const bolt = document.createElement("div");
-  bolt.className = "climax-lightning-bolt";
+  bolt.className = "climax-lightning-bolt is-bitmap";
   bolt.style.setProperty("--delay", `${baseDelay}ms`);
   bolt.style.setProperty("--duration", `${CLIMAX_LIGHTNING_DURATION_MS}ms`);
-  svg.setAttribute("viewBox", `0 0 ${hostRect.width} ${hostRect.height}`);
-  svg.setAttribute("preserveAspectRatio", "none");
-  polyA.setAttribute("points", pointsAttribute(primary));
-  polyB.setAttribute("points", pointsAttribute(secondary));
-  polyA.setAttribute("pathLength", "1");
-  polyB.setAttribute("pathLength", "1");
-  polyA.classList.add("main");
-  polyB.classList.add("core");
-  svg.append(polyA, polyB);
-  bolt.appendChild(svg);
+  route.forEach((point, index) => {
+    const next = route[index + 1];
+    if (next) appendBitmapLightningSegment(bolt, point, next, baseDelay + index * 18);
+  });
   host.appendChild(bolt);
   window.setTimeout(() => playClimaxLightningPerformance(col), baseDelay);
   window.setTimeout(() => {
@@ -5399,7 +5366,7 @@ async function playFlameEvent(stage = currentSpecialStageIndex()) {
     finalCells = flamePatternCells(nextFlamePattern(i === steps - 1));
     state.flameCells = finalCells;
     state.flameFinal = false;
-    render();
+    renderBoardSurface();
     if (i === 0 || i === steps - 1 || i % 3 === 0) {
       playFlameSweepPerformance(i, steps);
     }
@@ -5409,7 +5376,7 @@ async function playFlameEvent(stage = currentSpecialStageIndex()) {
   state.flameCells = finalCells;
   state.flameFinal = true;
   setEventPulse(true);
-  render();
+  renderBoardSurface();
   triggerScreenFx("fx-blast", 360);
   playFlameBurnPerformance();
   await wait(resolveDelay(260, 120));
@@ -5446,7 +5413,7 @@ async function playFlameEvent(stage = currentSpecialStageIndex()) {
   }
 
   state.clearing = new Set(clearedCells);
-  render();
+  renderBoardSurface();
   // FX-TUNE: 現行事件 - 火焰事件清除粒子改造。
   spawnParticles(Math.min(48, Math.max(18, clearedCells.size * 2 + destroyedIds.size * 8)));
   if (destroyedIds.size) triggerScreenFx("fx-blast", 520);
@@ -5454,14 +5421,14 @@ async function playFlameEvent(stage = currentSpecialStageIndex()) {
 
   if (resisted.length) {
     for (const multiplier of resisted) multiplier._flameResist = true;
-    render();
+    renderBoardSurface();
     playSound("flameResist");
     await wait(resolveDelay(360, 150));
   }
 
   state.flameCells = new Set();
   state.flameFinal = false;
-  render();
+  renderBoardSurface();
   await wait(resolveDelay(150, 70));
 
   for (const key of clearedCells) {
@@ -5485,7 +5452,7 @@ async function playFlameEvent(stage = currentSpecialStageIndex()) {
   clearFlameMarks();
   clearFallMarks();
   setEventPulse(false);
-  render();
+  renderBoardSurface();
   return clearedCells.size > 0 || resisted.length > 0;
 }
 
