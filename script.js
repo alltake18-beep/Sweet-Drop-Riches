@@ -7,8 +7,7 @@ const MULTIPLIER_COLS = [0, 2, 4];
 const SYMBOL_VERSION = "normal-candy-scale-20260611-225819";
 const SLOT_TURN_MAX = 20;
 const PERF_ENABLED = new URLSearchParams(window.location.search).has("perf");
-const IOS_PERFORMANCE_MODE = /iP(hone|ad|od)/.test(navigator.userAgent)
-  || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+const IOS_PERFORMANCE_MODE = PERF_ENABLED;
 const SPECIAL_METER_TARGET = 9;
 const SPECIAL_METER_THRESHOLDS = [9, 21, 40];
 const SPECIAL_METER_MAX = SPECIAL_METER_THRESHOLDS[SPECIAL_METER_THRESHOLDS.length - 1];

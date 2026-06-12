@@ -7,13 +7,13 @@
     <script>
       (() => {
         try {
-          const ios = /iP(hone|ad|od)/.test(navigator.userAgent)
-            || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-          if (ios) document.documentElement.classList.add("ios-performance");
+          if (new URLSearchParams(window.location.search).has("perf")) {
+            document.documentElement.classList.add("ios-performance");
+          }
         } catch (error) {}
       })();
     </script>
-    <link rel="stylesheet" href="styles.css?v=ios-viewport-stable-20260612-192111" />
+    <link rel="stylesheet" href="styles.css?v=disable-ios-performance-20260612-201023" />
   </head>
   <body>
     <main class="stage">
@@ -144,6 +144,6 @@
       </div>
     </main>
 
-    <script src="script.js?v=ios-viewport-stable-20260612-192111"></script>
+    <script src="script.js?v=disable-ios-performance-20260612-201023"></script>
   </body>
 </html>
