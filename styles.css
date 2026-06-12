@@ -6577,11 +6577,11 @@ button {
 }
 
 .event-socket img.roll-step {
-  animation: event-socket-roll-step 180ms cubic-bezier(0.18, 0.86, 0.22, 1) both;
+  animation: none;
 }
 
 .event-socket.win img {
-  animation: event-socket-win 680ms cubic-bezier(0.18, 1.22, 0.28, 1) both;
+  animation: none;
 }
 
 .special-meter-track {
@@ -6684,15 +6684,12 @@ button {
 
 @keyframes event-socket-roll-step {
   0% {
-    transform: translateY(-3px) scale(0.96);
     opacity: 0.76;
   }
   58% {
-    transform: translateY(2px) scale(1.04);
     opacity: 1;
   }
   100% {
-    transform: translateY(0) scale(1);
     opacity: 1;
   }
 }
@@ -6700,10 +6697,10 @@ button {
 @keyframes event-socket-win {
   0%,
   100% {
-    transform: scale(1);
+    opacity: 1;
   }
   42% {
-    transform: scale(1.08);
+    opacity: 1;
   }
 }
 
@@ -8935,4 +8932,52 @@ html.ios-performance .event-socket {
 .phone.ios-performance .climax-lightning-bolt .core {
   filter: none;
   stroke-width: 3;
+}
+
+/* Local-first viewport lock: phones should scale the same cabinet instead of reflowing internals. */
+.stage {
+  align-items: center;
+  display: grid;
+  height: 100dvh;
+  justify-items: center;
+  min-height: 100dvh;
+  padding: 0;
+  overflow: hidden;
+  width: 100vw;
+}
+
+.phone,
+html.ios-performance .phone {
+  width: 720px;
+  height: 1280px;
+  min-height: 0;
+  max-height: none;
+  max-width: none;
+  aspect-ratio: 720 / 1280;
+  flex: none;
+  zoom: var(--cabinet-scale, 1);
+  background:
+    url("assets/ui/candy-machine-final-bg.jpg") center / 100% 100% no-repeat,
+    linear-gradient(180deg, #170408, #070205);
+}
+
+.board {
+  top: var(--play-board-top, 27.6%) !important;
+  left: var(--play-board-left, 50%) !important;
+  width: var(--play-board-width, 73%) !important;
+  height: var(--play-board-height, 50.3%) !important;
+  border-radius: var(--play-board-radius, 14px);
+}
+
+html.ios-performance .stage-slot,
+html.ios-performance .event-socket {
+  background: transparent !important;
+}
+
+.phone.ios-performance .board,
+.phone.ios-performance.slot-hype .board {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 242, 197, 0.12),
+    inset 0 0 20px rgba(0, 0, 0, 0.62),
+    0 0 0 1px rgba(96, 14, 29, 0.42);
 }

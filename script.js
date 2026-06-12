@@ -367,6 +367,9 @@ const climaxWheelHighlightEl = document.getElementById("climaxWheelHighlight");
 const climaxCenterLineEl = document.getElementById("climaxCenterLine");
 const climaxChargeTargetsEl = document.getElementById("climaxChargeTargets");
 const phoneShellEl = document.querySelector(".phone");
+const CABINET_DESIGN_WIDTH = 720;
+const CABINET_DESIGN_HEIGHT = 1280;
+let cabinetScaleFrame = 0;
 
 const state = {
   board: [],
@@ -6512,6 +6515,22 @@ function applyPerformanceMode() {
   phoneShellEl?.classList.toggle("ios-performance", IOS_PERFORMANCE_MODE);
 }
 
+function syncCabinetScale() {
+  if (!phoneShellEl) return;
+  const widthScale = window.innerWidth / CABINET_DESIGN_WIDTH;
+  const heightScale = window.innerHeight / CABINET_DESIGN_HEIGHT;
+  const scale = Math.max(0.1, Math.min(1, widthScale, heightScale));
+  phoneShellEl.style.setProperty("--cabinet-scale", String(+scale.toFixed(5)));
+}
+
+function scheduleCabinetScaleSync() {
+  if (cabinetScaleFrame) return;
+  cabinetScaleFrame = requestAnimationFrame(() => {
+    cabinetScaleFrame = 0;
+    syncCabinetScale();
+  });
+}
+
 function ensureClimaxWheelImageLoaded() {
   if (!climaxWheelImageEl || climaxWheelImageEl.dataset.loaded === "true") return;
   const src = IOS_PERFORMANCE_MODE
@@ -6539,6 +6558,10 @@ function preventImageSelection() {
   });
 }
 
+syncCabinetScale();
+window.addEventListener("resize", scheduleCabinetScaleSync);
+window.addEventListener("orientationchange", scheduleCabinetScaleSync);
+window.visualViewport?.addEventListener("resize", scheduleCabinetScaleSync);
 applyPerformanceMode();
 preventImageSelection();
 preloadSymbolAssets();
