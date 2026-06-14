@@ -3069,6 +3069,42 @@ function drawFx(now) {
 }
 
 // FX-TUNE: 現行事件 - 收集能量粒子改造；改成少量光線飛行，不再每個格子都生一顆。
+function cssNumberValue(element, name, fallback = 0) {
+  const value = getComputedStyle(element).getPropertyValue(name).trim();
+  const number = Number.parseFloat(value);
+  return Number.isFinite(number) ? number : fallback;
+}
+
+function collectEnergyTargetPoint(targetRect, hostRect, target) {
+  const holes = [1, 2, 3].map((index) => ({
+    x: targetRect.width * (cssNumberValue(target, `--energy-hole-${index}-x`, 50) / 100),
+    y: targetRect.height * (cssNumberValue(target, `--energy-hole-${index}-y`, 50) / 100),
+    r: cssNumberValue(target, `--energy-hole-${index}-r`, 0) + 8,
+  }));
+  const isInHole = (x, y) => holes.some((hole) => {
+    const dx = x - hole.x;
+    const dy = y - hole.y;
+    return dx * dx + dy * dy <= hole.r * hole.r;
+  });
+
+  let localX = targetRect.width * 0.5;
+  let localY = targetRect.height * 0.86;
+  for (let attempt = 0; attempt < 18; attempt += 1) {
+    const candidateX = targetRect.width * (0.08 + Math.random() * 0.84);
+    const candidateY = targetRect.height * (0.66 + Math.random() * 0.28);
+    if (!isInHole(candidateX, candidateY)) {
+      localX = candidateX;
+      localY = candidateY;
+      break;
+    }
+  }
+
+  return {
+    x: targetRect.left + localX - hostRect.left,
+    y: targetRect.top + localY - hostRect.top,
+  };
+}
+
 function spawnCollectEnergy(cells) {
   const host = document.querySelector(".play-area");
   const target = document.querySelector(".special-meter-track");
@@ -3090,8 +3126,7 @@ function spawnCollectEnergy(cells) {
     const rect = tile.getBoundingClientRect();
     const startX = rect.left + rect.width * 0.5 - hostRect.left;
     const startY = rect.top + rect.height * 0.5 - hostRect.top;
-    const targetX = targetRect.left + targetRect.width * (0.16 + Math.random() * 0.68) - hostRect.left;
-    const targetY = targetRect.top + targetRect.height * (0.24 + Math.random() * 0.52) - hostRect.top;
+    const end = collectEnergyTargetPoint(targetRect, hostRect, target);
     items.push({
       kind: "fly",
       start: now,
@@ -3099,8 +3134,8 @@ function spawnCollectEnergy(cells) {
       duration: 560 + Math.random() * 120,
       x: startX,
       y: startY,
-      tx: targetX - startX,
-      ty: targetY - startY,
+      tx: end.x - startX,
+      ty: end.y - startY,
       arc: 30 + Math.random() * 22,
       radius: 4.8 + Math.random() * 1.6,
       color: Math.random() > 0.5 ? "#35f4ff" : "#ff58d4",
@@ -6530,15 +6565,15 @@ function initBoardTunePanel() {
     { label: "終點範圍寬", name: "--energy-track-width", min: 4, max: 100, step: 0.1, value: 74.8, unit: "%" },
     { label: "終點範圍高", name: "--energy-track-height", min: 4, max: 150, step: 1, value: 93, unit: "px" },
     { label: "兩端弧度", name: "--energy-end-curve", min: 0, max: 120, step: 1, value: 9, unit: "px" },
-    { label: "圓洞1 X", name: "--energy-hole-1-x", min: 0, max: 100, step: 0.1, value: 22, unit: "%" },
-    { label: "圓洞1 Y", name: "--energy-hole-1-y", min: 0, max: 100, step: 0.1, value: 50, unit: "%" },
-    { label: "圓洞1 半徑", name: "--energy-hole-1-r", min: 0, max: 80, step: 1, value: 30, unit: "px" },
-    { label: "圓洞2 X", name: "--energy-hole-2-x", min: 0, max: 100, step: 0.1, value: 52.5, unit: "%" },
-    { label: "圓洞2 Y", name: "--energy-hole-2-y", min: 0, max: 100, step: 0.1, value: 50, unit: "%" },
-    { label: "圓洞2 半徑", name: "--energy-hole-2-r", min: 0, max: 80, step: 1, value: 30, unit: "px" },
-    { label: "圓洞3 X", name: "--energy-hole-3-x", min: 0, max: 100, step: 0.1, value: 78.2, unit: "%" },
-    { label: "圓洞3 Y", name: "--energy-hole-3-y", min: 0, max: 100, step: 0.1, value: 50, unit: "%" },
-    { label: "圓洞3 半徑", name: "--energy-hole-3-r", min: 0, max: 80, step: 1, value: 30, unit: "px" },
+    { label: "圓洞1 X", name: "--energy-hole-1-x", min: 0, max: 100, step: 0.1, value: 22.1, unit: "%" },
+    { label: "圓洞1 Y", name: "--energy-hole-1-y", min: 0, max: 100, step: 0.1, value: 33.6, unit: "%" },
+    { label: "圓洞1 半徑", name: "--energy-hole-1-r", min: 0, max: 80, step: 1, value: 55, unit: "px" },
+    { label: "圓洞2 X", name: "--energy-hole-2-x", min: 0, max: 100, step: 0.1, value: 50, unit: "%" },
+    { label: "圓洞2 Y", name: "--energy-hole-2-y", min: 0, max: 100, step: 0.1, value: 33.6, unit: "%" },
+    { label: "圓洞2 半徑", name: "--energy-hole-2-r", min: 0, max: 80, step: 1, value: 56, unit: "px" },
+    { label: "圓洞3 X", name: "--energy-hole-3-x", min: 0, max: 100, step: 0.1, value: 78.1, unit: "%" },
+    { label: "圓洞3 Y", name: "--energy-hole-3-y", min: 0, max: 100, step: 0.1, value: 33.6, unit: "%" },
+    { label: "圓洞3 半徑", name: "--energy-hole-3-r", min: 0, max: 80, step: 1, value: 56, unit: "px" },
   ];
 
   const panel = document.createElement("div");
