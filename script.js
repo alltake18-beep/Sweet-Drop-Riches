@@ -6574,6 +6574,10 @@ function initBoardTunePanel() {
     { label: "圓洞3 X", name: "--energy-hole-3-x", min: 0, max: 100, step: 0.1, value: 78.1, unit: "%" },
     { label: "圓洞3 Y", name: "--energy-hole-3-y", min: 0, max: 100, step: 0.1, value: 33.6, unit: "%" },
     { label: "圓洞3 半徑", name: "--energy-hole-3-r", min: 0, max: 80, step: 1, value: 56, unit: "px" },
+    { label: "倒數環 X", name: "--slot-ring-x", min: -50, max: 150, step: 0.1, value: 50, unit: "%" },
+    { label: "倒數環 Y", name: "--slot-ring-y", min: -50, max: 150, step: 0.1, value: 50, unit: "%" },
+    { label: "倒數環寬", name: "--slot-ring-width", min: 20, max: 220, step: 0.1, value: 100, unit: "%" },
+    { label: "倒數環高", name: "--slot-ring-height", min: 20, max: 220, step: 0.1, value: 100, unit: "%" },
   ];
 
   const panel = document.createElement("div");

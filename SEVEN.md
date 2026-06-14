@@ -656,6 +656,10 @@ Push 後提供：
   - `--energy-hole-3-x`
   - `--energy-hole-3-y`
   - `--energy-hole-3-r`
+  - `--slot-ring-x`
+  - `--slot-ring-y`
+  - `--slot-ring-width`
+  - `--slot-ring-height`
 - 目前正式預設值：
   - `--energy-track-x: 50%;`
   - `--energy-track-y: 18.6%;`
@@ -671,7 +675,12 @@ Push 後提供：
   - `--energy-hole-3-x: 78.1%;`
   - `--energy-hole-3-y: 33.6%;`
   - `--energy-hole-3-r: 56px;`
+  - `--slot-ring-x: 50%;`
+  - `--slot-ring-y: 50%;`
+  - `--slot-ring-width: 100%;`
+  - `--slot-ring-height: 100%;`
 - `boardTune=1` 面板有「隱藏能量槽」開關，用來只看三個圓洞定位框是否對齊輪播。
+- `boardTune=1` 會 Always 顯示下方三個倍數槽的倒數 20 次橢圓光環，方便調整光環形狀和位置。
 - 一般物件消除後的收集光點終點要避開三個能量槽圓洞，並優先落在能量槽下半部。
 
 ### 18.6 已淘汰方向
