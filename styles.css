@@ -8915,16 +8915,21 @@ button {
 .climax-number-final::before {
   content: "";
   position: absolute;
-  z-index: -1;
+  z-index: 1;
   left: 50%;
-  top: 72%;
-  width: 58px;
-  height: 24px;
-  border-radius: 50%;
-  background:
-    radial-gradient(ellipse at center, rgba(255, 255, 255, 0.96) 0 12%, rgba(255, 232, 103, 0.72) 13% 44%, rgba(255, 96, 205, 0.28) 45% 66%, transparent 68%);
-  opacity: 0.88;
-  transform: translate(-50%, -50%) scale(0.9);
+  top: 74%;
+  width: 138px;
+  height: 78px;
+  background: url("assets/fx/screen-burst.png?v=number-bottom-glow-20260615") center / 100% 100% no-repeat;
+  opacity: 0.74;
+  transform: translate(-50%, -50%) scaleX(1.1) scaleY(0.38);
+  transform-origin: 50% 50%;
+  pointer-events: none;
+}
+
+.climax-number-final-text {
+  position: relative;
+  z-index: 2;
 }
 
 .climax-number-final.is-visible {
@@ -8959,14 +8964,13 @@ button {
   position: absolute;
   z-index: 1;
   left: 50%;
-  top: 72%;
-  width: 58px;
-  height: 24px;
-  border-radius: 50%;
-  background:
-    radial-gradient(ellipse at center, rgba(255, 255, 255, 0.96) 0 12%, rgba(255, 232, 103, 0.72) 13% 44%, rgba(255, 96, 205, 0.28) 45% 66%, transparent 68%);
-  opacity: 0.88;
-  transform: translate(-50%, -50%) scale(0.9);
+  top: 74%;
+  width: 138px;
+  height: 78px;
+  background: url("assets/fx/screen-burst.png?v=number-bottom-glow-20260615") center / 100% 100% no-repeat;
+  opacity: 0.74;
+  transform: translate(-50%, -50%) scaleX(1.1) scaleY(0.38);
+  transform-origin: 50% 50%;
   animation: none;
 }
 

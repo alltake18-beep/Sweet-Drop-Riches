@@ -6022,7 +6022,7 @@ function initClimaxTunePanel() {
       flight: readPhonePercent("--number-flight-size", 70),
       final: readPhonePercent("--number-final-size", 40),
     };
-    const showScale = Math.max(1, Math.min(1.8, readPhonePercent("--number-show-scale", 1.25)));
+    let showScale = Math.max(1, Math.min(1.8, readPhonePercent("--number-show-scale", 1.25)));
     const timeTune = {
       toShow: readPhonePercent("--number-to-show-ms", 360),
       hold: readPhonePercent("--number-show-hold-ms", 260),
@@ -6057,6 +6057,14 @@ function initClimaxTunePanel() {
         <button type="button" data-size="final" data-step="1">+</button>
       </div>
       <span class="climax-tune-value" data-size-readout="final"></span>
+    </div>
+    <div class="climax-tune-row number-size-row">
+      <span>show scale</span>
+      <div class="climax-tune-control">
+        <button type="button" data-scale="show" data-step="-0.05">-</button>
+        <button type="button" data-scale="show" data-step="0.05">+</button>
+      </div>
+      <span class="climax-tune-value" data-scale-readout="show"></span>
     </div>
     <div class="climax-tune-row number-time-row">
       <span>to show</span>
@@ -6094,12 +6102,13 @@ function initClimaxTunePanel() {
       ${numberStartTune.map((item, index) => `<button type="button" class="climax-number-start-handle" data-slot="${index}" aria-label="${item.label} number start">${item.label[0]}</button>`).join("")}
       <button type="button" class="climax-number-show-handle" aria-label="number show point">S</button>
       <button type="button" class="climax-number-receiver" aria-label="number receiver"></button>
-      <div class="climax-number-final" aria-hidden="true"></div>
+      <div class="climax-number-final" aria-hidden="true"><span class="climax-number-final-text"></span></div>
     `;
     phone.appendChild(numberTuneLayer);
     const showEl = numberTuneLayer.querySelector(".climax-number-show-handle");
     const receiverEl = numberTuneLayer.querySelector(".climax-number-receiver");
     const finalEl = numberTuneLayer.querySelector(".climax-number-final");
+    const finalTextEl = numberTuneLayer.querySelector(".climax-number-final-text");
 
     function cssText() {
       const lines = numberStartTune.flatMap((item) => [
@@ -6128,6 +6137,12 @@ function initClimaxTunePanel() {
       phone.style.setProperty("--number-final-size", `${sizeTune.final}px`);
       panel.querySelector('[data-size-readout="flight"]').textContent = `${sizeTune.flight}px`;
       panel.querySelector('[data-size-readout="final"]').textContent = `${sizeTune.final}px`;
+      refreshOutput();
+    }
+
+    function syncNumberScales() {
+      phone.style.setProperty("--number-show-scale", showScale.toFixed(2));
+      panel.querySelector('[data-scale-readout="show"]').textContent = `${showScale.toFixed(2)}x`;
       refreshOutput();
     }
 
@@ -6350,7 +6365,7 @@ function initClimaxTunePanel() {
       });
       const revealFinal = () => {
         receiverEl.classList.add("is-hit");
-        finalEl.textContent = label;
+        finalTextEl.textContent = label;
         finalEl.classList.add("is-visible");
       };
       window.setTimeout(() => receiverEl.classList.remove("is-hit"), total + 140);
@@ -6382,6 +6397,14 @@ function initClimaxTunePanel() {
       });
     });
 
+    panel.querySelectorAll("[data-scale]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const step = Number(button.dataset.step || 0);
+        showScale = Math.max(1, Math.min(1.8, showScale + step));
+        syncNumberScales();
+      });
+    });
+
     panel.querySelectorAll("[data-time]").forEach((button) => {
       button.addEventListener("click", () => {
         const key = button.dataset.time;
@@ -6403,6 +6426,7 @@ function initClimaxTunePanel() {
 
     renderClimaxStage();
     syncNumberSizes();
+    syncNumberScales();
     syncNumberTimes();
     placeStartHandles();
     placeShowPoint();
