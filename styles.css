@@ -7173,6 +7173,7 @@ button {
 .phone {
   --normal-candy-size: 90%;
   --special-candy-size: 116%;
+  --multiplier-mark-size: 100%;
   --play-board-radius: 14px;
   --stage-slots-x: 0%;
   --stage-slots-y: 0%;
@@ -7517,51 +7518,51 @@ button {
 }
 
 .tile.multiplier-size-1 .multiplier-mark {
-  font-size: 19px;
+  font-size: calc(19px * var(--multiplier-mark-size, 100%) / 100%);
   -webkit-text-stroke-width: 1px;
 }
 
 .tile.multiplier-size-1.edge-left .multiplier-mark,
 .tile.multiplier-size-1.edge-right .multiplier-mark,
 .tile.multiplier-size-1.edge-bottom .multiplier-mark {
-  font-size: 19px;
+  font-size: calc(19px * var(--multiplier-mark-size, 100%) / 100%);
 }
 
 .tile.multiplier-size-1 .multiplier-mark.score-length-4 {
-  font-size: 16px;
+  font-size: calc(16px * var(--multiplier-mark-size, 100%) / 100%);
 }
 
 .tile.multiplier-size-1 .multiplier-mark.score-length-5 {
-  font-size: 13px;
+  font-size: calc(13px * var(--multiplier-mark-size, 100%) / 100%);
   -webkit-text-stroke-width: 0.8px;
 }
 
 .tile.multiplier-size-1 .multiplier-mark.score-length-6 {
-  font-size: 11px;
+  font-size: calc(11px * var(--multiplier-mark-size, 100%) / 100%);
   -webkit-text-stroke-width: 0.7px;
 }
 
 .tile.multiplier-size-2 .multiplier-mark {
-  font-size: 32px;
+  font-size: calc(32px * var(--multiplier-mark-size, 100%) / 100%);
   -webkit-text-stroke-width: 1.8px;
 }
 
 .tile.multiplier-size-2.edge-left .multiplier-mark,
 .tile.multiplier-size-2.edge-right .multiplier-mark,
 .tile.multiplier-size-2.edge-bottom .multiplier-mark {
-  font-size: 32px;
+  font-size: calc(32px * var(--multiplier-mark-size, 100%) / 100%);
 }
 
 .tile.multiplier-size-2 .multiplier-mark.score-length-4 {
-  font-size: 28px;
+  font-size: calc(28px * var(--multiplier-mark-size, 100%) / 100%);
 }
 
 .tile.multiplier-size-2 .multiplier-mark.score-length-5 {
-  font-size: 23px;
+  font-size: calc(23px * var(--multiplier-mark-size, 100%) / 100%);
 }
 
 .tile.multiplier-size-2 .multiplier-mark.score-length-6 {
-  font-size: 19px;
+  font-size: calc(19px * var(--multiplier-mark-size, 100%) / 100%);
   -webkit-text-stroke-width: 1.2px;
 }
 

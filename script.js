@@ -6526,6 +6526,7 @@ function initBoardTunePanel() {
   const controls = [
     { label: "一般糖尺寸", name: "--normal-candy-size", min: 40, max: 500, step: 1, value: 90, unit: "%" },
     { label: "特殊糖尺寸", name: "--special-candy-size", min: 40, max: 500, step: 1, value: 116, unit: "%" },
+    { label: "特殊糖數字大小", name: "--multiplier-mark-size", min: 40, max: 220, step: 1, value: 100, unit: "%" },
   ];
 
   const panel = document.createElement("div");
