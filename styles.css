@@ -8192,19 +8192,19 @@ button {
   --lightning-right-9-y: 13.1%;
   --lightning-right-10-x: 58.71%;
   --lightning-right-10-y: 12.53%;
-  --number-start-left-x: 22.8%;
-  --number-start-left-y: 83.67%;
-  --number-start-middle-x: 49.9%;
-  --number-start-middle-y: 84.06%;
-  --number-start-right-x: 77.12%;
-  --number-start-right-y: 84.48%;
+  --number-start-left-x: 22.49%;
+  --number-start-left-y: 84.66%;
+  --number-start-middle-x: 49.49%;
+  --number-start-middle-y: 84.86%;
+  --number-start-right-x: 77.59%;
+  --number-start-right-y: 84.8%;
   --number-show-x: 50.73%;
   --number-show-y: 36.57%;
   --number-receiver-x: 50.54%;
   --number-receiver-y: 13.1%;
   --number-flight-size: 60px;
   --number-final-size: 60px;
-  --number-show-scale: 1.25;
+  --number-show-scale: 1.8;
   --number-to-show-ms: 800ms;
   --number-show-hold-ms: 420ms;
   --number-to-final-ms: 80ms;
@@ -8917,12 +8917,12 @@ button {
   position: absolute;
   z-index: 1;
   left: 50%;
-  top: 74%;
-  width: 138px;
-  height: 78px;
+  top: 64%;
+  width: 190px;
+  height: 108px;
   background: url("assets/fx/screen-burst.png?v=number-bottom-glow-20260615") center / 100% 100% no-repeat;
-  opacity: 0.74;
-  transform: translate(-50%, -50%) scaleX(1.1) scaleY(0.38);
+  opacity: 0.95;
+  transform: translate(-50%, -50%) scaleX(1.08) scaleY(0.42);
   transform-origin: 50% 50%;
   pointer-events: none;
 }
@@ -8938,6 +8938,7 @@ button {
 
 .climax-flying-number {
   position: absolute;
+  z-index: 7;
   display: grid;
   place-items: center;
   min-width: 54px;
@@ -8964,12 +8965,12 @@ button {
   position: absolute;
   z-index: 1;
   left: 50%;
-  top: 74%;
-  width: 138px;
-  height: 78px;
+  top: 64%;
+  width: 190px;
+  height: 108px;
   background: url("assets/fx/screen-burst.png?v=number-bottom-glow-20260615") center / 100% 100% no-repeat;
-  opacity: 0.74;
-  transform: translate(-50%, -50%) scaleX(1.1) scaleY(0.38);
+  opacity: 0.95;
+  transform: translate(-50%, -50%) scaleX(1.08) scaleY(0.42);
   transform-origin: 50% 50%;
   animation: none;
 }
