@@ -7221,10 +7221,10 @@ button {
   --stage-slot-digits-6-x: -46%;
   --stage-slot-digits-6-y: 20%;
   --stage-slot-digits-6-size: 24px;
-  --slot-ring-x: 50%;
-  --slot-ring-y: 50%;
-  --slot-ring-width: 100%;
-  --slot-ring-height: 100%;
+  --slot-ring-x: 49%;
+  --slot-ring-y: 38%;
+  --slot-ring-width: 108%;
+  --slot-ring-height: 150.5%;
   --hud-x: 0.3%;
   --hud-y: -0.2%;
   --hud-width: 85.4%;

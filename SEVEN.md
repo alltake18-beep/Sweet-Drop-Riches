@@ -675,10 +675,10 @@ Push 後提供：
   - `--energy-hole-3-x: 78.1%;`
   - `--energy-hole-3-y: 33.6%;`
   - `--energy-hole-3-r: 56px;`
-  - `--slot-ring-x: 50%;`
-  - `--slot-ring-y: 50%;`
-  - `--slot-ring-width: 100%;`
-  - `--slot-ring-height: 100%;`
+  - `--slot-ring-x: 49%;`
+  - `--slot-ring-y: 38%;`
+  - `--slot-ring-width: 108%;`
+  - `--slot-ring-height: 150.5%;`
 - `boardTune=1` 面板有「隱藏能量槽」開關，用來只看三個圓洞定位框是否對齊輪播。
 - `boardTune=1` 會 Always 顯示下方三個倍數槽的倒數 20 次橢圓光環，方便調整光環形狀和位置。
 - 一般物件消除後的收集光點終點要避開三個能量槽圓洞，並優先落在能量槽下半部。
