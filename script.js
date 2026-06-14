@@ -6280,29 +6280,31 @@ function initClimaxTunePanel() {
       });
     });
 
-    function slotStartPoint(slotIndex) {
-      const hostRect = phone.getBoundingClientRect();
-      const tune = numberStartTune[slotIndex] || numberStartTune[1];
+    function phoneDesignSize() {
       return {
-        x: hostRect.width * tune.x / 100,
-        y: hostRect.height * tune.y / 100,
+        width: phone.offsetWidth || CABINET_DESIGN_WIDTH,
+        height: phone.offsetHeight || CABINET_DESIGN_HEIGHT,
       };
+    }
+
+    function percentPointToDesignPx(point) {
+      const size = phoneDesignSize();
+      return {
+        x: size.width * point.x / 100,
+        y: size.height * point.y / 100,
+      };
+    }
+
+    function slotStartPoint(slotIndex) {
+      return percentPointToDesignPx(numberStartTune[slotIndex] || numberStartTune[1]);
     }
 
     function receiverPoint() {
-      const hostRect = phone.getBoundingClientRect();
-      return {
-        x: hostRect.width * receiverTune.x / 100,
-        y: hostRect.height * receiverTune.y / 100,
-      };
+      return percentPointToDesignPx(receiverTune);
     }
 
     function showPoint() {
-      const hostRect = phone.getBoundingClientRect();
-      return {
-        x: hostRect.width * showTune.x / 100,
-        y: hostRect.height * showTune.y / 100,
-      };
+      return percentPointToDesignPx(showTune);
     }
 
     function playNumberFlight(slotIndex, label = "x20") {
