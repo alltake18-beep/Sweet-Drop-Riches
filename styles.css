@@ -8690,6 +8690,16 @@ button {
   font-size: 13px;
 }
 
+.climax-tune-title {
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.climax-tune-panel.is-dragging .climax-tune-title {
+  cursor: grabbing;
+}
+
 .climax-tune-row {
   display: grid;
   grid-template-columns: 112px 1fr 48px;

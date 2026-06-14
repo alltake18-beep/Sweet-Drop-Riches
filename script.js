@@ -6010,7 +6010,7 @@ function initClimaxTunePanel() {
     const panel = document.createElement("div");
     panel.className = "climax-tune-panel";
     panel.innerHTML = `
-    <strong>Number Flight Tune</strong>
+    <strong class="climax-tune-title">Number Flight Tune</strong>
     <div class="climax-tune-actions">
       <button type="button" data-action="preview" data-slot="0">Left</button>
       <button type="button" data-action="preview" data-slot="1">Middle</button>
@@ -6024,6 +6024,7 @@ function initClimaxTunePanel() {
   `;
     document.body.appendChild(panel);
 
+    const titleEl = panel.querySelector(".climax-tune-title");
     const output = panel.querySelector(".climax-tune-output");
     const numberTuneLayer = document.createElement("div");
     numberTuneLayer.className = "climax-number-tune-layer";
@@ -6038,6 +6039,50 @@ function initClimaxTunePanel() {
     function refreshOutput() {
       output.value = cssText();
     }
+
+    let panelDrag = null;
+    const movePanel = (clientX, clientY) => {
+      if (!panelDrag) return;
+      const width = panel.offsetWidth;
+      const height = panel.offsetHeight;
+      const maxLeft = Math.max(0, window.innerWidth - width);
+      const maxTop = Math.max(0, window.innerHeight - height);
+      const left = Math.min(maxLeft, Math.max(0, clientX - panelDrag.offsetX));
+      const top = Math.min(maxTop, Math.max(0, clientY - panelDrag.offsetY));
+      panel.style.left = `${left}px`;
+      panel.style.top = `${top}px`;
+      panel.style.right = "auto";
+      panel.style.bottom = "auto";
+    };
+
+    titleEl?.addEventListener("pointerdown", (event) => {
+      if (event.button !== 0) return;
+      const rect = panel.getBoundingClientRect();
+      panelDrag = {
+        pointerId: event.pointerId,
+        offsetX: event.clientX - rect.left,
+        offsetY: event.clientY - rect.top,
+      };
+      panel.classList.add("is-dragging");
+      titleEl.setPointerCapture?.(event.pointerId);
+      event.preventDefault();
+      event.stopPropagation();
+    });
+
+    const endPanelDrag = (event) => {
+      if (!panelDrag || event.pointerId !== panelDrag.pointerId) return;
+      titleEl?.releasePointerCapture?.(event.pointerId);
+      panelDrag = null;
+      panel.classList.remove("is-dragging");
+    };
+
+    document.addEventListener("pointermove", (event) => {
+      if (!panelDrag || event.pointerId !== panelDrag.pointerId) return;
+      movePanel(event.clientX, event.clientY);
+      event.preventDefault();
+    });
+    document.addEventListener("pointerup", endPanelDrag);
+    document.addEventListener("pointercancel", endPanelDrag);
 
     function placeReceiver() {
       receiverEl.style.left = `${receiverTune.x}%`;
