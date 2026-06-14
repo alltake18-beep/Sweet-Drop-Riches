@@ -6526,10 +6526,19 @@ function initBoardTunePanel() {
 
   const controls = [
     { label: "能量槽 X", name: "--energy-track-x", min: 0, max: 100, step: 0.1, value: 50, unit: "%" },
-    { label: "能量槽 Y", name: "--energy-track-y", min: 0, max: 100, step: 0.1, value: 18.2, unit: "%" },
-    { label: "終點範圍寬", name: "--energy-track-width", min: 4, max: 100, step: 0.1, value: 74, unit: "%" },
-    { label: "終點範圍高", name: "--energy-track-height", min: 4, max: 150, step: 1, value: 100, unit: "px" },
-    { label: "兩端弧度", name: "--energy-end-curve", min: 0, max: 120, step: 1, value: 7, unit: "px" },
+    { label: "能量槽 Y", name: "--energy-track-y", min: 0, max: 100, step: 0.1, value: 18.6, unit: "%" },
+    { label: "終點範圍寬", name: "--energy-track-width", min: 4, max: 100, step: 0.1, value: 74.8, unit: "%" },
+    { label: "終點範圍高", name: "--energy-track-height", min: 4, max: 150, step: 1, value: 93, unit: "px" },
+    { label: "兩端弧度", name: "--energy-end-curve", min: 0, max: 120, step: 1, value: 9, unit: "px" },
+    { label: "圓洞1 X", name: "--energy-hole-1-x", min: 0, max: 100, step: 0.1, value: 22, unit: "%" },
+    { label: "圓洞1 Y", name: "--energy-hole-1-y", min: 0, max: 100, step: 0.1, value: 50, unit: "%" },
+    { label: "圓洞1 半徑", name: "--energy-hole-1-r", min: 0, max: 80, step: 1, value: 30, unit: "px" },
+    { label: "圓洞2 X", name: "--energy-hole-2-x", min: 0, max: 100, step: 0.1, value: 52.5, unit: "%" },
+    { label: "圓洞2 Y", name: "--energy-hole-2-y", min: 0, max: 100, step: 0.1, value: 50, unit: "%" },
+    { label: "圓洞2 半徑", name: "--energy-hole-2-r", min: 0, max: 80, step: 1, value: 30, unit: "px" },
+    { label: "圓洞3 X", name: "--energy-hole-3-x", min: 0, max: 100, step: 0.1, value: 78.2, unit: "%" },
+    { label: "圓洞3 Y", name: "--energy-hole-3-y", min: 0, max: 100, step: 0.1, value: 50, unit: "%" },
+    { label: "圓洞3 半徑", name: "--energy-hole-3-r", min: 0, max: 80, step: 1, value: 30, unit: "px" },
   ];
 
   const panel = document.createElement("div");
@@ -6538,6 +6547,10 @@ function initBoardTunePanel() {
     <strong class="board-tune-title">能量槽調整</strong>
     <div class="board-tune-readout"></div>
     <div class="board-tune-controls"></div>
+    <label class="board-tune-toggle">
+      <input type="checkbox" data-energy-track-hidden>
+      <span>隱藏能量槽</span>
+    </label>
     <textarea class="board-tune-output" readonly></textarea>
   `;
 
@@ -6545,6 +6558,7 @@ function initBoardTunePanel() {
   const readoutEl = panel.querySelector(".board-tune-readout");
   const controlsEl = panel.querySelector(".board-tune-controls");
   const outputEl = panel.querySelector(".board-tune-output");
+  const hideEnergyTrackToggle = panel.querySelector("[data-energy-track-hidden]");
   let panelDrag = null;
   const outputControls = [];
 
@@ -6603,6 +6617,10 @@ function initBoardTunePanel() {
   }
 
   controls.forEach((control) => addTuneControl(control));
+
+  hideEnergyTrackToggle?.addEventListener("change", () => {
+    phoneShellEl.classList.toggle("energy-track-hidden", hideEnergyTrackToggle.checked);
+  });
 
   const movePanel = (clientX, clientY) => {
     if (!panelDrag) return;

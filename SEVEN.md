@@ -647,12 +647,31 @@ Push 後提供：
   - `--energy-track-width`
   - `--energy-track-height`
   - `--energy-end-curve`
+  - `--energy-hole-1-x`
+  - `--energy-hole-1-y`
+  - `--energy-hole-1-r`
+  - `--energy-hole-2-x`
+  - `--energy-hole-2-y`
+  - `--energy-hole-2-r`
+  - `--energy-hole-3-x`
+  - `--energy-hole-3-y`
+  - `--energy-hole-3-r`
 - 目前正式預設值：
   - `--energy-track-x: 50%;`
-  - `--energy-track-y: 18.2%;`
-  - `--energy-track-width: 74%;`
-  - `--energy-track-height: 100px;`
-  - `--energy-end-curve: 7px;`
+  - `--energy-track-y: 18.6%;`
+  - `--energy-track-width: 74.8%;`
+  - `--energy-track-height: 93px;`
+  - `--energy-end-curve: 9px;`
+  - `--energy-hole-1-x: 22%;`
+  - `--energy-hole-1-y: 50%;`
+  - `--energy-hole-1-r: 30px;`
+  - `--energy-hole-2-x: 52.5%;`
+  - `--energy-hole-2-y: 50%;`
+  - `--energy-hole-2-r: 30px;`
+  - `--energy-hole-3-x: 78.2%;`
+  - `--energy-hole-3-y: 50%;`
+  - `--energy-hole-3-r: 30px;`
+- `boardTune=1` 面板有「隱藏能量槽」開關，用來只看三個圓洞定位框是否對齊輪播。
 
 ### 18.6 已淘汰方向
 
