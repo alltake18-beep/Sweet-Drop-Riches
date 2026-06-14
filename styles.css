@@ -7300,7 +7300,7 @@ button {
   z-index: 10000;
   right: 10px;
   bottom: 10px;
-  width: min(390px, calc(100vw - 20px));
+  width: min(max(25vw, 280px), calc(100vw - 20px));
   max-height: min(58vh, 530px);
   overflow: auto;
   padding: 10px;
