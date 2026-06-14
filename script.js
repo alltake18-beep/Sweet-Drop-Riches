@@ -6006,17 +6006,17 @@ function initClimaxTunePanel() {
 
   {
     const numberStartTune = [
-      { id: "left", label: "Left", preview: "x0.5", x: readPhonePercent("--number-start-left-x", 36), y: readPhonePercent("--number-start-left-y", 86) },
-      { id: "middle", label: "Middle", preview: "x1", x: readPhonePercent("--number-start-middle-x", 50), y: readPhonePercent("--number-start-middle-y", 86) },
-      { id: "right", label: "Right", preview: "x5", x: readPhonePercent("--number-start-right-x", 64), y: readPhonePercent("--number-start-right-y", 86) },
+      { id: "left", label: "Left", value: 5, x: readPhonePercent("--number-start-left-x", 22.03), y: readPhonePercent("--number-start-left-y", 99.01) },
+      { id: "middle", label: "Middle", value: 20, x: readPhonePercent("--number-start-middle-x", 50.88), y: readPhonePercent("--number-start-middle-y", 99.56) },
+      { id: "right", label: "Right", value: 50, x: readPhonePercent("--number-start-right-x", 81.29), y: readPhonePercent("--number-start-right-y", 99.56) },
     ];
     const receiverTune = {
       x: readPhonePercent("--number-receiver-x", CLIMAX_CHARGE_TARGETS[1].x),
       y: readPhonePercent("--number-receiver-y", CLIMAX_CHARGE_TARGETS[1].y),
     };
     const sizeTune = {
-      flight: readPhonePercent("--number-flight-size", 30),
-      final: readPhonePercent("--number-final-size", 34),
+      flight: readPhonePercent("--number-flight-size", 70),
+      final: readPhonePercent("--number-final-size", 40),
     };
 
     const panel = document.createElement("div");
@@ -6226,8 +6226,6 @@ function initClimaxTunePanel() {
       fly.style.top = `${start.y}px`;
       fly.style.setProperty("--fly-x", `${end.x - start.x}px`);
       fly.style.setProperty("--fly-y", `${end.y - start.y}px`);
-      fly.style.setProperty("--fly-mid-x", `${(end.x - start.x) * 0.8 + (slotIndex - 1) * 42}px`);
-      fly.style.setProperty("--fly-mid-y", `${(end.y - start.y) * 0.76}px`);
       fly.style.setProperty("--number-flight-size", `${sizeTune.flight}px`);
       fly.innerHTML = `
         <i class="climax-number-glow" aria-hidden="true"></i>
@@ -6248,13 +6246,13 @@ function initClimaxTunePanel() {
     panel.querySelectorAll('[data-action="preview"]').forEach((button) => {
       button.addEventListener("click", () => {
         const slotIndex = Number(button.dataset.slot || 0);
-        playNumberFlight(slotIndex, numberStartTune[slotIndex]?.preview || FULL_DROP_WHEEL_LABEL_ORDER[slotIndex]?.text || "x1");
+        playNumberFlight(slotIndex, multiplierDisplay(numberStartTune[slotIndex]?.value || 20));
       });
     });
 
     panel.querySelector('[data-action="preview-all"]').addEventListener("click", () => {
       [0, 1, 2].forEach((slotIndex) => {
-        window.setTimeout(() => playNumberFlight(slotIndex, numberStartTune[slotIndex]?.preview || FULL_DROP_WHEEL_LABEL_ORDER[slotIndex]?.text || "x1"), slotIndex * 120);
+        window.setTimeout(() => playNumberFlight(slotIndex, multiplierDisplay(numberStartTune[slotIndex]?.value || 20)), slotIndex * 120);
       });
     });
 
