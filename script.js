@@ -6004,6 +6004,131 @@ function initClimaxTunePanel() {
   if (!phone) return;
   phone.classList.add("tune-climax");
 
+  {
+    const lightningTune = {
+      left: CLIMAX_LIGHTNING_PATHS.left.map((point) => ({ ...point })),
+      right: CLIMAX_LIGHTNING_PATHS.right.map((point) => ({ ...point })),
+    };
+
+    const panel = document.createElement("div");
+    panel.className = "climax-tune-panel";
+    panel.innerHTML = `
+    <strong>Lightning Path Tune</strong>
+    <div class="climax-tune-actions">
+      <button type="button" data-action="copy">Copy CSS</button>
+      <button type="button" data-action="toggle-points">Hide Points</button>
+    </div>
+    <textarea class="climax-tune-output" spellcheck="false"></textarea>
+  `;
+    document.body.appendChild(panel);
+
+    const output = panel.querySelector(".climax-tune-output");
+    const lightningTuneLayer = document.createElement("div");
+    lightningTuneLayer.className = "climax-tune-lightning-layer";
+    lightningTuneLayer.innerHTML = `
+    <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+      <path class="left"></path>
+      <path class="right"></path>
+    </svg>
+  `;
+    document.body.appendChild(lightningTuneLayer);
+
+    function cssText() {
+      const lines = [];
+      ["left", "right"].forEach((side) => {
+        lightningTune[side].forEach((point, index) => {
+          lines.push(`  --lightning-${side}-${index + 1}-x: ${+point.x.toFixed(2)}%;`);
+          lines.push(`  --lightning-${side}-${index + 1}-y: ${+point.y.toFixed(2)}%;`);
+        });
+      });
+      return `.phone {\n${lines.join("\n")}\n}`;
+    }
+
+    function refreshOutput() {
+      output.value = cssText();
+    }
+
+    function updateLightningTuneLayer() {
+      ["left", "right"].forEach((side) => {
+        const path = lightningTuneLayer.querySelector(`path.${side}`);
+        path?.setAttribute("d", curvePathData(lightningTune[side]));
+      });
+      lightningTuneLayer.querySelectorAll(".climax-lightning-path-handle").forEach((handle) => {
+        const side = handle.dataset.side;
+        const index = Number(handle.dataset.index);
+        const point = lightningTune[side]?.[index];
+        if (!point) return;
+        handle.style.left = `${point.x}%`;
+        handle.style.top = `${point.y}%`;
+      });
+      refreshOutput();
+    }
+
+    function placeLightningTuneLayer() {
+      const rect = climaxStageEl.getBoundingClientRect();
+      lightningTuneLayer.style.left = `${rect.left}px`;
+      lightningTuneLayer.style.top = `${rect.top}px`;
+      lightningTuneLayer.style.width = `${rect.width}px`;
+      lightningTuneLayer.style.height = `${rect.height}px`;
+      updateLightningTuneLayer();
+    }
+
+    ["left", "right"].forEach((side) => {
+      lightningTune[side].forEach((point, index) => {
+        const handle = document.createElement("button");
+        handle.type = "button";
+        handle.className = `climax-lightning-path-handle is-${side}`;
+        handle.dataset.side = side;
+        handle.dataset.index = String(index);
+        handle.title = `${side} lightning point ${index + 1}`;
+        handle.setAttribute("aria-label", `${side} lightning point ${index + 1}`);
+        handle.textContent = "+";
+        handle.addEventListener("pointerdown", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          handle.setPointerCapture(event.pointerId);
+          const move = (moveEvent) => {
+            const rect = climaxStageEl.getBoundingClientRect();
+            point.x = ((moveEvent.clientX - rect.left) / rect.width) * 100;
+            point.y = ((moveEvent.clientY - rect.top) / rect.height) * 100;
+            updateLightningTuneLayer();
+          };
+          const up = () => {
+            handle.removeEventListener("pointermove", move);
+            handle.removeEventListener("pointerup", up);
+            handle.removeEventListener("pointercancel", up);
+          };
+          handle.addEventListener("pointermove", move);
+          handle.addEventListener("pointerup", up);
+          handle.addEventListener("pointercancel", up);
+        });
+        lightningTuneLayer.appendChild(handle);
+      });
+    });
+
+    panel.querySelector('[data-action="copy"]').addEventListener("click", async () => {
+      refreshOutput();
+      output.select();
+      try {
+        await navigator.clipboard.writeText(output.value);
+      } catch {
+        document.execCommand("copy");
+      }
+    });
+
+    panel.querySelector('[data-action="toggle-points"]').addEventListener("click", (event) => {
+      lightningTuneLayer.classList.toggle("is-hidden");
+      event.currentTarget.textContent = lightningTuneLayer.classList.contains("is-hidden") ? "Show Points" : "Hide Points";
+    });
+
+    renderClimaxStage();
+    placeLightningTuneLayer();
+    window.addEventListener("resize", placeLightningTuneLayer);
+    window.visualViewport?.addEventListener("resize", placeLightningTuneLayer);
+    renderHud();
+    return;
+  }
+
   const controls = [
     ["wheel left", "--climax-wheel-left", -200, 300, 0.5, "%"],
     ["wheel top", "--climax-wheel-top", -200, 500, 0.5, "%"],
