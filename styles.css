@@ -6502,7 +6502,7 @@ button {
 .event-socket.multiplier-preview img {
   width: var(--stage-slot-special-icon-size, 78%);
   height: var(--stage-slot-special-icon-size, 78%);
-  transform: translate(var(--stage-slot-object-x, 0%), calc(var(--stage-slot-object-y, 0%) + var(--stage-slot-special-icon-y, 0%)));
+  transform: translate(var(--stage-slot-multiplier-x, 0%), var(--stage-slot-multiplier-y, -15%));
 }
 
 .event-socket.flame-preview img {
@@ -7171,9 +7171,10 @@ button {
 
 /* Clean meter and board-object rules. */
 .phone {
-  --normal-candy-size: 90%;
+  --normal-candy-size: 100%;
   --special-candy-size: 116%;
-  --multiplier-mark-size: 100%;
+  --board-multiplier-size: 100%;
+  --multiplier-mark-size: 175%;
   --play-board-radius: 14px;
   --stage-slots-x: 0%;
   --stage-slots-y: 0%;
@@ -7184,6 +7185,8 @@ button {
   --stage-slot-3-x: 71.1%;
   --stage-slot-object-x: 0%;
   --stage-slot-object-y: 5%;
+  --stage-slot-multiplier-x: 0%;
+  --stage-slot-multiplier-y: -15%;
   --stage-slot-normal-icon-size: 72%;
   --stage-slot-special-icon-size: 174%;
   --stage-slot-special-icon-y: -20%;
@@ -7483,8 +7486,8 @@ button {
 }
 
 .tile.multiplier .multiplier-symbol {
-  width: 136%;
-  height: 136%;
+  width: calc(136% * var(--board-multiplier-size, 100%) / 100%);
+  height: calc(136% * var(--board-multiplier-size, 100%) / 100%);
   --relic-scale: 1;
   overflow: visible;
   filter:
@@ -7493,8 +7496,8 @@ button {
 }
 
 .tile.multiplier-size-2 .multiplier-symbol {
-  width: 124%;
-  height: 124%;
+  width: calc(124% * var(--board-multiplier-size, 100%) / 100%);
+  height: calc(124% * var(--board-multiplier-size, 100%) / 100%);
 }
 
 .tile.multiplier.edge-left .multiplier-symbol,

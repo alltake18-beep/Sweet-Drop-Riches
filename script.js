@@ -6524,9 +6524,11 @@ function initBoardTunePanel() {
   phoneShellEl.classList.add("board-tune");
 
   const controls = [
-    { label: "一般糖尺寸", name: "--normal-candy-size", min: 40, max: 500, step: 1, value: 90, unit: "%" },
-    { label: "特殊糖尺寸", name: "--special-candy-size", min: 40, max: 500, step: 1, value: 116, unit: "%" },
-    { label: "特殊糖數字大小", name: "--multiplier-mark-size", min: 40, max: 220, step: 1, value: 100, unit: "%" },
+    { label: "一般糖尺寸", name: "--normal-candy-size", min: 40, max: 500, step: 1, value: 100, unit: "%" },
+    { label: "盤面倍數糖尺寸", name: "--board-multiplier-size", min: 40, max: 220, step: 1, value: 100, unit: "%" },
+    { label: "倍數糖數字大小", name: "--multiplier-mark-size", min: 40, max: 220, step: 1, value: 175, unit: "%" },
+    { label: "輪播倍數糖 X", name: "--stage-slot-multiplier-x", min: -100, max: 100, step: 1, value: 0, unit: "%" },
+    { label: "輪播倍數糖 Y", name: "--stage-slot-multiplier-y", min: -100, max: 100, step: 1, value: -15, unit: "%" },
   ];
 
   const panel = document.createElement("div");
@@ -6554,10 +6556,10 @@ function initBoardTunePanel() {
     const boardRect = boardEl.getBoundingClientRect();
     const tileRect = boardEl.querySelector(".tile")?.getBoundingClientRect();
     const imgRect = boardEl.querySelector(".tile.candy .candy-img")?.getBoundingClientRect();
-    const specialRect = boardEl.querySelector(".tile.special-candy .special-img")?.getBoundingClientRect();
+    const multiplierRect = boardEl.querySelector(".tile.multiplier .multiplier-symbol")?.getBoundingClientRect();
     const socketRect = document.querySelector(".event-socket")?.getBoundingClientRect();
     readoutEl.textContent = tileRect
-      ? `盤面 ${Math.round(boardRect.width)} x ${Math.round(boardRect.height)} / 格 ${Math.round(tileRect.width)} x ${Math.round(tileRect.height)}${imgRect ? ` / 一般 ${Math.round(imgRect.width)} x ${Math.round(imgRect.height)}` : ""}${specialRect ? ` / 特殊 ${Math.round(specialRect.width)} x ${Math.round(specialRect.height)}` : ""}${socketRect ? ` / 上槽 ${Math.round(socketRect.width)} x ${Math.round(socketRect.height)}` : ""}`
+      ? `盤面 ${Math.round(boardRect.width)} x ${Math.round(boardRect.height)} / 格 ${Math.round(tileRect.width)} x ${Math.round(tileRect.height)}${imgRect ? ` / 一般 ${Math.round(imgRect.width)} x ${Math.round(imgRect.height)}` : ""}${multiplierRect ? ` / 倍數 ${Math.round(multiplierRect.width)} x ${Math.round(multiplierRect.height)}` : ""}${socketRect ? ` / 上槽 ${Math.round(socketRect.width)} x ${Math.round(socketRect.height)}` : ""}`
       : `board ${Math.round(boardRect.width)} x ${Math.round(boardRect.height)}`;
     outputEl.value = outputText();
   }
