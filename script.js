@@ -6014,9 +6014,18 @@ function initClimaxTunePanel() {
       x: readPhonePercent("--number-receiver-x", CLIMAX_CHARGE_TARGETS[1].x),
       y: readPhonePercent("--number-receiver-y", CLIMAX_CHARGE_TARGETS[1].y),
     };
+    const showTune = {
+      x: readPhonePercent("--number-show-x", 50),
+      y: readPhonePercent("--number-show-y", 56),
+    };
     const sizeTune = {
       flight: readPhonePercent("--number-flight-size", 70),
       final: readPhonePercent("--number-final-size", 40),
+    };
+    const timeTune = {
+      toShow: readPhonePercent("--number-to-show-ms", 360),
+      hold: readPhonePercent("--number-show-hold-ms", 260),
+      toFinal: readPhonePercent("--number-to-final-ms", 360),
     };
 
     const panel = document.createElement("div");
@@ -6048,6 +6057,30 @@ function initClimaxTunePanel() {
       </div>
       <span class="climax-tune-value" data-size-readout="final"></span>
     </div>
+    <div class="climax-tune-row number-time-row">
+      <span>to show</span>
+      <div class="climax-tune-control">
+        <button type="button" data-time="toShow" data-step="-40">-</button>
+        <button type="button" data-time="toShow" data-step="40">+</button>
+      </div>
+      <span class="climax-tune-value" data-time-readout="toShow"></span>
+    </div>
+    <div class="climax-tune-row number-time-row">
+      <span>hold</span>
+      <div class="climax-tune-control">
+        <button type="button" data-time="hold" data-step="-40">-</button>
+        <button type="button" data-time="hold" data-step="40">+</button>
+      </div>
+      <span class="climax-tune-value" data-time-readout="hold"></span>
+    </div>
+    <div class="climax-tune-row number-time-row">
+      <span>to final</span>
+      <div class="climax-tune-control">
+        <button type="button" data-time="toFinal" data-step="-40">-</button>
+        <button type="button" data-time="toFinal" data-step="40">+</button>
+      </div>
+      <span class="climax-tune-value" data-time-readout="toFinal"></span>
+    </div>
     <textarea class="climax-tune-output" spellcheck="false"></textarea>
   `;
     document.body.appendChild(panel);
@@ -6058,10 +6091,12 @@ function initClimaxTunePanel() {
     numberTuneLayer.className = "climax-number-tune-layer";
     numberTuneLayer.innerHTML = `
       ${numberStartTune.map((item, index) => `<button type="button" class="climax-number-start-handle" data-slot="${index}" aria-label="${item.label} number start">${item.label[0]}</button>`).join("")}
+      <button type="button" class="climax-number-show-handle" aria-label="number show point">S</button>
       <button type="button" class="climax-number-receiver" aria-label="number receiver"></button>
       <div class="climax-number-final" aria-hidden="true"></div>
     `;
     phone.appendChild(numberTuneLayer);
+    const showEl = numberTuneLayer.querySelector(".climax-number-show-handle");
     const receiverEl = numberTuneLayer.querySelector(".climax-number-receiver");
     const finalEl = numberTuneLayer.querySelector(".climax-number-final");
 
@@ -6070,10 +6105,15 @@ function initClimaxTunePanel() {
         `  --number-start-${item.id}-x: ${+item.x.toFixed(2)}%;`,
         `  --number-start-${item.id}-y: ${+item.y.toFixed(2)}%;`,
       ]);
+      lines.push(`  --number-show-x: ${+showTune.x.toFixed(2)}%;`);
+      lines.push(`  --number-show-y: ${+showTune.y.toFixed(2)}%;`);
       lines.push(`  --number-receiver-x: ${+receiverTune.x.toFixed(2)}%;`);
       lines.push(`  --number-receiver-y: ${+receiverTune.y.toFixed(2)}%;`);
       lines.push(`  --number-flight-size: ${+sizeTune.flight.toFixed(0)}px;`);
       lines.push(`  --number-final-size: ${+sizeTune.final.toFixed(0)}px;`);
+      lines.push(`  --number-to-show-ms: ${+timeTune.toShow.toFixed(0)}ms;`);
+      lines.push(`  --number-show-hold-ms: ${+timeTune.hold.toFixed(0)}ms;`);
+      lines.push(`  --number-to-final-ms: ${+timeTune.toFinal.toFixed(0)}ms;`);
       return `.phone {\n${lines.join("\n")}\n}`;
     }
 
@@ -6086,6 +6126,17 @@ function initClimaxTunePanel() {
       phone.style.setProperty("--number-final-size", `${sizeTune.final}px`);
       panel.querySelector('[data-size-readout="flight"]').textContent = `${sizeTune.flight}px`;
       panel.querySelector('[data-size-readout="final"]').textContent = `${sizeTune.final}px`;
+      refreshOutput();
+    }
+
+    function formatSeconds(ms) {
+      return `${(ms / 1000).toFixed(2)}s`;
+    }
+
+    function syncNumberTimes() {
+      panel.querySelector('[data-time-readout="toShow"]').textContent = formatSeconds(timeTune.toShow);
+      panel.querySelector('[data-time-readout="hold"]').textContent = formatSeconds(timeTune.hold);
+      panel.querySelector('[data-time-readout="toFinal"]').textContent = formatSeconds(timeTune.toFinal);
       refreshOutput();
     }
 
@@ -6141,6 +6192,12 @@ function initClimaxTunePanel() {
       refreshOutput();
     }
 
+    function placeShowPoint() {
+      showEl.style.left = `${showTune.x}%`;
+      showEl.style.top = `${showTune.y}%`;
+      refreshOutput();
+    }
+
     function placeStartHandles() {
       numberTuneLayer.querySelectorAll(".climax-number-start-handle").forEach((handle) => {
         const tune = numberStartTune[Number(handle.dataset.slot || 0)];
@@ -6155,6 +6212,13 @@ function initClimaxTunePanel() {
       receiverTune.x = ((event.clientX - rect.left) / rect.width) * 100;
       receiverTune.y = ((event.clientY - rect.top) / rect.height) * 100;
       placeReceiver();
+    }
+
+    function setShowFromPointer(event) {
+      const rect = phone.getBoundingClientRect();
+      showTune.x = ((event.clientX - rect.left) / rect.width) * 100;
+      showTune.y = ((event.clientY - rect.top) / rect.height) * 100;
+      placeShowPoint();
     }
 
     function setStartFromPointer(slotIndex, event) {
@@ -6179,6 +6243,22 @@ function initClimaxTunePanel() {
       receiverEl.addEventListener("pointermove", move);
       receiverEl.addEventListener("pointerup", up);
       receiverEl.addEventListener("pointercancel", up);
+    });
+
+    showEl.addEventListener("pointerdown", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      showEl.setPointerCapture(event.pointerId);
+      setShowFromPointer(event);
+      const move = (moveEvent) => setShowFromPointer(moveEvent);
+      const up = () => {
+        showEl.removeEventListener("pointermove", move);
+        showEl.removeEventListener("pointerup", up);
+        showEl.removeEventListener("pointercancel", up);
+      };
+      showEl.addEventListener("pointermove", move);
+      showEl.addEventListener("pointerup", up);
+      showEl.addEventListener("pointercancel", up);
     });
 
     numberTuneLayer.querySelectorAll(".climax-number-start-handle").forEach((handle) => {
@@ -6217,15 +6297,22 @@ function initClimaxTunePanel() {
       };
     }
 
+    function showPoint() {
+      const hostRect = phone.getBoundingClientRect();
+      return {
+        x: hostRect.width * showTune.x / 100,
+        y: hostRect.height * showTune.y / 100,
+      };
+    }
+
     function playNumberFlight(slotIndex, label = "x20") {
       const start = slotStartPoint(slotIndex);
+      const show = showPoint();
       const end = receiverPoint();
       const fly = document.createElement("div");
       fly.className = "climax-flying-number";
       fly.style.left = `${start.x}px`;
       fly.style.top = `${start.y}px`;
-      fly.style.setProperty("--fly-x", `${end.x - start.x}px`);
-      fly.style.setProperty("--fly-y", `${end.y - start.y}px`);
       fly.style.setProperty("--number-flight-size", `${sizeTune.flight}px`);
       fly.innerHTML = `
         <i class="climax-number-glow" aria-hidden="true"></i>
@@ -6234,13 +6321,36 @@ function initClimaxTunePanel() {
       numberTuneLayer.appendChild(fly);
       receiverEl.classList.remove("is-hit");
       finalEl.classList.remove("is-visible");
-      window.setTimeout(() => receiverEl.classList.add("is-hit"), 440);
+      const showX = show.x - start.x;
+      const showY = show.y - start.y;
+      const finalX = end.x - start.x;
+      const finalY = end.y - start.y;
+      const toShow = Math.max(80, timeTune.toShow);
+      const hold = Math.max(40, timeTune.hold);
+      const toFinal = Math.max(80, timeTune.toFinal);
+      const total = toShow + hold + toFinal;
+      const showOffset = toShow / total;
+      const leaveOffset = (toShow + hold) / total;
+      const earlyOffset = Math.min(0.12, showOffset * 0.58);
+      const transformAt = (x, y, scale) => `translate(-50%, -50%) translate3d(${x}px, ${y}px, 0) scale(${scale})`;
+      const flightAnimation = fly.animate([
+        { offset: 0, opacity: 0, transform: transformAt(0, 0, 0.72) },
+        { offset: earlyOffset, opacity: 1, transform: transformAt(0, 0, 1) },
+        { offset: showOffset, opacity: 1, transform: transformAt(showX, showY, 1.12) },
+        { offset: leaveOffset, opacity: 1, transform: transformAt(showX, showY, 1.12) },
+        { offset: 1, opacity: 0, transform: transformAt(finalX, finalY, 0.52) },
+      ], {
+        duration: total,
+        easing: "cubic-bezier(0.16, 0.82, 0.17, 1)",
+        fill: "forwards",
+      });
+      window.setTimeout(() => receiverEl.classList.add("is-hit"), Math.max(0, total - 180));
       window.setTimeout(() => {
         finalEl.textContent = label;
         finalEl.classList.add("is-visible");
-      }, 500);
-      window.setTimeout(() => receiverEl.classList.remove("is-hit"), 760);
-      window.setTimeout(() => fly.remove(), 820);
+      }, Math.max(0, total - 80));
+      window.setTimeout(() => receiverEl.classList.remove("is-hit"), total + 140);
+      flightAnimation.finished.then(() => fly.remove()).catch(() => fly.remove());
     }
 
     panel.querySelectorAll('[data-action="preview"]').forEach((button) => {
@@ -6265,6 +6375,15 @@ function initClimaxTunePanel() {
       });
     });
 
+    panel.querySelectorAll("[data-time]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const key = button.dataset.time;
+        const step = Number(button.dataset.step || 0);
+        timeTune[key] = Math.max(key === "hold" ? 40 : 80, Math.min(1600, timeTune[key] + step));
+        syncNumberTimes();
+      });
+    });
+
     panel.querySelector('[data-action="copy"]').addEventListener("click", async () => {
       refreshOutput();
       output.select();
@@ -6277,14 +6396,18 @@ function initClimaxTunePanel() {
 
     renderClimaxStage();
     syncNumberSizes();
+    syncNumberTimes();
     placeStartHandles();
+    placeShowPoint();
     placeReceiver();
     window.addEventListener("resize", () => {
       placeStartHandles();
+      placeShowPoint();
       placeReceiver();
     });
     window.visualViewport?.addEventListener("resize", () => {
       placeStartHandles();
+      placeShowPoint();
       placeReceiver();
     });
     renderHud();
