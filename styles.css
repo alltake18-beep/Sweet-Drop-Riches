@@ -7301,7 +7301,7 @@ button {
   right: 10px;
   bottom: 10px;
   width: min(max(25vw, 280px), calc(100vw - 20px));
-  max-height: min(58vh, 530px);
+  max-height: min(29vh, 265px);
   overflow: auto;
   padding: 10px;
   color: #ffeec2;
