@@ -6005,104 +6005,123 @@ function initClimaxTunePanel() {
   phone.classList.add("tune-climax");
 
   {
-    const lightningTune = {
-      left: CLIMAX_LIGHTNING_PATHS.left.map((point) => ({ ...point })),
-      right: CLIMAX_LIGHTNING_PATHS.right.map((point) => ({ ...point })),
-    };
+    const receiverTune = { ...CLIMAX_CHARGE_TARGETS[1] };
 
     const panel = document.createElement("div");
     panel.className = "climax-tune-panel";
     panel.innerHTML = `
-    <strong>Lightning Path Tune</strong>
+    <strong>Number Flight Tune</strong>
     <div class="climax-tune-actions">
+      <button type="button" data-action="preview" data-slot="0">Left</button>
+      <button type="button" data-action="preview" data-slot="1">Middle</button>
+      <button type="button" data-action="preview" data-slot="2">Right</button>
+    </div>
+    <div class="climax-tune-actions">
+      <button type="button" data-action="preview-all">All</button>
       <button type="button" data-action="copy">Copy CSS</button>
-      <button type="button" data-action="toggle-points">Hide Points</button>
     </div>
     <textarea class="climax-tune-output" spellcheck="false"></textarea>
   `;
     document.body.appendChild(panel);
 
     const output = panel.querySelector(".climax-tune-output");
-    const lightningTuneLayer = document.createElement("div");
-    lightningTuneLayer.className = "climax-tune-lightning-layer";
-    lightningTuneLayer.innerHTML = `
-    <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-      <path class="left"></path>
-      <path class="right"></path>
-    </svg>
-  `;
-    document.body.appendChild(lightningTuneLayer);
+    const numberTuneLayer = document.createElement("div");
+    numberTuneLayer.className = "climax-number-tune-layer";
+    numberTuneLayer.innerHTML = `<button type="button" class="climax-number-receiver" aria-label="number receiver"></button>`;
+    phone.appendChild(numberTuneLayer);
+    const receiverEl = numberTuneLayer.querySelector(".climax-number-receiver");
 
     function cssText() {
-      const lines = [];
-      ["left", "right"].forEach((side) => {
-        lightningTune[side].forEach((point, index) => {
-          lines.push(`  --lightning-${side}-${index + 1}-x: ${+point.x.toFixed(2)}%;`);
-          lines.push(`  --lightning-${side}-${index + 1}-y: ${+point.y.toFixed(2)}%;`);
-        });
-      });
-      return `.phone {\n${lines.join("\n")}\n}`;
+      return `.phone {\n  --number-receiver-x: ${+receiverTune.x.toFixed(2)}%;\n  --number-receiver-y: ${+receiverTune.y.toFixed(2)}%;\n}`;
     }
 
     function refreshOutput() {
       output.value = cssText();
     }
 
-    function updateLightningTuneLayer() {
-      ["left", "right"].forEach((side) => {
-        const path = lightningTuneLayer.querySelector(`path.${side}`);
-        path?.setAttribute("d", curvePathData(lightningTune[side]));
-      });
-      lightningTuneLayer.querySelectorAll(".climax-lightning-path-handle").forEach((handle) => {
-        const side = handle.dataset.side;
-        const index = Number(handle.dataset.index);
-        const point = lightningTune[side]?.[index];
-        if (!point) return;
-        handle.style.left = `${point.x}%`;
-        handle.style.top = `${point.y}%`;
-      });
+    function placeReceiver() {
+      receiverEl.style.left = `${receiverTune.x}%`;
+      receiverEl.style.top = `${receiverTune.y}%`;
       refreshOutput();
     }
 
-    function placeLightningTuneLayer() {
-      const rect = climaxStageEl.getBoundingClientRect();
-      lightningTuneLayer.style.left = `${rect.left}px`;
-      lightningTuneLayer.style.top = `${rect.top}px`;
-      lightningTuneLayer.style.width = `${rect.width}px`;
-      lightningTuneLayer.style.height = `${rect.height}px`;
-      updateLightningTuneLayer();
+    function setReceiverFromPointer(event) {
+      const rect = phone.getBoundingClientRect();
+      receiverTune.x = ((event.clientX - rect.left) / rect.width) * 100;
+      receiverTune.y = ((event.clientY - rect.top) / rect.height) * 100;
+      placeReceiver();
     }
 
-    ["left", "right"].forEach((side) => {
-      lightningTune[side].forEach((point, index) => {
-        const handle = document.createElement("button");
-        handle.type = "button";
-        handle.className = `climax-lightning-path-handle is-${side}`;
-        handle.dataset.side = side;
-        handle.dataset.index = String(index);
-        handle.title = `${side} lightning point ${index + 1}`;
-        handle.setAttribute("aria-label", `${side} lightning point ${index + 1}`);
-        handle.textContent = "+";
-        handle.addEventListener("pointerdown", (event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          handle.setPointerCapture(event.pointerId);
-          const move = (moveEvent) => {
-            const rect = climaxStageEl.getBoundingClientRect();
-            point.x = ((moveEvent.clientX - rect.left) / rect.width) * 100;
-            point.y = ((moveEvent.clientY - rect.top) / rect.height) * 100;
-            updateLightningTuneLayer();
-          };
-          const up = () => {
-            handle.removeEventListener("pointermove", move);
-            handle.removeEventListener("pointerup", up);
-            handle.removeEventListener("pointercancel", up);
-          };
-          handle.addEventListener("pointermove", move);
-          handle.addEventListener("pointerup", up);
-          handle.addEventListener("pointercancel", up);
-        });
-        lightningTuneLayer.appendChild(handle);
+    receiverEl.addEventListener("pointerdown", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      receiverEl.setPointerCapture(event.pointerId);
+      setReceiverFromPointer(event);
+      const move = (moveEvent) => setReceiverFromPointer(moveEvent);
+      const up = () => {
+        receiverEl.removeEventListener("pointermove", move);
+        receiverEl.removeEventListener("pointerup", up);
+        receiverEl.removeEventListener("pointercancel", up);
+      };
+      receiverEl.addEventListener("pointermove", move);
+      receiverEl.addEventListener("pointerup", up);
+      receiverEl.addEventListener("pointercancel", up);
+    });
+
+    function slotStartPoint(slotIndex) {
+      const hostRect = phone.getBoundingClientRect();
+      const slot = slotsEl?.children[slotIndex];
+      const rect = slot?.getBoundingClientRect();
+      if (!rect) {
+        const fallbackX = [36, 50, 64][slotIndex] || 50;
+        return { x: hostRect.width * fallbackX / 100, y: hostRect.height * 0.86 };
+      }
+      return {
+        x: rect.left + rect.width * 0.5 - hostRect.left,
+        y: rect.top + rect.height * 0.42 - hostRect.top,
+      };
+    }
+
+    function receiverPoint() {
+      const hostRect = phone.getBoundingClientRect();
+      return {
+        x: hostRect.width * receiverTune.x / 100,
+        y: hostRect.height * receiverTune.y / 100,
+      };
+    }
+
+    function playNumberFlight(slotIndex, label = "x20") {
+      const start = slotStartPoint(slotIndex);
+      const end = receiverPoint();
+      const fly = document.createElement("div");
+      fly.className = "climax-flying-number";
+      fly.style.left = `${start.x}px`;
+      fly.style.top = `${start.y}px`;
+      fly.style.setProperty("--fly-x", `${end.x - start.x}px`);
+      fly.style.setProperty("--fly-y", `${end.y - start.y}px`);
+      fly.style.setProperty("--fly-mid-x", `${(end.x - start.x) * 0.8 + (slotIndex - 1) * 42}px`);
+      fly.style.setProperty("--fly-mid-y", `${(end.y - start.y) * 0.76}px`);
+      fly.innerHTML = `
+        <i class="climax-number-glow" aria-hidden="true"></i>
+        <strong>${label}</strong>
+      `;
+      numberTuneLayer.appendChild(fly);
+      receiverEl.classList.remove("is-hit");
+      window.setTimeout(() => receiverEl.classList.add("is-hit"), 440);
+      window.setTimeout(() => receiverEl.classList.remove("is-hit"), 760);
+      window.setTimeout(() => fly.remove(), 820);
+    }
+
+    panel.querySelectorAll('[data-action="preview"]').forEach((button) => {
+      button.addEventListener("click", () => {
+        const slotIndex = Number(button.dataset.slot || 0);
+        playNumberFlight(slotIndex, ["x5", "x20", "x50"][slotIndex] || "x20");
+      });
+    });
+
+    panel.querySelector('[data-action="preview-all"]').addEventListener("click", () => {
+      [0, 1, 2].forEach((slotIndex) => {
+        window.setTimeout(() => playNumberFlight(slotIndex, ["x5", "x20", "x50"][slotIndex]), slotIndex * 120);
       });
     });
 
@@ -6116,15 +6135,10 @@ function initClimaxTunePanel() {
       }
     });
 
-    panel.querySelector('[data-action="toggle-points"]').addEventListener("click", (event) => {
-      lightningTuneLayer.classList.toggle("is-hidden");
-      event.currentTarget.textContent = lightningTuneLayer.classList.contains("is-hidden") ? "Show Points" : "Hide Points";
-    });
-
     renderClimaxStage();
-    placeLightningTuneLayer();
-    window.addEventListener("resize", placeLightningTuneLayer);
-    window.visualViewport?.addEventListener("resize", placeLightningTuneLayer);
+    placeReceiver();
+    window.addEventListener("resize", placeReceiver);
+    window.visualViewport?.addEventListener("resize", placeReceiver);
     renderHud();
     return;
   }
