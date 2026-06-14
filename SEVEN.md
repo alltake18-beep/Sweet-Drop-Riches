@@ -646,15 +646,13 @@ Push 後提供：
   - `--energy-track-y`
   - `--energy-track-width`
   - `--energy-track-height`
-  - `--energy-left-radius`
-  - `--energy-right-radius`
+  - `--energy-end-curve`
 - 目前正式預設值：
   - `--energy-track-x: 50%;`
-  - `--energy-track-y: 23.8%;`
-  - `--energy-track-width: 68.9%;`
-  - `--energy-track-height: 18px;`
-  - `--energy-left-radius: 18px;`
-  - `--energy-right-radius: 18px;`
+  - `--energy-track-y: 18.2%;`
+  - `--energy-track-width: 74%;`
+  - `--energy-track-height: 100px;`
+  - `--energy-end-curve: 7px;`
 
 ### 18.6 已淘汰方向
 

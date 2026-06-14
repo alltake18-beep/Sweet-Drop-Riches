@@ -7192,11 +7192,10 @@ button {
   --stage-slot-special-icon-y: -20%;
   --stage-slot-flame-icon-size: 100%;
   --energy-track-x: 50%;
-  --energy-track-y: 23.8%;
-  --energy-track-width: 68.9%;
-  --energy-track-height: 18px;
-  --energy-left-radius: 18px;
-  --energy-right-radius: 18px;
+  --energy-track-y: 18.2%;
+  --energy-track-width: 74%;
+  --energy-track-height: 100px;
+  --energy-end-curve: 7px;
   --stage-slot-digits-3-x: 0%;
   --stage-slot-digits-3-y: 20%;
   --stage-slot-digits-3-size: 27px;
@@ -7491,11 +7490,15 @@ button {
   opacity: 1;
   visibility: visible;
   transform: translate(-50%, 0);
-  border-radius:
-    var(--energy-left-radius, 18px)
-    var(--energy-right-radius, 18px)
-    var(--energy-right-radius, 18px)
-    var(--energy-left-radius, 18px);
+  border-radius: 0;
+  clip-path: polygon(
+    var(--energy-end-curve, 7px) 0,
+    calc(100% - var(--energy-end-curve, 7px)) 0,
+    100% 50%,
+    calc(100% - var(--energy-end-curve, 7px)) 100%,
+    var(--energy-end-curve, 7px) 100%,
+    0 50%
+  );
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0.04) 42%, rgba(0, 0, 0, 0.24)),
     rgba(13, 4, 21, 0.88);
@@ -7514,7 +7517,7 @@ button {
   z-index: 2;
   display: block !important;
   pointer-events: none;
-  border-radius: inherit;
+  border-radius: 0;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.42), transparent 38%, rgba(0, 0, 0, 0.24)),
     linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
@@ -7527,7 +7530,7 @@ button {
   display: block !important;
   height: 100%;
   margin: 0;
-  border-radius: inherit;
+  border-radius: 0;
   background:
     linear-gradient(90deg, rgba(255, 255, 255, 0.34), transparent 17%, rgba(255, 255, 255, 0.28) 36%, transparent 54%),
     linear-gradient(90deg, #ff4fd8 0%, #ffe56c 44%, #61f7ff 100%);
@@ -7549,7 +7552,7 @@ button {
   inset: 0;
   z-index: 4;
   pointer-events: none;
-  border-radius: inherit;
+  border-radius: 0;
   background:
     linear-gradient(90deg, rgba(143, 247, 255, 0.9) 0 2px, transparent 2px calc(100% - 2px), rgba(143, 247, 255, 0.9) calc(100% - 2px)),
     linear-gradient(180deg, rgba(143, 247, 255, 0.9) 0 2px, transparent 2px calc(100% - 2px), rgba(143, 247, 255, 0.9) calc(100% - 2px));
