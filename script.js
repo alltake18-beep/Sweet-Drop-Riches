@@ -6022,6 +6022,7 @@ function initClimaxTunePanel() {
       flight: readPhonePercent("--number-flight-size", 70),
       final: readPhonePercent("--number-final-size", 40),
     };
+    const showScale = Math.max(1, Math.min(1.8, readPhonePercent("--number-show-scale", 1.25)));
     const timeTune = {
       toShow: readPhonePercent("--number-to-show-ms", 360),
       hold: readPhonePercent("--number-show-hold-ms", 260),
@@ -6111,6 +6112,7 @@ function initClimaxTunePanel() {
       lines.push(`  --number-receiver-y: ${+receiverTune.y.toFixed(2)}%;`);
       lines.push(`  --number-flight-size: ${+sizeTune.flight.toFixed(0)}px;`);
       lines.push(`  --number-final-size: ${+sizeTune.final.toFixed(0)}px;`);
+      lines.push(`  --number-show-scale: ${+showScale.toFixed(2)};`);
       lines.push(`  --number-to-show-ms: ${+timeTune.toShow.toFixed(0)}ms;`);
       lines.push(`  --number-show-hold-ms: ${+timeTune.hold.toFixed(0)}ms;`);
       lines.push(`  --number-to-final-ms: ${+timeTune.toFinal.toFixed(0)}ms;`);
@@ -6336,23 +6338,26 @@ function initClimaxTunePanel() {
       const earlyOffset = Math.min(0.12, showOffset * 0.58);
       const transformAt = (x, y, scale) => `translate(-50%, -50%) translate3d(${x}px, ${y}px, 0) scale(${scale})`;
       const flightAnimation = fly.animate([
-        { offset: 0, opacity: 0, transform: transformAt(0, 0, 0.72) },
+        { offset: 0, opacity: 0, transform: transformAt(0, 0, 0.9) },
         { offset: earlyOffset, opacity: 1, transform: transformAt(0, 0, 1) },
-        { offset: showOffset, opacity: 1, transform: transformAt(showX, showY, 1.12) },
-        { offset: leaveOffset, opacity: 1, transform: transformAt(showX, showY, 1.12) },
-        { offset: 1, opacity: 0, transform: transformAt(finalX, finalY, 0.52) },
+        { offset: showOffset, opacity: 1, transform: transformAt(showX, showY, showScale) },
+        { offset: leaveOffset, opacity: 1, transform: transformAt(showX, showY, showScale) },
+        { offset: 1, opacity: 1, transform: transformAt(finalX, finalY, 1) },
       ], {
         duration: total,
         easing: "cubic-bezier(0.16, 0.82, 0.17, 1)",
         fill: "forwards",
       });
-      window.setTimeout(() => receiverEl.classList.add("is-hit"), Math.max(0, total - 180));
-      window.setTimeout(() => {
+      const revealFinal = () => {
+        receiverEl.classList.add("is-hit");
         finalEl.textContent = label;
         finalEl.classList.add("is-visible");
-      }, Math.max(0, total - 80));
+      };
       window.setTimeout(() => receiverEl.classList.remove("is-hit"), total + 140);
-      flightAnimation.finished.then(() => fly.remove()).catch(() => fly.remove());
+      flightAnimation.finished.then(() => {
+        revealFinal();
+        fly.remove();
+      }).catch(() => fly.remove());
     }
 
     panel.querySelectorAll('[data-action="preview"]').forEach((button) => {

@@ -8192,21 +8192,22 @@ button {
   --lightning-right-9-y: 13.1%;
   --lightning-right-10-x: 58.71%;
   --lightning-right-10-y: 12.53%;
-  --number-start-left-x: 22.03%;
-  --number-start-left-y: 99.01%;
-  --number-start-middle-x: 50.88%;
-  --number-start-middle-y: 99.56%;
-  --number-start-right-x: 81.29%;
-  --number-start-right-y: 99.56%;
-  --number-receiver-x: 50%;
-  --number-receiver-y: 12.5%;
-  --number-flight-size: 70px;
-  --number-final-size: 40px;
-  --number-show-x: 50%;
-  --number-show-y: 56%;
-  --number-to-show-ms: 360ms;
-  --number-show-hold-ms: 260ms;
-  --number-to-final-ms: 360ms;
+  --number-start-left-x: 22.8%;
+  --number-start-left-y: 83.67%;
+  --number-start-middle-x: 49.9%;
+  --number-start-middle-y: 84.06%;
+  --number-start-right-x: 77.12%;
+  --number-start-right-y: 84.48%;
+  --number-show-x: 50.73%;
+  --number-show-y: 36.57%;
+  --number-receiver-x: 50.54%;
+  --number-receiver-y: 13.1%;
+  --number-flight-size: 60px;
+  --number-final-size: 60px;
+  --number-show-scale: 1.25;
+  --number-to-show-ms: 800ms;
+  --number-show-hold-ms: 420ms;
+  --number-to-final-ms: 80ms;
 }
 
 .climax-stage {
@@ -8893,7 +8894,10 @@ button {
 .climax-number-final {
   position: absolute;
   z-index: 6;
+  display: grid;
+  place-items: center;
   min-width: 62px;
+  min-height: 52px;
   color: #fff7c6;
   font: 900 var(--number-final-size, 34px) / 1 "Arial Black", "Microsoft JhengHei", Arial, sans-serif;
   text-align: center;
@@ -8905,6 +8909,22 @@ button {
   opacity: 0;
   transform: translate(-50%, -50%) scale(0.72);
   pointer-events: none;
+  isolation: isolate;
+}
+
+.climax-number-final::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: 50%;
+  top: 72%;
+  width: 58px;
+  height: 24px;
+  border-radius: 50%;
+  background:
+    radial-gradient(ellipse at center, rgba(255, 255, 255, 0.96) 0 12%, rgba(255, 232, 103, 0.72) 13% 44%, rgba(255, 96, 205, 0.28) 45% 66%, transparent 68%);
+  opacity: 0.88;
+  transform: translate(-50%, -50%) scale(0.9);
 }
 
 .climax-number-final.is-visible {
@@ -8945,9 +8965,9 @@ button {
   border-radius: 50%;
   background:
     radial-gradient(ellipse at center, rgba(255, 255, 255, 0.96) 0 12%, rgba(255, 232, 103, 0.72) 13% 44%, rgba(255, 96, 205, 0.28) 45% 66%, transparent 68%);
-  opacity: 0.86;
+  opacity: 0.88;
   transform: translate(-50%, -50%) scale(0.9);
-  animation: number-glow-pulse 620ms ease-out forwards;
+  animation: none;
 }
 
 @keyframes number-glow-pulse {
