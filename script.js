@@ -3076,8 +3076,7 @@ function spawnCollectEnergy(cells) {
 
   const hostRect = host.getBoundingClientRect();
   const targetRect = target.getBoundingClientRect();
-  const targetX = targetRect.left + targetRect.width * 0.5 - hostRect.left;
-  const targetY = targetRect.top + targetRect.height * 0.68 - hostRect.top;
+  if (!targetRect.width || !targetRect.height) return;
 
   const maxEnergy = FX_PERFORMANCE_MODE || window.innerWidth <= 520 ? 5 : 8;
   const allPoints = Array.from(cells);
@@ -3091,6 +3090,8 @@ function spawnCollectEnergy(cells) {
     const rect = tile.getBoundingClientRect();
     const startX = rect.left + rect.width * 0.5 - hostRect.left;
     const startY = rect.top + rect.height * 0.5 - hostRect.top;
+    const targetX = targetRect.left + targetRect.width * (0.16 + Math.random() * 0.68) - hostRect.left;
+    const targetY = targetRect.top + targetRect.height * (0.24 + Math.random() * 0.52) - hostRect.top;
     items.push({
       kind: "fly",
       start: now,
@@ -6524,17 +6525,18 @@ function initBoardTunePanel() {
   phoneShellEl.classList.add("board-tune");
 
   const controls = [
-    { label: "一般糖尺寸", name: "--normal-candy-size", min: 40, max: 500, step: 1, value: 100, unit: "%" },
-    { label: "盤面倍數糖尺寸", name: "--board-multiplier-size", min: 40, max: 220, step: 1, value: 110, unit: "%" },
-    { label: "倍數糖數字大小", name: "--multiplier-mark-size", min: 40, max: 220, step: 1, value: 175, unit: "%" },
-    { label: "輪播倍數糖 X", name: "--stage-slot-multiplier-x", min: -100, max: 100, step: 1, value: 0, unit: "%" },
-    { label: "輪播倍數糖 Y", name: "--stage-slot-multiplier-y", min: -100, max: 100, step: 1, value: -10, unit: "%" },
+    { label: "能量槽 X", name: "--energy-track-x", min: 0, max: 100, step: 0.1, value: 50, unit: "%" },
+    { label: "能量槽 Y", name: "--energy-track-y", min: 0, max: 100, step: 0.1, value: 23.8, unit: "%" },
+    { label: "終點範圍寬", name: "--energy-track-width", min: 4, max: 100, step: 0.1, value: 68.9, unit: "%" },
+    { label: "終點範圍高", name: "--energy-track-height", min: 4, max: 48, step: 1, value: 18, unit: "px" },
+    { label: "左端弧度", name: "--energy-left-radius", min: 0, max: 48, step: 1, value: 18, unit: "px" },
+    { label: "右端弧度", name: "--energy-right-radius", min: 0, max: 48, step: 1, value: 18, unit: "px" },
   ];
 
   const panel = document.createElement("div");
   panel.className = "board-tune-panel";
   panel.innerHTML = `
-    <strong class="board-tune-title">物件調整</strong>
+    <strong class="board-tune-title">能量槽調整</strong>
     <div class="board-tune-readout"></div>
     <div class="board-tune-controls"></div>
     <textarea class="board-tune-output" readonly></textarea>
@@ -6553,14 +6555,11 @@ function initBoardTunePanel() {
   }
 
   function refreshOutput() {
-    const boardRect = boardEl.getBoundingClientRect();
-    const tileRect = boardEl.querySelector(".tile")?.getBoundingClientRect();
-    const imgRect = boardEl.querySelector(".tile.candy .candy-img")?.getBoundingClientRect();
-    const multiplierRect = boardEl.querySelector(".tile.multiplier .multiplier-symbol")?.getBoundingClientRect();
-    const socketRect = document.querySelector(".event-socket")?.getBoundingClientRect();
-    readoutEl.textContent = tileRect
-      ? `盤面 ${Math.round(boardRect.width)} x ${Math.round(boardRect.height)} / 格 ${Math.round(tileRect.width)} x ${Math.round(tileRect.height)}${imgRect ? ` / 一般 ${Math.round(imgRect.width)} x ${Math.round(imgRect.height)}` : ""}${multiplierRect ? ` / 倍數 ${Math.round(multiplierRect.width)} x ${Math.round(multiplierRect.height)}` : ""}${socketRect ? ` / 上槽 ${Math.round(socketRect.width)} x ${Math.round(socketRect.height)}` : ""}`
-      : `board ${Math.round(boardRect.width)} x ${Math.round(boardRect.height)}`;
+    const hostRect = document.querySelector(".play-area")?.getBoundingClientRect();
+    const targetRect = document.querySelector(".special-meter-track")?.getBoundingClientRect();
+    readoutEl.textContent = hostRect && targetRect
+      ? `終點 ${Math.round(targetRect.left - hostRect.left)}, ${Math.round(targetRect.top - hostRect.top)} / ${Math.round(targetRect.width)} x ${Math.round(targetRect.height)}`
+      : "調整收集能量終點範圍";
     outputEl.value = outputText();
   }
 

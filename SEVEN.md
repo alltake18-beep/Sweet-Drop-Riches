@@ -641,18 +641,20 @@ Push 後提供：
 
 ### 18.5 Board Tune 狀態
 
-- `boardTune=1` 現在用來調：
-  - `--normal-candy-size`
-  - `--board-multiplier-size`
-  - `--multiplier-mark-size`
-  - `--stage-slot-multiplier-x`
-  - `--stage-slot-multiplier-y`
+- `boardTune=1` 現在用來調收集能量終點範圍與能量槽形狀：
+  - `--energy-track-x`
+  - `--energy-track-y`
+  - `--energy-track-width`
+  - `--energy-track-height`
+  - `--energy-left-radius`
+  - `--energy-right-radius`
 - 目前正式預設值：
-  - `--normal-candy-size: 100%;`
-  - `--board-multiplier-size: 110%;`
-  - `--multiplier-mark-size: 175%;`
-  - `--stage-slot-multiplier-x: 0%;`
-  - `--stage-slot-multiplier-y: -10%;`
+  - `--energy-track-x: 50%;`
+  - `--energy-track-y: 23.8%;`
+  - `--energy-track-width: 68.9%;`
+  - `--energy-track-height: 18px;`
+  - `--energy-left-radius: 18px;`
+  - `--energy-right-radius: 18px;`
 
 ### 18.6 已淘汰方向
 

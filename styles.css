@@ -7191,6 +7191,12 @@ button {
   --stage-slot-special-icon-size: 174%;
   --stage-slot-special-icon-y: -20%;
   --stage-slot-flame-icon-size: 100%;
+  --energy-track-x: 50%;
+  --energy-track-y: 23.8%;
+  --energy-track-width: 68.9%;
+  --energy-track-height: 18px;
+  --energy-left-radius: 18px;
+  --energy-right-radius: 18px;
   --stage-slot-digits-3-x: 0%;
   --stage-slot-digits-3-y: 20%;
   --stage-slot-digits-3-size: 27px;
@@ -7471,6 +7477,91 @@ button {
 .special-meter-track i,
 .meter-mark {
   display: none !important;
+}
+
+.phone .special-meter-track {
+  position: absolute;
+  z-index: 5;
+  left: var(--energy-track-x, 50%);
+  top: var(--energy-track-y, 23.8%);
+  width: var(--energy-track-width, 68.9%);
+  height: var(--energy-track-height, 18px);
+  display: block !important;
+  overflow: hidden !important;
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, 0);
+  border-radius:
+    var(--energy-left-radius, 18px)
+    var(--energy-right-radius, 18px)
+    var(--energy-right-radius, 18px)
+    var(--energy-left-radius, 18px);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0.04) 42%, rgba(0, 0, 0, 0.24)),
+    rgba(13, 4, 21, 0.88);
+  border: 1px solid rgba(255, 226, 119, 0.76);
+  box-shadow:
+    0 5px 8px rgba(0, 0, 0, 0.32),
+    0 0 12px rgba(89, 236, 255, 0.23),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    inset 0 -5px 8px rgba(0, 0, 0, 0.38);
+}
+
+.phone .special-meter-track::after {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  z-index: 2;
+  display: block !important;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.42), transparent 38%, rgba(0, 0, 0, 0.24)),
+    linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  mix-blend-mode: screen;
+}
+
+.phone .special-meter-track i {
+  position: relative;
+  z-index: 1;
+  display: block !important;
+  height: 100%;
+  margin: 0;
+  border-radius: inherit;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.34), transparent 17%, rgba(255, 255, 255, 0.28) 36%, transparent 54%),
+    linear-gradient(90deg, #ff4fd8 0%, #ffe56c 44%, #61f7ff 100%);
+  background-size: 190% 100%, 100% 100%;
+  box-shadow:
+    0 0 10px rgba(98, 241, 255, 0.72),
+    0 0 16px rgba(255, 86, 216, 0.28);
+  animation: energy-track-flow 920ms linear infinite;
+}
+
+.phone.board-tune .special-meter-track {
+  outline: 2px dashed rgba(143, 247, 255, 0.95);
+  outline-offset: 4px;
+}
+
+.phone.board-tune .special-meter-track::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    linear-gradient(90deg, rgba(143, 247, 255, 0.9) 0 2px, transparent 2px calc(100% - 2px), rgba(143, 247, 255, 0.9) calc(100% - 2px)),
+    linear-gradient(180deg, rgba(143, 247, 255, 0.9) 0 2px, transparent 2px calc(100% - 2px), rgba(143, 247, 255, 0.9) calc(100% - 2px));
+}
+
+@keyframes energy-track-flow {
+  from {
+    background-position: 0% 0, 0 0;
+  }
+  to {
+    background-position: 190% 0, 0 0;
+  }
 }
 
 .board,
