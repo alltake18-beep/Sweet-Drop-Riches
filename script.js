@@ -6525,10 +6525,10 @@ function initBoardTunePanel() {
 
   const controls = [
     { label: "一般糖尺寸", name: "--normal-candy-size", min: 40, max: 500, step: 1, value: 100, unit: "%" },
-    { label: "盤面倍數糖尺寸", name: "--board-multiplier-size", min: 40, max: 220, step: 1, value: 100, unit: "%" },
+    { label: "盤面倍數糖尺寸", name: "--board-multiplier-size", min: 40, max: 220, step: 1, value: 110, unit: "%" },
     { label: "倍數糖數字大小", name: "--multiplier-mark-size", min: 40, max: 220, step: 1, value: 175, unit: "%" },
     { label: "輪播倍數糖 X", name: "--stage-slot-multiplier-x", min: -100, max: 100, step: 1, value: 0, unit: "%" },
-    { label: "輪播倍數糖 Y", name: "--stage-slot-multiplier-y", min: -100, max: 100, step: 1, value: -15, unit: "%" },
+    { label: "輪播倍數糖 Y", name: "--stage-slot-multiplier-y", min: -100, max: 100, step: 1, value: -10, unit: "%" },
   ];
 
   const panel = document.createElement("div");

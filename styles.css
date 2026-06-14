@@ -7173,7 +7173,7 @@ button {
 .phone {
   --normal-candy-size: 100%;
   --special-candy-size: 116%;
-  --board-multiplier-size: 100%;
+  --board-multiplier-size: 110%;
   --multiplier-mark-size: 175%;
   --play-board-radius: 14px;
   --stage-slots-x: 0%;
@@ -7186,7 +7186,7 @@ button {
   --stage-slot-object-x: 0%;
   --stage-slot-object-y: 5%;
   --stage-slot-multiplier-x: 0%;
-  --stage-slot-multiplier-y: -15%;
+  --stage-slot-multiplier-y: -10%;
   --stage-slot-normal-icon-size: 72%;
   --stage-slot-special-icon-size: 174%;
   --stage-slot-special-icon-y: -20%;

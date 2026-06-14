@@ -349,6 +349,10 @@ SFX 要有工作分工：
 - 不可見或非活動狀態要停 RAF。
 - 粒子數要控。
 - 手機不能因為特效降低操作體驗。
+- 手機效能不能靠關掉核心表演解決，優先把重特效素材化、縮短、降頻，保留同一種事件語言。
+- iPhone / Android 不應看到不同核心表演；可以用同一套素材與邏輯做 scale-aware / reduced-cost 實作。
+- 高峰事件不能長時間搖整個畫面。全畫面 shake 對手機尤其重，應改成短促事件或局部表演。
+- 底部 HUD 問題要先查 viewport / transform / scale，不要只放大字。
 
 如果想法好但會卡，應該簡化實作，不是放棄記憶點。
 
@@ -506,6 +510,10 @@ Sweet Drop Riches 需要 duck BGM 的事件：
 - 非活動狀態停止 RAF。
 - 慢轉不每幀讀 layout。
 - 動效優先用 transform / opacity。
+- 手機輪盤不要載入 desktop 大圖，優先用 mobile 素材。
+- 正式轉盤期間避免全程搖整台遊戲畫面。
+- 輕量模式仍要保留核心表演，例如短版 bitmap 閃電，而不是直接消失。
+- iPhone Safari 的 `visualViewport` 會受工具列影響，底部 HUD 要用實測 computed size 找原因。
 
 可複用重點：
 
@@ -543,6 +551,9 @@ Sweet Drop Riches 需要 duck BGM 的事件：
   - 正式網址
   - Tune 網址，如本次相關
 - 不提交 `.codex-remote-attachments/`。
+- iPhone 問題要先完整盤查：cache、viewport、CSS computed size、JS 狀態、素材大小、RAF / animation。
+- iPhone Safari HUD 文字消失時，採用 live canvas HUD text；canvas 要掛在 HUD 容器層，不要掛在文字節點裡。
+- Push 前只 stage 目標檔案，不提交 reports、臨時圖或 `.codex-remote-attachments/`。
 
 ## 17. Cache Bust 規則
 
@@ -580,7 +591,8 @@ Push 後提供：
 - Wheel spin:
   - `5-7s`
   - `2-4` turns
-  - idle 約 `1s / 1 slice`
+  - idle 慢轉目前因手機效能停用
+  - formal spin 視覺更新約 `30fps`
   - landing 偏格邊，但不能太貼邊
 
 ### 18.2 Wheel Prize Weights
@@ -611,3 +623,41 @@ Push 後提供：
   - Super Mega Win
   - Epic Win
   - Legendary Win
+
+### 18.4 最新手機效能狀態
+
+- Latest pushed commit: `2e64a3e`
+- Latest Pages URL: `https://alltake18-beep.github.io/Sweet-Drop-Riches/?v=83b913f&t=20260613-053216`
+- 已完成：
+  - iPhone 不再自動吃舊 JS，web changes push 前要更新 cache bust。
+  - 火焰、閃電、screen burst 已素材化。
+  - 手機轉輪改用 `assets/ui/mobile/climax-wheel-disc-mobile.png`。
+  - 轉輪 idle RAF 已停掉。
+  - 正式轉輪更新降到較輕節奏。
+  - 移除轉輪期間整台畫面全程 shake。
+  - `lite/perf` 模式也保留短版 bitmap 閃電。
+  - 底部 HUD 用 `--hud-scale` 解決 iPhone Safari 可視高度造成的縮小。
+  - iPhone Safari HUD 文字消失時，最後採用 live canvas HUD text，且 canvas 掛在 HUD 容器層，不掛在文字節點裡。
+
+### 18.5 Board Tune 狀態
+
+- `boardTune=1` 現在用來調：
+  - `--normal-candy-size`
+  - `--board-multiplier-size`
+  - `--multiplier-mark-size`
+  - `--stage-slot-multiplier-x`
+  - `--stage-slot-multiplier-y`
+- 目前正式預設值：
+  - `--normal-candy-size: 100%;`
+  - `--board-multiplier-size: 110%;`
+  - `--multiplier-mark-size: 175%;`
+  - `--stage-slot-multiplier-x: 0%;`
+  - `--stage-slot-multiplier-y: -10%;`
+
+### 18.6 已淘汰方向
+
+- 避免用 iPhone 專屬自動 `fx-lite` 直接關掉核心表演。
+- 避免轉輪出現後長時間 full-screen shake。
+- 避免手機載入 desktop wheel 大圖。
+- 避免用「只放大 HUD 字」假修底部 HUD 問題。
+- 盤面目前不需要「特殊糖尺寸」調整；遊戲核心調的是倍數糖，不是舊的 special candy。
