@@ -6769,35 +6769,38 @@ function initBoardTunePanel() {
   phoneShellEl.classList.add("board-tune");
 
   const controls = [
+    { heading: "20段光環" },
+    { label: "光環 X", name: "--slot-ring-x", min: -50, max: 150, step: 0.1, value: 49, unit: "%" },
+    { label: "光環 Y", name: "--slot-ring-y", min: -50, max: 150, step: 0.1, value: 38, unit: "%" },
+    { label: "光環寬", name: "--slot-ring-width", min: 20, max: 240, step: 0.1, value: 108, unit: "%" },
+    { label: "光環高", name: "--slot-ring-height", min: 20, max: 240, step: 0.1, value: 150.5, unit: "%" },
+    { heading: "能量槽" },
     { label: "能量槽 X", name: "--energy-track-x", min: 0, max: 100, step: 0.1, value: 50, unit: "%" },
     { label: "能量槽 Y", name: "--energy-track-y", min: 0, max: 100, step: 0.1, value: 18.6, unit: "%" },
-    { label: "終點範圍寬", name: "--energy-track-width", min: 4, max: 100, step: 0.1, value: 74.8, unit: "%" },
-    { label: "終點範圍高", name: "--energy-track-height", min: 4, max: 150, step: 1, value: 93, unit: "px" },
-    { label: "兩端弧度", name: "--energy-end-curve", min: 0, max: 120, step: 1, value: 9, unit: "px" },
-    { label: "圓洞1 X", name: "--energy-hole-1-x", min: 0, max: 100, step: 0.1, value: 22.1, unit: "%" },
-    { label: "圓洞1 Y", name: "--energy-hole-1-y", min: 0, max: 100, step: 0.1, value: 33.6, unit: "%" },
-    { label: "圓洞1 半徑", name: "--energy-hole-1-r", min: 0, max: 80, step: 1, value: 55, unit: "px" },
-    { label: "圓洞2 X", name: "--energy-hole-2-x", min: 0, max: 100, step: 0.1, value: 50, unit: "%" },
-    { label: "圓洞2 Y", name: "--energy-hole-2-y", min: 0, max: 100, step: 0.1, value: 33.6, unit: "%" },
-    { label: "圓洞2 半徑", name: "--energy-hole-2-r", min: 0, max: 80, step: 1, value: 56, unit: "px" },
-    { label: "圓洞3 X", name: "--energy-hole-3-x", min: 0, max: 100, step: 0.1, value: 78.1, unit: "%" },
-    { label: "圓洞3 Y", name: "--energy-hole-3-y", min: 0, max: 100, step: 0.1, value: 33.6, unit: "%" },
-    { label: "圓洞3 半徑", name: "--energy-hole-3-r", min: 0, max: 80, step: 1, value: 56, unit: "px" },
-    { label: "倒數環 X", name: "--slot-ring-x", min: -50, max: 150, step: 0.1, value: 49, unit: "%" },
-    { label: "倒數環 Y", name: "--slot-ring-y", min: -50, max: 150, step: 0.1, value: 38, unit: "%" },
-    { label: "倒數環寬", name: "--slot-ring-width", min: 20, max: 220, step: 0.1, value: 108, unit: "%" },
-    { label: "倒數環高", name: "--slot-ring-height", min: 20, max: 220, step: 0.1, value: 150.5, unit: "%" },
+    { label: "能量槽寬", name: "--energy-track-width", min: 4, max: 100, step: 0.1, value: 74.8, unit: "%" },
+    { label: "能量槽高", name: "--energy-track-height", min: 4, max: 160, step: 1, value: 93, unit: "px" },
+    { label: "兩端斜角", name: "--energy-end-curve", min: 0, max: 120, step: 1, value: 9, unit: "px" },
+    { heading: "遮罩圓洞" },
+    { label: "左洞 X", name: "--energy-hole-1-x", min: 0, max: 100, step: 0.1, value: 22.1, unit: "%" },
+    { label: "左洞 Y", name: "--energy-hole-1-y", min: 0, max: 100, step: 0.1, value: 33.6, unit: "%" },
+    { label: "左洞半徑", name: "--energy-hole-1-r", min: 0, max: 90, step: 1, value: 55, unit: "px" },
+    { label: "中洞 X", name: "--energy-hole-2-x", min: 0, max: 100, step: 0.1, value: 50, unit: "%" },
+    { label: "中洞 Y", name: "--energy-hole-2-y", min: 0, max: 100, step: 0.1, value: 33.6, unit: "%" },
+    { label: "中洞半徑", name: "--energy-hole-2-r", min: 0, max: 90, step: 1, value: 56, unit: "px" },
+    { label: "右洞 X", name: "--energy-hole-3-x", min: 0, max: 100, step: 0.1, value: 78.1, unit: "%" },
+    { label: "右洞 Y", name: "--energy-hole-3-y", min: 0, max: 100, step: 0.1, value: 33.6, unit: "%" },
+    { label: "右洞半徑", name: "--energy-hole-3-r", min: 0, max: 90, step: 1, value: 56, unit: "px" },
   ];
 
   const panel = document.createElement("div");
   panel.className = "board-tune-panel";
   panel.innerHTML = `
-    <strong class="board-tune-title">能量槽調整</strong>
+    <strong class="board-tune-title">光環 / 能量槽調整</strong>
     <div class="board-tune-readout"></div>
     <div class="board-tune-controls"></div>
     <label class="board-tune-toggle">
       <input type="checkbox" data-energy-track-hidden>
-      <span>隱藏能量槽</span>
+      <span>隱藏能量槽色條</span>
     </label>
     <textarea class="board-tune-output" readonly></textarea>
   `;
@@ -6818,9 +6821,10 @@ function initBoardTunePanel() {
   function refreshOutput() {
     const hostRect = document.querySelector(".play-area")?.getBoundingClientRect();
     const targetRect = document.querySelector(".special-meter-track")?.getBoundingClientRect();
-    readoutEl.textContent = hostRect && targetRect
-      ? `終點 ${Math.round(targetRect.left - hostRect.left)}, ${Math.round(targetRect.top - hostRect.top)} / ${Math.round(targetRect.width)} x ${Math.round(targetRect.height)}`
-      : "調整收集能量終點範圍";
+    const ringRect = document.querySelector(".slot-countdown")?.getBoundingClientRect();
+    readoutEl.textContent = hostRect && targetRect && ringRect
+      ? `光環 ${Math.round(ringRect.width)}x${Math.round(ringRect.height)} / 能量槽 ${Math.round(targetRect.left - hostRect.left)}, ${Math.round(targetRect.top - hostRect.top)} / ${Math.round(targetRect.width)}x${Math.round(targetRect.height)}`
+      : "調整20段光環與能量槽遮罩";
     outputEl.value = outputText();
   }
 
@@ -6864,7 +6868,16 @@ function initBoardTunePanel() {
     return { row, input, setValue, control };
   }
 
-  controls.forEach((control) => addTuneControl(control));
+  controls.forEach((control) => {
+    if (control.heading) {
+      const heading = document.createElement("div");
+      heading.className = "board-tune-section";
+      heading.textContent = control.heading;
+      controlsEl.appendChild(heading);
+      return;
+    }
+    addTuneControl(control);
+  });
 
   hideEnergyTrackToggle?.addEventListener("change", () => {
     phoneShellEl.classList.toggle("energy-track-hidden", hideEnergyTrackToggle.checked);

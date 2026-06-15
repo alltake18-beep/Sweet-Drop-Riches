@@ -6763,6 +6763,19 @@ button {
 
 .phone.board-tune .slot-countdown {
   display: block !important;
+  opacity: 1;
+  mix-blend-mode: normal;
+  filter: drop-shadow(0 0 8px rgba(143, 247, 255, 0.72));
+}
+
+.phone.board-tune .slot-countdown .ring-track .ring-segment {
+  stroke: rgba(143, 247, 255, 0.9);
+  opacity: 0.86;
+}
+
+.phone.board-tune .slot-countdown .ring-glow .ring-segment {
+  stroke: rgba(255, 232, 114, 0.95);
+  opacity: 0.72;
 }
 
 .slot-countdown .ring-segment {
@@ -7302,7 +7315,7 @@ button {
   right: 10px;
   bottom: 10px;
   width: min(max(25vw, 280px), calc(100vw - 20px));
-  max-height: min(29vh, 265px);
+  max-height: min(44vh, 440px);
   overflow: auto;
   padding: 10px;
   color: #ffeec2;
@@ -7327,10 +7340,18 @@ button {
 
 .board-tune-row {
   display: grid;
-  grid-template-columns: 82px 1fr 58px;
+  grid-template-columns: 90px 1fr 58px;
   gap: 8px;
   align-items: center;
   margin: 6px 0;
+}
+
+.board-tune-section {
+  margin: 10px 0 5px;
+  padding-top: 8px;
+  color: #ffd55c;
+  font-weight: 900;
+  border-top: 1px solid rgba(255, 213, 103, 0.24);
 }
 
 .board-tune-row input {
@@ -9269,7 +9290,7 @@ html.ios-performance .phone.machine-candy-cat,
   --climax-center-line-x: 50%;
   --climax-mask-path: polygon(23.46% 1.32%, 51.29% -3.07%, 71.86% 0.44%, 83.96% 2.63%, 97.23% 8.78%, 97.23% 16.79%, 84.93% 17.56%, 50.2% 17.67%, 15.46% 17.56%, 1.8% 16.58%, 4.14% 8.89%, 16.04% 3.18%);
   background:
-    url("assets/ui/mobile/candy-machine-candy-cat-mobile.png?v=candy-cat-720-20260616-000759") center / 100% 100% no-repeat,
+    url("assets/ui/mobile/candy-machine-candy-cat-mobile.png?v=candy-cat-720-20260616-005254") center / 100% 100% no-repeat,
     linear-gradient(180deg, #70c7ff, #f84ea0) !important;
 }
 
