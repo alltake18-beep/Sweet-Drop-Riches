@@ -6003,7 +6003,8 @@ window.setInterval(() => {
 
 function initClimaxTunePanel() {
   const params = new URLSearchParams(window.location.search);
-  if (!params.has("tune")) return;
+  const tuningClimax = params.has("tune") || params.has("machineTune");
+  if (!tuningClimax) return;
 
   const phone = document.querySelector(".phone");
   if (!phone) return;
@@ -6035,7 +6036,7 @@ function initClimaxTunePanel() {
     };
 
     const panel = document.createElement("div");
-    panel.className = "climax-tune-panel";
+    panel.className = "climax-tune-panel number-flight-tune-panel";
     panel.innerHTML = `
     <strong class="climax-tune-title">Number Flight Tune</strong>
     <div class="climax-tune-actions">
@@ -6392,7 +6393,6 @@ function initClimaxTunePanel() {
       placeReceiver();
     });
     renderHud();
-    return;
   }
 
   const controls = [
@@ -6405,7 +6405,7 @@ function initClimaxTunePanel() {
   let selectedLabel = FULL_DROP_WHEEL_LABEL_ORDER[0].key;
 
   const panel = document.createElement("div");
-  panel.className = "climax-tune-panel";
+  panel.className = "climax-tune-panel wheel-tune-panel";
   panel.innerHTML = `
     <strong>Climax Tune</strong>
     <div class="climax-tune-controls"></div>
@@ -6681,7 +6681,7 @@ function initClimaxTunePanel() {
   });
 
   climaxCenterLineEl?.addEventListener("pointerdown", (event) => {
-    if (!params.has("tune")) return;
+    if (!tuningClimax) return;
     event.preventDefault();
     event.stopPropagation();
     climaxCenterLineEl.setPointerCapture(event.pointerId);
@@ -6705,7 +6705,7 @@ function initClimaxTunePanel() {
   });
 
   climaxStageEl.addEventListener("pointerdown", (event) => {
-    if (!params.has("tune") || draggingPoint || event.target.closest(".climax-mask-handle") || event.target.closest(".climax-center-line") || event.target.closest(".climax-tune-panel")) return;
+    if (!tuningClimax || draggingPoint || event.target.closest(".climax-mask-handle") || event.target.closest(".climax-center-line") || event.target.closest(".climax-tune-panel")) return;
     event.preventDefault();
     climaxStageEl.setPointerCapture(event.pointerId);
     const rect = climaxStageEl.getBoundingClientRect();

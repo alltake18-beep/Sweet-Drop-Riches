@@ -8327,6 +8327,10 @@ html.ios-performance .phone.climax-idle-wheel .climax-wheel-rotor,
   display: none;
 }
 
+.phone.machine-tune .climax-center-line {
+  display: block;
+}
+
 .phone.multiplier-climax .play-area::before {
   content: "";
   position: absolute;
@@ -9218,6 +9222,45 @@ html.ios-performance .phone {
 .phone.machine-candy-cat,
 html.ios-performance .phone.machine-candy-cat,
 .phone.fx-lite.machine-candy-cat {
+  --logo-left: 11.4%;
+  --logo-top: 4.9%;
+  --logo-width: 76.5%;
+  --logo-height: 10.8%;
+  --play-board-left: 50%;
+  --play-board-top: 29.3%;
+  --play-board-width: 68.5%;
+  --play-board-height: 49%;
+  --play-board-radius: 14px;
+  --stage-slot-top: 23.2%;
+  --stage-slot-size: 62px;
+  --stage-slot-1-x: 28.4%;
+  --stage-slot-2-x: 51.9%;
+  --stage-slot-3-x: 71.1%;
+  --well-top: 84.4%;
+  --well-width: 20.9%;
+  --well-height: 8.8%;
+  --well-1-x: 23.1%;
+  --well-2-x: 48.6%;
+  --well-3-x: 74.9%;
+  --number-start-left-x: 46.1%;
+  --number-start-left-y: 84.66%;
+  --number-start-middle-x: 49.49%;
+  --number-start-middle-y: 84.86%;
+  --number-start-right-x: 77.59%;
+  --number-start-right-y: 84.8%;
+  --number-show-x: 50.73%;
+  --number-show-y: 36.57%;
+  --number-receiver-x: 50.54%;
+  --number-receiver-y: 13.1%;
+  --hud-x: -0.9%;
+  --hud-y: -0.9%;
+  --hud-width: 88.2%;
+  --hud-height: 4.8%;
+  --hud-gap: 8.2%;
+  --climax-wheel-left: 27.5%;
+  --climax-wheel-top: 24%;
+  --climax-wheel-size: 98%;
+  --climax-center-line-x: 50%;
   background:
     url("assets/ui/mobile/candy-machine-candy-cat-mobile.png?v=candy-cat-720-20260615") center / 100% 100% no-repeat,
     linear-gradient(180deg, #70c7ff, #f84ea0) !important;
@@ -9252,6 +9295,21 @@ html.ios-performance .phone.machine-candy-cat,
   background: rgba(14, 4, 9, 0.94);
   border: 1px solid rgba(255, 213, 103, 0.72);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.48);
+}
+
+.number-flight-tune-panel {
+  left: 10px;
+  right: auto;
+  bottom: 10px;
+}
+
+.wheel-tune-panel {
+  left: 10px;
+  right: auto;
+  top: 10px;
+  bottom: auto;
+  height: min(42vh, 430px);
+  max-height: 42vh;
 }
 
 .machine-tune-title {
