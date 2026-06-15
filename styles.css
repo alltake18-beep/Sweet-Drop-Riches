@@ -7603,6 +7603,11 @@ button {
   animation: none;
 }
 
+.phone.board-tune .special-meter-track i {
+  background: #000;
+  box-shadow: none;
+}
+
 .phone.board-tune .special-meter-track {
   outline: 2px dashed rgba(143, 247, 255, 0.95);
   outline-offset: 4px;
