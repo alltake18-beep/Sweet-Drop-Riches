@@ -2801,16 +2801,14 @@ async function playFullDropWheel() {
   const baseTotal = slotTotals.reduce((sum, value) => sum + value, 0);
   if (baseTotal <= 0) return;
 
-  const prize = weightedPick(FULL_DROP_WHEEL_PRIZES);
-  const prizeIndex = wheelLabelIndexByPrize(prize.label);
+  const targetPrize = weightedPick(FULL_DROP_WHEEL_PRIZES);
+  const targetPrizeIndex = wheelLabelIndexByPrize(targetPrize.label);
   const sliceAngle = wheelLabelSliceAngle();
-  const award = Math.round(baseTotal * prize.multiplier);
-  const climaxTotal = baseTotal + award;
 
   render();
   const spinProfile = createWheelSpinProfile();
   duckBackgroundMusic(spinProfile.duration + 2600, BGM_DUCK_DEEP);
-  const landingAngle = wheelLandingAngle(prizeIndex, sliceAngle, prize.multiplier);
+  const landingAngle = wheelLandingAngle(targetPrizeIndex, sliceAngle, targetPrize.multiplier);
   const finalRotation = wheelRotationDeltaToLand(landingAngle, climaxPointerAngle(), spinProfile.turns);
   playWheelStartPerformance();
   await wait(3000);
@@ -2820,15 +2818,19 @@ async function playFullDropWheel() {
   render();
   await animateClimaxWheel(finalRotation, spinProfile);
 
+  const resultIndex = wheelIndexAtPointer(sliceAngle, climaxPointerAngle());
+  const resultLabel = FULL_DROP_WHEEL_LABEL_ORDER[resultIndex]?.prizeLabel;
+  const prize = wheelPrizeByLabel(resultLabel) || targetPrize;
+  const award = Math.round(baseTotal * prize.multiplier);
   duckBackgroundMusic(1300, BGM_DUCK_DEEP);
   playWheelStopPerformance(prize.multiplier);
-  if (isWheelHighNearMiss(prizeIndex, prize)) playNearMissPerformance("wheel");
+  if (isWheelHighNearMiss(resultIndex, prize)) playNearMissPerformance("wheel");
   addWin(award);
   state.climaxSpinning = false;
   state.climaxWheelHoldingResult = true;
   triggerScreenFx(prize.multiplier >= 5 ? "fx-jackpot" : prize.multiplier >= 1 ? "fx-blast" : "fx-bump", 820);
   render();
-  await maybeShowWinCard({ amount: climaxTotal, force: true });
+  await maybeShowWinCard({ amount: award, force: true });
   await wait(360);
 }
 
