@@ -3212,6 +3212,7 @@ function placeNumberFlightFinal(layer, tune) {
 function playClimaxNumberFlight({
   slotIndex,
   label,
+  finalLabel = label,
   layer = ensureClimaxNumberFlightLayer(),
   finalEl = layer?.querySelector(".climax-number-final"),
   finalTextEl = layer?.querySelector(".climax-number-final-text"),
@@ -3267,7 +3268,7 @@ function playClimaxNumberFlight({
       });
 
       const revealFinal = () => {
-        finalTextEl.textContent = label;
+        finalTextEl.textContent = finalLabel;
         finalEl.classList.add("is-visible");
         onArrive?.();
       };
@@ -3286,9 +3287,11 @@ function playClimaxNumberFlight({
 
 function spawnSlotClimaxNumberFlight(col, payout, baseDelay = 0) {
   const tune = numberFlightTuneFromCss();
+  const baseTotal = state.slotValues.reduce((sum, value) => sum + Math.round(value || 0), 0);
   return playClimaxNumberFlight({
     slotIndex: col,
     label: formatScore(payout),
+    finalLabel: formatScore(baseTotal),
     tune,
     baseDelay,
     onArrive: () => {
