@@ -6136,6 +6136,7 @@ function initClimaxTunePanel() {
 
     function refreshOutput() {
       output.value = cssText();
+      window.dispatchEvent(new CustomEvent("machine-tune-source-change"));
     }
 
     function syncNumberSizes() {
@@ -6492,6 +6493,7 @@ function initClimaxTunePanel() {
 
   function refreshOutput() {
     output.value = cssText();
+    window.dispatchEvent(new CustomEvent("machine-tune-source-change"));
   }
 
   function applyLabelTune() {
@@ -6977,6 +6979,12 @@ function initMachineTunePanel() {
         { label: "Show Y", name: "--number-show-y", min: 0, max: 100, step: 0.1, fallback: 36.57, unit: "%" },
         { label: "Final X", name: "--number-receiver-x", min: 0, max: 100, step: 0.1, fallback: 50.54, unit: "%" },
         { label: "Final Y", name: "--number-receiver-y", min: 0, max: 100, step: 0.1, fallback: 13.1, unit: "%" },
+        { label: "Flight Size", name: "--number-flight-size", min: 12, max: 96, step: 1, fallback: 60, unit: "px" },
+        { label: "Final Size", name: "--number-final-size", min: 12, max: 96, step: 1, fallback: 60, unit: "px" },
+        { label: "Show Scale", name: "--number-show-scale", min: 1, max: 2.4, step: 0.05, fallback: 1.8, unit: "" },
+        { label: "To Show", name: "--number-to-show-ms", min: 80, max: 1600, step: 40, fallback: 800, unit: "ms" },
+        { label: "Hold", name: "--number-show-hold-ms", min: 40, max: 1600, step: 40, fallback: 420, unit: "ms" },
+        { label: "To Final", name: "--number-to-final-ms", min: 80, max: 1600, step: 40, fallback: 80, unit: "ms" },
       ],
     },
     {
@@ -7032,6 +7040,8 @@ function initMachineTunePanel() {
 
   function refreshOutput() {
     const lines = controls.map((control) => `  ${control.name}: ${phoneShellEl.style.getPropertyValue(control.name) || formatted(control, values.get(control.name) ?? currentNumeric(control))};`);
+    const maskPath = phoneShellEl.style.getPropertyValue("--climax-mask-path") || getComputedStyle(phoneShellEl).getPropertyValue("--climax-mask-path").trim();
+    if (maskPath) lines.push(`  --climax-mask-path: ${maskPath};`);
     outputEl.value = `.phone {\n${lines.join("\n")}\n}`;
   }
 
@@ -7149,6 +7159,7 @@ function initMachineTunePanel() {
       document.execCommand("copy");
     }
   });
+  window.addEventListener("machine-tune-source-change", refreshOutput);
 
   refreshOutput();
   renderClimaxStage();

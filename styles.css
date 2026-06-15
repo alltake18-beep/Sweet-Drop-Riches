@@ -9242,16 +9242,22 @@ html.ios-performance .phone.machine-candy-cat,
   --well-1-x: 23.1%;
   --well-2-x: 48.6%;
   --well-3-x: 74.9%;
-  --number-start-left-x: 46.1%;
-  --number-start-left-y: 84.66%;
+  --number-start-left-x: 23.46%;
+  --number-start-left-y: 84.74%;
   --number-start-middle-x: 49.49%;
   --number-start-middle-y: 84.86%;
-  --number-start-right-x: 77.59%;
-  --number-start-right-y: 84.8%;
-  --number-show-x: 50.73%;
-  --number-show-y: 36.57%;
-  --number-receiver-x: 50.54%;
-  --number-receiver-y: 13.1%;
+  --number-start-right-x: 75.17%;
+  --number-start-right-y: 84.85%;
+  --number-show-x: 50.2%;
+  --number-show-y: 37.32%;
+  --number-receiver-x: 49.61%;
+  --number-receiver-y: 15.59%;
+  --number-flight-size: 60px;
+  --number-final-size: 60px;
+  --number-show-scale: 1.8;
+  --number-to-show-ms: 800ms;
+  --number-show-hold-ms: 420ms;
+  --number-to-final-ms: 80ms;
   --hud-x: -0.9%;
   --hud-y: -0.9%;
   --hud-width: 88.2%;
@@ -9310,6 +9316,41 @@ html.ios-performance .phone.machine-candy-cat,
   bottom: auto;
   height: min(42vh, 430px);
   max-height: 42vh;
+}
+
+.climax-mask-handle-layer {
+  position: fixed;
+  z-index: 10010;
+  pointer-events: none;
+}
+
+.climax-mask-handle {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 2px solid rgba(255, 255, 255, 0.95);
+  border-radius: 50%;
+  background: #31c4ff;
+  box-shadow:
+    0 0 0 1px rgba(10, 2, 22, 0.78),
+    0 0 10px rgba(49, 196, 255, 0.82);
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+  touch-action: none;
+  cursor: grab;
+}
+
+.climax-mask-handle:active {
+  cursor: grabbing;
+}
+
+.climax-mask-handle.is-top {
+  background: #ffe15c;
+}
+
+.climax-mask-handle.is-bottom {
+  background: #ff4fc4;
 }
 
 .machine-tune-title {
