@@ -8223,6 +8223,17 @@ button {
   transition: none;
 }
 
+.phone.climax-idle-wheel .climax-wheel-rotor {
+  animation: climax-wheel-idle 24s linear infinite;
+  transition: none;
+  will-change: transform;
+}
+
+html.ios-performance .phone.climax-idle-wheel .climax-wheel-rotor,
+.phone.fx-lite.climax-idle-wheel .climax-wheel-rotor {
+  animation-duration: 36s;
+}
+
 .climax-wheel-rotor img {
   position: absolute;
   z-index: 1;
@@ -8453,6 +8464,15 @@ button {
   100% {
     transform: translate(-50%, -50%) rotate(var(--wheel-rotation, 0deg)) scale(1);
     opacity: 1;
+  }
+}
+
+@keyframes climax-wheel-idle {
+  0% {
+    transform: translate(-50%, -50%) rotate(var(--wheel-rotation, 0deg));
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(calc(var(--wheel-rotation, 0deg) + 360deg));
   }
 }
 

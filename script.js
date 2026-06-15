@@ -1058,6 +1058,7 @@ function startNewBoard(keepScore = false) {
   state.climaxIntroPhase = null;
   state.pendingClimaxIntro = false;
   state.climaxLogoReturn = false;
+  clearClimaxNumberFlightDisplay();
   if (!keepScore) {
     state.currentWin = 0;
     state.lastWin = 0;
@@ -1353,10 +1354,29 @@ function stopClimaxIdleSpin() {
   state.climaxIdleFrame = null;
   state.climaxIdleLastAt = 0;
   state.climaxIdleLastTickIndex = null;
+  if (phoneShellEl?.classList.contains("climax-idle-wheel") && climaxWheelRotorEl) {
+    const transform = getComputedStyle(climaxWheelRotorEl).transform;
+    if (transform && transform !== "none") {
+      const MatrixCtor = window.DOMMatrixReadOnly || window.WebKitCSSMatrix;
+      if (MatrixCtor) {
+        const matrix = new MatrixCtor(transform);
+        const angle = Math.atan2(matrix.b, matrix.a) * 180 / Math.PI;
+        if (Number.isFinite(angle)) state.climaxWheelRotation = normalizeAngle(angle);
+      }
+    }
+  }
+  phoneShellEl?.classList.remove("climax-idle-wheel");
+  if (climaxWheelRotorEl) {
+    climaxWheelRotorEl.style.setProperty("--wheel-rotation", `${state.climaxWheelRotation || 0}deg`);
+  }
 }
 
 function startClimaxIdleSpin() {
-  stopClimaxIdleSpin();
+  if (!phoneShellEl || !climaxWheelRotorEl || state.climaxSpinning || state.climaxIntroPhase) return;
+  if (!phoneShellEl.classList.contains("climax-idle-wheel")) {
+    climaxWheelRotorEl.style.setProperty("--wheel-rotation", `${state.climaxWheelRotation || 0}deg`);
+    phoneShellEl.classList.add("climax-idle-wheel");
+  }
 }
 
 function updateClimaxWheelVisual(sliceAngle = wheelLabelSliceAngle(), pointerAngle = climaxPointerAngle()) {
@@ -1438,7 +1458,7 @@ function renderClimaxStage() {
   const active = isMultiplierClimaxActive();
   if (active || phoneShellEl?.classList.contains("tune-climax")) ensureClimaxWheelImageLoaded();
   climaxStageEl.setAttribute("aria-hidden", String(!active));
-  if (!active || state.climaxSpinning) stopClimaxIdleSpin();
+  if (!active || state.climaxSpinning || state.climaxIntroPhase) stopClimaxIdleSpin();
   if (climaxWheelRotorEl) {
     climaxWheelRotorEl.style.setProperty("--wheel-rotation", `${state.climaxWheelRotation || 0}deg`);
   }
@@ -1463,7 +1483,7 @@ function renderClimaxStage() {
     const index = currentClimaxHighlightIndex(sliceAngle);
     climaxWheelHighlightEl.style.setProperty("--highlight-angle", `${index * sliceAngle + sliceAngle * 0.5}deg`);
   }
-  if (active && !state.climaxSpinning) startClimaxIdleSpin();
+  if (active && !state.climaxSpinning && !state.climaxIntroPhase) startClimaxIdleSpin();
 }
 
 function render() {
@@ -2752,6 +2772,7 @@ async function maybeFullDropBonus() {
   state.pendingClimaxIntro = false;
   state.climaxIntroPhase = null;
   state.climaxLogoReturn = true;
+  clearClimaxNumberFlightDisplay();
   render();
   duckBackgroundMusic(900, BGM_DUCK_LIGHT);
   playSound("logoReturn");
@@ -2788,6 +2809,7 @@ async function playFullDropWheel() {
   if (isWheelHighNearMiss(prizeIndex, prize)) playNearMissPerformance("wheel");
   addWin(award);
   state.climaxSpinning = false;
+  clearClimaxNumberFlightDisplay();
   triggerScreenFx(prize.multiplier >= 5 ? "fx-jackpot" : prize.multiplier >= 1 ? "fx-blast" : "fx-bump", 820);
   render();
   await wait(520);
@@ -3199,6 +3221,16 @@ function ensureClimaxNumberFlightLayer() {
   layer.innerHTML = `<div class="climax-number-final" aria-hidden="true"><span class="climax-number-final-text"></span></div>`;
   host.appendChild(layer);
   return layer;
+}
+
+function clearClimaxNumberFlightDisplay() {
+  document.querySelectorAll(".climax-number-flight-layer").forEach((layer) => {
+    layer.querySelectorAll(".climax-flying-number").forEach((item) => item.remove());
+    const finalEl = layer.querySelector(".climax-number-final");
+    const finalTextEl = layer.querySelector(".climax-number-final-text");
+    finalEl?.classList.remove("is-visible");
+    if (finalTextEl) finalTextEl.textContent = "";
+  });
 }
 
 function placeNumberFlightFinal(layer, tune) {
