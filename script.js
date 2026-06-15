@@ -1337,8 +1337,17 @@ function wheelEdgeLandingOffset(sliceAngle, multiplier) {
   return side * (sliceAngle * 0.5 - edgePadding - Math.random() * edgeBand);
 }
 
+function wheelVisualSliceCenter(index, sliceAngle = wheelLabelSliceAngle()) {
+  return normalizeAngle(WHEEL_LABEL_TUNE.angleOffset + index * sliceAngle + sliceAngle * 0.5);
+}
+
+function wheelIndexAtPointer(sliceAngle = wheelLabelSliceAngle(), pointerAngle = climaxPointerAngle()) {
+  const rawAngle = normalizeAngle(pointerAngle - state.climaxWheelRotation - WHEEL_LABEL_TUNE.angleOffset);
+  return Math.floor(rawAngle / sliceAngle) % FULL_DROP_WHEEL_LABEL_ORDER.length;
+}
+
 function wheelLandingAngle(prizeIndex, sliceAngle, multiplier) {
-  return normalizeAngle(prizeIndex * sliceAngle + sliceAngle * 0.5 + wheelEdgeLandingOffset(sliceAngle, multiplier));
+  return normalizeAngle(wheelVisualSliceCenter(prizeIndex, sliceAngle) + wheelEdgeLandingOffset(sliceAngle, multiplier));
 }
 
 function wheelRotationDeltaToLand(landingAngle, pointerAngle, turns) {
@@ -1348,7 +1357,7 @@ function wheelRotationDeltaToLand(landingAngle, pointerAngle, turns) {
 }
 
 function currentClimaxHighlightIndex(sliceAngle = wheelLabelSliceAngle(), pointerAngle = climaxPointerAngle()) {
-  return Math.floor(normalizeAngle(pointerAngle - state.climaxWheelRotation) / sliceAngle) % FULL_DROP_WHEEL_LABEL_ORDER.length;
+  return wheelIndexAtPointer(sliceAngle, pointerAngle);
 }
 
 function stopClimaxIdleSpin() {
@@ -1386,8 +1395,8 @@ function updateClimaxWheelVisual(sliceAngle = wheelLabelSliceAngle(), pointerAng
     climaxWheelRotorEl.style.setProperty("--wheel-rotation", `${state.climaxWheelRotation || 0}deg`);
   }
   if (climaxWheelHighlightEl) {
-    const index = Math.floor(normalizeAngle(pointerAngle - state.climaxWheelRotation) / sliceAngle) % FULL_DROP_WHEEL_LABEL_ORDER.length;
-    climaxWheelHighlightEl.style.setProperty("--highlight-angle", `${index * sliceAngle + sliceAngle * 0.5}deg`);
+    const index = wheelIndexAtPointer(sliceAngle, pointerAngle);
+    climaxWheelHighlightEl.style.setProperty("--highlight-angle", `${wheelVisualSliceCenter(index, sliceAngle)}deg`);
   }
 }
 
@@ -1483,7 +1492,7 @@ function renderClimaxStage() {
   if (climaxWheelHighlightEl) {
     const sliceAngle = wheelLabelSliceAngle();
     const index = currentClimaxHighlightIndex(sliceAngle);
-    climaxWheelHighlightEl.style.setProperty("--highlight-angle", `${index * sliceAngle + sliceAngle * 0.5}deg`);
+    climaxWheelHighlightEl.style.setProperty("--highlight-angle", `${wheelVisualSliceCenter(index, sliceAngle)}deg`);
   }
   if (active && !state.climaxSpinning && !state.climaxWheelHoldingResult && !state.climaxIntroPhase) startClimaxIdleSpin();
 }

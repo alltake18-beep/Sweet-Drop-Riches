@@ -7814,7 +7814,7 @@ button {
 .hud-panel span {
   align-self: end !important;
   color: rgba(255, 218, 128, 0.88) !important;
-  font-size: calc(clamp(9px, 2.05vw, 15px) * var(--balance-label-size, 100%) / 100%) !important;
+  font-size: 15px !important;
   line-height: 1 !important;
   letter-spacing: 0 !important;
   position: relative;
@@ -7828,7 +7828,7 @@ button {
   align-self: start !important;
   margin: -1px 0 0 !important;
   color: #ffe88e !important;
-  font-size: calc(clamp(14px, 3.35vw, 22px) * var(--balance-number-size, 100%) / 100%) !important;
+  font-size: 22px !important;
   line-height: 1 !important;
   letter-spacing: 0 !important;
   white-space: nowrap !important;
@@ -7896,7 +7896,7 @@ button {
 .bet-panel strong {
   margin: 0 !important;
   color: #ffe88e !important;
-  font-size: calc(clamp(16px, 3.75vw, 24px) * var(--bet-text-size, 100%) / 100%) !important;
+  font-size: 24px !important;
   line-height: 1 !important;
   letter-spacing: 0 !important;
   white-space: nowrap !important;
@@ -9056,15 +9056,15 @@ html.ios-performance .event-socket {
 }
 
 .hud-panel span {
-  font-size: calc(11.9515px * var(--balance-label-size, 100%) / 100%) !important;
+  font-size: 11.9515px !important;
 }
 
 .hud-panel strong {
-  font-size: calc(19.5305px * var(--balance-number-size, 100%) / 100%) !important;
+  font-size: 19.5305px !important;
 }
 
 .bet-panel strong {
-  font-size: calc(21.8625px * var(--bet-text-size, 100%) / 100%) !important;
+  font-size: 21.8625px !important;
 }
 
 #fastButton::before,
@@ -9153,7 +9153,7 @@ html.ios-performance .event-socket {
 
 .hud-panel span {
   display: block !important;
-  font-size: min(20px, calc(18px * var(--hud-scale, 1) * var(--balance-label-size, 100%) / 100%)) !important;
+  font-size: 19px !important;
   line-height: 0.84 !important;
   color: #ffe6a6 !important;
   text-shadow:
@@ -9163,7 +9163,7 @@ html.ios-performance .event-socket {
 
 .hud-panel strong {
   display: block !important;
-  font-size: min(27px, calc(25px * var(--hud-scale, 1) * var(--balance-number-size, 100%) / 100%)) !important;
+  font-size: 26px !important;
   line-height: 0.9 !important;
   color: #fff1a8 !important;
   -webkit-text-stroke: 0.45px rgba(53, 5, 8, 0.82) !important;
@@ -9175,7 +9175,7 @@ html.ios-performance .event-socket {
 
 .bet-panel strong {
   display: block !important;
-  font-size: min(30px, calc(28px * var(--hud-scale, 1) * var(--bet-text-size, 100%) / 100%)) !important;
+  font-size: 29px !important;
   line-height: 0.9 !important;
   color: #fff1a8 !important;
   -webkit-text-stroke: 0.45px rgba(53, 5, 8, 0.82) !important;
@@ -9186,10 +9186,7 @@ html.ios-performance .event-socket {
 }
 
 .hud-canvas-ready {
-  color: transparent !important;
-  text-shadow: none !important;
-  -webkit-text-fill-color: transparent !important;
-  -webkit-text-stroke: 0 !important;
+  -webkit-text-fill-color: currentColor !important;
 }
 
 .hud-canvas-host {
@@ -9199,7 +9196,7 @@ html.ios-performance .event-socket {
 .hud-text-canvas {
   position: absolute;
   z-index: 2;
-  display: block;
+  display: none;
   max-width: none;
   max-height: none;
   pointer-events: none;
