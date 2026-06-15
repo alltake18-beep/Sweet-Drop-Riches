@@ -7609,6 +7609,7 @@ button {
 }
 
 .phone.board-tune .special-meter-track {
+  background: #000;
   outline: 2px dashed rgba(143, 247, 255, 0.95);
   outline-offset: 4px;
 }
