@@ -6916,6 +6916,245 @@ function initBoardTunePanel() {
   refreshOutput();
 }
 
+function initMachineTunePanel() {
+  const params = new URLSearchParams(window.location.search);
+  if (!params.has("machineTune")) return;
+  if (!phoneShellEl) return;
+
+  phoneShellEl.classList.add("machine-candy-cat", "machine-tune");
+
+  const groups = [
+    {
+      label: "Logo",
+      controls: [
+        { label: "Logo X", name: "--logo-left", min: -20, max: 120, step: 0.1, fallback: 14.5, unit: "%" },
+        { label: "Logo Y", name: "--logo-top", min: -20, max: 50, step: 0.1, fallback: 2.2, unit: "%" },
+        { label: "Logo W", name: "--logo-width", min: 10, max: 120, step: 0.1, fallback: 71, unit: "%" },
+        { label: "Logo H", name: "--logo-height", min: 2, max: 35, step: 0.1, fallback: 10.8, unit: "%" },
+      ],
+    },
+    {
+      label: "Board",
+      controls: [
+        { label: "Board X", name: "--play-board-left", min: 0, max: 100, step: 0.1, fallback: 50, unit: "%" },
+        { label: "Board Y", name: "--play-board-top", min: 0, max: 100, step: 0.1, fallback: 27.6, unit: "%" },
+        { label: "Board W", name: "--play-board-width", min: 20, max: 100, step: 0.1, fallback: 73, unit: "%" },
+        { label: "Board H", name: "--play-board-height", min: 20, max: 80, step: 0.1, fallback: 50.3, unit: "%" },
+        { label: "Board R", name: "--play-board-radius", min: 0, max: 60, step: 1, fallback: 14, unit: "px" },
+      ],
+    },
+    {
+      label: "Top Slots",
+      controls: [
+        { label: "Slot Y", name: "--stage-slot-top", min: 0, max: 60, step: 0.1, fallback: 20.9, unit: "%" },
+        { label: "Slot Size", name: "--stage-slot-size", min: 20, max: 120, step: 1, fallback: 54, unit: "px" },
+        { label: "Slot L", name: "--stage-slot-1-x", min: 0, max: 100, step: 0.1, fallback: 29.1, unit: "%" },
+        { label: "Slot M", name: "--stage-slot-2-x", min: 0, max: 100, step: 0.1, fallback: 51.9, unit: "%" },
+        { label: "Slot R", name: "--stage-slot-3-x", min: 0, max: 100, step: 0.1, fallback: 71.1, unit: "%" },
+      ],
+    },
+    {
+      label: "Bottom Wells",
+      controls: [
+        { label: "Well Y", name: "--well-top", min: 40, max: 105, step: 0.1, fallback: 85, unit: "%" },
+        { label: "Well W", name: "--well-width", min: 5, max: 40, step: 0.1, fallback: 25.6, unit: "%" },
+        { label: "Well H", name: "--well-height", min: 2, max: 22, step: 0.1, fallback: 7.65, unit: "%" },
+        { label: "Well L", name: "--well-1-x", min: 0, max: 100, step: 0.1, fallback: 22.9, unit: "%" },
+        { label: "Well M", name: "--well-2-x", min: 0, max: 100, step: 0.1, fallback: 50, unit: "%" },
+        { label: "Well R", name: "--well-3-x", min: 0, max: 100, step: 0.1, fallback: 77.1, unit: "%" },
+      ],
+    },
+    {
+      label: "Number Flight",
+      controls: [
+        { label: "Start L X", name: "--number-start-left-x", min: 0, max: 100, step: 0.1, fallback: 22.49, unit: "%" },
+        { label: "Start L Y", name: "--number-start-left-y", min: 0, max: 110, step: 0.1, fallback: 84.66, unit: "%" },
+        { label: "Start M X", name: "--number-start-middle-x", min: 0, max: 100, step: 0.1, fallback: 49.49, unit: "%" },
+        { label: "Start M Y", name: "--number-start-middle-y", min: 0, max: 110, step: 0.1, fallback: 84.86, unit: "%" },
+        { label: "Start R X", name: "--number-start-right-x", min: 0, max: 100, step: 0.1, fallback: 77.59, unit: "%" },
+        { label: "Start R Y", name: "--number-start-right-y", min: 0, max: 110, step: 0.1, fallback: 84.8, unit: "%" },
+        { label: "Show X", name: "--number-show-x", min: 0, max: 100, step: 0.1, fallback: 50.73, unit: "%" },
+        { label: "Show Y", name: "--number-show-y", min: 0, max: 100, step: 0.1, fallback: 36.57, unit: "%" },
+        { label: "Final X", name: "--number-receiver-x", min: 0, max: 100, step: 0.1, fallback: 50.54, unit: "%" },
+        { label: "Final Y", name: "--number-receiver-y", min: 0, max: 100, step: 0.1, fallback: 13.1, unit: "%" },
+      ],
+    },
+    {
+      label: "HUD",
+      controls: [
+        { label: "HUD X", name: "--hud-x", min: -30, max: 30, step: 0.1, fallback: 0.3, unit: "%" },
+        { label: "HUD Y", name: "--hud-y", min: -20, max: 20, step: 0.1, fallback: -0.2, unit: "%" },
+        { label: "HUD W", name: "--hud-width", min: 30, max: 110, step: 0.1, fallback: 85.4, unit: "%" },
+        { label: "HUD H", name: "--hud-height", min: 1, max: 12, step: 0.1, fallback: 3.6, unit: "%" },
+        { label: "HUD Gap", name: "--hud-gap", min: 0, max: 18, step: 0.05, fallback: 7.75, unit: "%" },
+      ],
+    },
+    {
+      label: "Wheel",
+      controls: [
+        { label: "Wheel X", name: "--climax-wheel-left", min: -200, max: 300, step: 0.5, fallback: 50, unit: "%" },
+        { label: "Wheel Y", name: "--climax-wheel-top", min: -200, max: 500, step: 0.5, fallback: 24, unit: "%" },
+        { label: "Wheel Size", name: "--climax-wheel-size", min: 25, max: 500, step: 1, fallback: 98, unit: "%" },
+        { label: "Pointer X", name: "--climax-center-line-x", min: -50, max: 150, step: 0.5, fallback: 50, unit: "%" },
+      ],
+    },
+  ];
+
+  const controls = groups.flatMap((group) => group.controls);
+  const panel = document.createElement("div");
+  panel.className = "machine-tune-panel";
+  panel.innerHTML = `
+    <strong class="machine-tune-title">Machine UI Tune</strong>
+    <div class="machine-tune-actions">
+      <button type="button" data-action="copy">Copy CSS</button>
+      <button type="button" data-action="sync-wells">Sync Starts</button>
+    </div>
+    <div class="machine-tune-controls"></div>
+    <textarea class="machine-tune-output" spellcheck="false"></textarea>
+  `;
+  document.body.appendChild(panel);
+
+  const titleEl = panel.querySelector(".machine-tune-title");
+  const controlsEl = panel.querySelector(".machine-tune-controls");
+  const outputEl = panel.querySelector(".machine-tune-output");
+  const values = new Map();
+
+  function currentNumeric(control) {
+    const raw = getComputedStyle(phoneShellEl).getPropertyValue(control.name).trim();
+    const value = parseFloat(raw);
+    return Number.isFinite(value) ? value : control.fallback;
+  }
+
+  function formatted(control, value) {
+    const decimals = control.step < 1 ? 2 : 0;
+    return `${+Number(value).toFixed(decimals)}${control.unit}`;
+  }
+
+  function refreshOutput() {
+    const lines = controls.map((control) => `  ${control.name}: ${phoneShellEl.style.getPropertyValue(control.name) || formatted(control, values.get(control.name) ?? currentNumeric(control))};`);
+    outputEl.value = `.phone {\n${lines.join("\n")}\n}`;
+  }
+
+  function setValue(control, raw, input, valueEl) {
+    const numeric = Math.max(control.min, Math.min(control.max, Number(raw)));
+    values.set(control.name, numeric);
+    const value = formatted(control, numeric);
+    phoneShellEl.style.setProperty(control.name, value);
+    if (input) input.value = String(numeric);
+    if (valueEl) valueEl.textContent = value;
+    scheduleBoardSizeSync(true);
+    renderClimaxStage();
+    renderHud();
+    refreshOutput();
+  }
+
+  for (const group of groups) {
+    const groupEl = document.createElement("div");
+    groupEl.className = "machine-tune-group";
+    groupEl.textContent = group.label;
+    controlsEl.appendChild(groupEl);
+
+    for (const control of group.controls) {
+      const value = currentNumeric(control);
+      values.set(control.name, value);
+      const row = document.createElement("label");
+      row.className = "machine-tune-row";
+      row.dataset.control = control.name;
+      row.innerHTML = `
+        <span>${control.label}</span>
+        <div class="machine-tune-control">
+          <button type="button" data-step="-1" aria-label="${control.label} minus">-</button>
+          <input type="range" min="${control.min}" max="${control.max}" step="${control.step}" value="${value}">
+          <button type="button" data-step="1" aria-label="${control.label} plus">+</button>
+        </div>
+        <span class="machine-tune-value">${formatted(control, value)}</span>
+      `;
+      const input = row.querySelector("input");
+      const valueEl = row.querySelector(".machine-tune-value");
+      input.addEventListener("input", () => setValue(control, input.value, input, valueEl));
+      row.querySelectorAll("[data-step]").forEach((button) => {
+        button.addEventListener("click", () => setValue(control, Number(input.value) + Number(button.dataset.step) * control.step, input, valueEl));
+      });
+      controlsEl.appendChild(row);
+      setValue(control, value, input, valueEl);
+    }
+  }
+
+  function syncStartsToWells() {
+    const map = [
+      ["--well-1-x", "--number-start-left-x"],
+      ["--well-2-x", "--number-start-middle-x"],
+      ["--well-3-x", "--number-start-right-x"],
+      ["--well-top", "--number-start-left-y"],
+      ["--well-top", "--number-start-middle-y"],
+      ["--well-top", "--number-start-right-y"],
+    ];
+    for (const [fromName, toName] of map) {
+      const fromControl = controls.find((control) => control.name === fromName);
+      const toControl = controls.find((control) => control.name === toName);
+      if (!fromControl || !toControl) continue;
+      const next = values.get(fromName) ?? currentNumeric(fromControl);
+      const row = Array.from(controlsEl.querySelectorAll(".machine-tune-row")).find((item) =>
+        item.dataset.control === toControl.name
+      );
+      setValue(toControl, next, row?.querySelector("input"), row?.querySelector(".machine-tune-value"));
+    }
+  }
+
+  let panelDrag = null;
+  const movePanel = (clientX, clientY) => {
+    if (!panelDrag) return;
+    const width = panel.offsetWidth;
+    const height = panel.offsetHeight;
+    const maxLeft = Math.max(0, window.innerWidth - width);
+    const maxTop = Math.max(0, window.innerHeight - height);
+    panel.style.left = `${Math.min(maxLeft, Math.max(0, clientX - panelDrag.offsetX))}px`;
+    panel.style.top = `${Math.min(maxTop, Math.max(0, clientY - panelDrag.offsetY))}px`;
+    panel.style.right = "auto";
+    panel.style.bottom = "auto";
+  };
+
+  titleEl?.addEventListener("pointerdown", (event) => {
+    if (event.button !== 0) return;
+    const rect = panel.getBoundingClientRect();
+    panelDrag = { pointerId: event.pointerId, offsetX: event.clientX - rect.left, offsetY: event.clientY - rect.top };
+    panel.classList.add("is-dragging");
+    titleEl.setPointerCapture?.(event.pointerId);
+    event.preventDefault();
+    event.stopPropagation();
+  });
+
+  const endPanelDrag = (event) => {
+    if (!panelDrag || event.pointerId !== panelDrag.pointerId) return;
+    titleEl?.releasePointerCapture?.(event.pointerId);
+    panelDrag = null;
+    panel.classList.remove("is-dragging");
+  };
+
+  document.addEventListener("pointermove", (event) => {
+    if (!panelDrag || event.pointerId !== panelDrag.pointerId) return;
+    movePanel(event.clientX, event.clientY);
+    event.preventDefault();
+  });
+  document.addEventListener("pointerup", endPanelDrag);
+  document.addEventListener("pointercancel", endPanelDrag);
+
+  panel.querySelector('[data-action="sync-wells"]').addEventListener("click", syncStartsToWells);
+  panel.querySelector('[data-action="copy"]').addEventListener("click", async () => {
+    refreshOutput();
+    outputEl.select();
+    try {
+      await navigator.clipboard.writeText(outputEl.value);
+    } catch {
+      document.execCommand("copy");
+    }
+  });
+
+  refreshOutput();
+  renderClimaxStage();
+  renderHud();
+}
+
 function applyPerformanceMode() {
   phoneShellEl?.classList.toggle("ios-performance", IOS_PERFORMANCE_MODE);
   phoneShellEl?.classList.toggle("fx-lite", FX_PERFORMANCE_MODE);
@@ -7072,6 +7311,7 @@ preventImageSelection();
 preloadSymbolAssets();
 initPerfMonitor();
 initAuditPanel();
+initMachineTunePanel();
 initClimaxTunePanel();
 initBoardTunePanel();
 startNewBoard();

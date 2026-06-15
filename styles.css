@@ -6027,10 +6027,11 @@ button {
 .topbar {
   position: absolute;
   z-index: 8;
-  top: 2.2%;
-  left: 14.5%;
-  right: 14.5%;
-  height: 10.8%;
+  top: var(--logo-top, 2.2%);
+  left: var(--logo-left, 14.5%);
+  right: auto;
+  width: var(--logo-width, 71%);
+  height: var(--logo-height, 10.8%);
   display: grid;
   place-items: center;
   padding: 0;
@@ -6697,9 +6698,9 @@ button {
 
 .slot {
   position: absolute;
-  top: 85%;
-  width: 25.6%;
-  height: 7.65%;
+  top: var(--well-top, 85%);
+  width: var(--well-width, 25.6%);
+  height: var(--well-height, 7.65%);
   aspect-ratio: auto;
   display: grid;
   place-items: center;
@@ -6727,15 +6728,15 @@ button {
 }
 
 .slot:nth-child(1) {
-  left: 22.9%;
+  left: var(--well-1-x, 22.9%);
 }
 
 .slot:nth-child(2) {
-  left: 50%;
+  left: var(--well-2-x, 50%);
 }
 
 .slot:nth-child(3) {
-  left: 77.1%;
+  left: var(--well-3-x, 77.1%);
 }
 
 .slot::before,
@@ -9212,6 +9213,126 @@ html.ios-performance .phone {
 
 .phone.fx-lite .ambient {
   display: none !important;
+}
+
+.phone.machine-candy-cat,
+html.ios-performance .phone.machine-candy-cat,
+.phone.fx-lite.machine-candy-cat {
+  background:
+    url("assets/ui/mobile/candy-machine-candy-cat-mobile.png?v=candy-cat-720-20260615") center / 100% 100% no-repeat,
+    linear-gradient(180deg, #70c7ff, #f84ea0) !important;
+}
+
+.phone.machine-tune .topbar,
+.phone.machine-tune .board,
+.phone.machine-tune .event-socket,
+.phone.machine-tune .slot,
+.phone.machine-tune .hud,
+.phone.machine-tune .climax-stage {
+  outline: 2px solid rgba(135, 247, 255, 0.78);
+  outline-offset: -1px;
+}
+
+.phone.machine-tune .event-socket,
+.phone.machine-tune .slot {
+  background: rgba(27, 248, 255, 0.1) !important;
+}
+
+.machine-tune-panel {
+  position: fixed;
+  z-index: 10020;
+  right: 10px;
+  bottom: 10px;
+  width: min(360px, calc(100vw - 20px));
+  max-height: min(58vh, 560px);
+  overflow: auto;
+  padding: 10px;
+  color: #ffeec2;
+  font: 12px/1.25 Arial, sans-serif;
+  background: rgba(14, 4, 9, 0.94);
+  border: 1px solid rgba(255, 213, 103, 0.72);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.48);
+}
+
+.machine-tune-title {
+  display: block;
+  margin-bottom: 8px;
+  color: #8ff7ff;
+  font-size: 13px;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.machine-tune-panel.is-dragging .machine-tune-title {
+  cursor: grabbing;
+}
+
+.machine-tune-group {
+  margin: 10px 0 4px;
+  color: #ffd865;
+  font-weight: 900;
+}
+
+.machine-tune-row {
+  display: grid;
+  grid-template-columns: 92px 1fr 64px;
+  gap: 8px;
+  align-items: center;
+  margin: 6px 0;
+}
+
+.machine-tune-control {
+  display: grid;
+  grid-template-columns: 24px 1fr 24px;
+  gap: 5px;
+  align-items: center;
+}
+
+.machine-tune-control input {
+  width: 100%;
+}
+
+.machine-tune-control button {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  color: #301006;
+  font-weight: 900;
+  line-height: 1;
+  background: linear-gradient(180deg, #fff4b0, #d49136);
+  border: 0;
+}
+
+.machine-tune-value {
+  color: #8ff7ff;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.machine-tune-actions {
+  display: flex;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.machine-tune-actions button {
+  min-height: 28px;
+  padding: 0 10px;
+  color: #301006;
+  font-weight: 900;
+  background: linear-gradient(180deg, #fff4b0, #d49136);
+  border: 0;
+}
+
+.machine-tune-output {
+  width: 100%;
+  min-height: 116px;
+  margin-top: 8px;
+  color: #d9ffff;
+  background: rgba(0, 0, 0, 0.38);
+  border: 1px solid rgba(143, 247, 255, 0.28);
+  resize: vertical;
 }
 
 .phone.fx-lite .brand,
