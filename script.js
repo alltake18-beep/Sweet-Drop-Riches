@@ -2661,9 +2661,10 @@ async function resolveMove(initialMatches, preferredSpawn = null) {
   }
 }
 
-async function maybeShowWinCard() {
+async function maybeShowWinCard(options = {}) {
   if (state.winCardShownThisResolve) return true;
-  const ratio = state.currentWin / currentBet();
+  const displayAmount = Math.max(0, Math.round(options.amount ?? state.currentWin));
+  const ratio = displayAmount / currentBet();
   const tier = WIN_TIERS.find((item) => ratio >= item.ratio);
   if (!tier) return false;
 
@@ -2677,7 +2678,7 @@ async function maybeShowWinCard() {
   winOverlay.className = `win-overlay ${tier.className}`;
   winOverlay.classList.remove("hidden");
   const countDuration = Math.max(1450, tier.duration - 340);
-  animateWinAmount(state.currentWin, countDuration);
+  animateWinAmount(displayAmount, countDuration);
   playWinCountLoop(countDuration, tier.countVolume || 0.04);
   // FX-TUNE: 現行事件 - Big Win 以上字卡粒子改造。
   spawnParticles(tier.particles);
@@ -2794,6 +2795,7 @@ async function playFullDropWheel() {
   const prizeIndex = wheelLabelIndexByPrize(prize.label);
   const sliceAngle = wheelLabelSliceAngle();
   const award = Math.round(baseTotal * prize.multiplier);
+  const climaxTotal = baseTotal + award;
 
   render();
   const spinProfile = createWheelSpinProfile();
@@ -2817,7 +2819,7 @@ async function playFullDropWheel() {
   triggerScreenFx(prize.multiplier >= 5 ? "fx-jackpot" : prize.multiplier >= 1 ? "fx-blast" : "fx-bump", 820);
   render();
   await wait(520);
-  await maybeShowWinCard();
+  await maybeShowWinCard({ amount: climaxTotal });
   await wait(360);
 }
 

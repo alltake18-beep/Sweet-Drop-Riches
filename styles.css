@@ -6899,9 +6899,9 @@ button {
   flex-direction: column !important;
   align-items: center !important;
   justify-content: center !important;
-  width: min(84vw, 360px) !important;
+  width: min(92vw, 430px) !important;
   min-width: 0 !important;
-  max-width: 360px !important;
+  max-width: 430px !important;
   padding: 0 !important;
   border: 0 !important;
   border-radius: 0 !important;
@@ -6921,7 +6921,7 @@ button {
 .win-overlay .win-title-art {
   display: block !important;
   order: 1;
-  width: min(82vw, 350px);
+  width: min(90vw, 420px);
   max-width: 100%;
   height: auto;
   object-fit: contain;
@@ -6931,20 +6931,20 @@ button {
 }
 
 .win-overlay.tier-big .win-title-art {
-  width: min(74vw, 310px);
+  width: min(82vw, 360px);
 }
 
 .win-overlay.tier-super .win-title-art,
 .win-overlay.tier-legendary .win-title-art {
-  width: min(84vw, 360px);
+  width: min(92vw, 430px);
 }
 
 .win-overlay #winMultiplier {
   display: block !important;
   order: 2;
-  margin: -5px 0 0 !important;
+  margin: -7px 0 0 !important;
   color: #fff076 !important;
-  font-size: clamp(38px, 12.8vw, 64px) !important;
+  font-size: clamp(48px, 16vw, 88px) !important;
   line-height: 0.9 !important;
   white-space: nowrap;
   -webkit-text-stroke: 2px #74138d;
@@ -6957,9 +6957,9 @@ button {
 .win-overlay #winAmount {
   display: block !important;
   order: 3;
-  margin: 8px 0 0 !important;
+  margin: 10px 0 0 !important;
   color: #fff8bd !important;
-  font-size: clamp(22px, 6.8vw, 36px) !important;
+  font-size: clamp(30px, 8.8vw, 48px) !important;
   line-height: 1 !important;
   white-space: nowrap;
   -webkit-text-stroke: 1px #8a3714;
@@ -8107,16 +8107,16 @@ button {
 }
 
 .win-overlay .win-rays {
-  width: min(72vw, 320px) !important;
-  height: min(72vw, 320px) !important;
-  opacity: 0.42 !important;
+  width: min(82vw, 390px) !important;
+  height: min(82vw, 390px) !important;
+  opacity: 0.48 !important;
 }
 
 .win-overlay.tier-epic .win-rays,
 .win-overlay.tier-legendary .win-rays {
-  width: min(80vw, 380px) !important;
-  height: min(80vw, 380px) !important;
-  opacity: 0.5 !important;
+  width: min(92vw, 460px) !important;
+  height: min(92vw, 460px) !important;
+  opacity: 0.56 !important;
 }
 
 .phone.flame-active .play-area::after {
