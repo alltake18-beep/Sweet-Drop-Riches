@@ -425,6 +425,7 @@ const state = {
   flameFinal: false,
   climaxWheelRotation: 0,
   climaxSpinning: false,
+  climaxWheelHoldingResult: false,
   climaxIntroPhase: null,
   pendingClimaxIntro: false,
   climaxLogoReturn: false,
@@ -1058,6 +1059,7 @@ function startNewBoard(keepScore = false) {
   state.climaxIntroPhase = null;
   state.pendingClimaxIntro = false;
   state.climaxLogoReturn = false;
+  state.climaxWheelHoldingResult = false;
   clearClimaxNumberFlightDisplay();
   if (!keepScore) {
     state.currentWin = 0;
@@ -1237,7 +1239,7 @@ function renderSlots() {
 }
 
 function isMultiplierClimaxActive() {
-  return state.filledSlots.size > 0 || state.climaxSpinning || Boolean(state.climaxIntroPhase);
+  return state.filledSlots.size > 0 || state.climaxSpinning || state.climaxWheelHoldingResult || Boolean(state.climaxIntroPhase);
 }
 
 function isReducedClimaxFx() {
@@ -1372,7 +1374,7 @@ function stopClimaxIdleSpin() {
 }
 
 function startClimaxIdleSpin() {
-  if (!phoneShellEl || !climaxWheelRotorEl || state.climaxSpinning || state.climaxIntroPhase) return;
+  if (!phoneShellEl || !climaxWheelRotorEl || state.climaxSpinning || state.climaxWheelHoldingResult || state.climaxIntroPhase) return;
   if (!phoneShellEl.classList.contains("climax-idle-wheel")) {
     climaxWheelRotorEl.style.setProperty("--wheel-rotation", `${state.climaxWheelRotation || 0}deg`);
     phoneShellEl.classList.add("climax-idle-wheel");
@@ -1458,7 +1460,7 @@ function renderClimaxStage() {
   const active = isMultiplierClimaxActive();
   if (active || phoneShellEl?.classList.contains("tune-climax")) ensureClimaxWheelImageLoaded();
   climaxStageEl.setAttribute("aria-hidden", String(!active));
-  if (!active || state.climaxSpinning || state.climaxIntroPhase) stopClimaxIdleSpin();
+  if (!active || state.climaxSpinning || state.climaxWheelHoldingResult || state.climaxIntroPhase) stopClimaxIdleSpin();
   if (climaxWheelRotorEl) {
     climaxWheelRotorEl.style.setProperty("--wheel-rotation", `${state.climaxWheelRotation || 0}deg`);
   }
@@ -1483,7 +1485,7 @@ function renderClimaxStage() {
     const index = currentClimaxHighlightIndex(sliceAngle);
     climaxWheelHighlightEl.style.setProperty("--highlight-angle", `${index * sliceAngle + sliceAngle * 0.5}deg`);
   }
-  if (active && !state.climaxSpinning && !state.climaxIntroPhase) startClimaxIdleSpin();
+  if (active && !state.climaxSpinning && !state.climaxWheelHoldingResult && !state.climaxIntroPhase) startClimaxIdleSpin();
 }
 
 function render() {
@@ -2771,6 +2773,7 @@ async function maybeFullDropBonus() {
   state.slotTurns = Array(SLOT_COUNT).fill(0);
   state.pendingClimaxIntro = false;
   state.climaxIntroPhase = null;
+  state.climaxWheelHoldingResult = false;
   state.climaxLogoReturn = true;
   clearClimaxNumberFlightDisplay();
   render();
@@ -2800,6 +2803,7 @@ async function playFullDropWheel() {
   playWheelStartPerformance();
   await wait(3000);
 
+  state.climaxWheelHoldingResult = false;
   state.climaxSpinning = true;
   render();
   await animateClimaxWheel(finalRotation, spinProfile);
@@ -2809,7 +2813,7 @@ async function playFullDropWheel() {
   if (isWheelHighNearMiss(prizeIndex, prize)) playNearMissPerformance("wheel");
   addWin(award);
   state.climaxSpinning = false;
-  clearClimaxNumberFlightDisplay();
+  state.climaxWheelHoldingResult = true;
   triggerScreenFx(prize.multiplier >= 5 ? "fx-jackpot" : prize.multiplier >= 1 ? "fx-blast" : "fx-bump", 820);
   render();
   await wait(520);
