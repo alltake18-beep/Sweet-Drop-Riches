@@ -9,6 +9,7 @@ const SLOT_TURN_MAX = 20;
 const SEARCH_PARAMS = new URLSearchParams(window.location.search);
 const PERF_ENABLED = SEARCH_PARAMS.has("perf");
 const LITE_ENABLED = SEARCH_PARAMS.has("lite");
+const WHEEL_AUDIT_ENABLED = SEARCH_PARAMS.has("wheelAudit");
 const IOS_PERFORMANCE_MODE = PERF_ENABLED;
 const FX_PERFORMANCE_MODE = PERF_ENABLED || LITE_ENABLED;
 const SPECIAL_METER_TARGET = 9;
@@ -2810,29 +2811,45 @@ async function playFullDropWheel() {
   if (baseTotal <= 0) return;
 
   const targetPrize = weightedPick(FULL_DROP_WHEEL_PRIZES);
-  const targetPrizeIndex = wheelLabelIndexByPrize(targetPrize.label);
-  const sliceAngle = wheelLabelSliceAngle();
 
   render();
   const spinProfile = createWheelSpinProfile();
   duckBackgroundMusic(spinProfile.duration + 2600, BGM_DUCK_DEEP);
-  const landingAngle = wheelLandingAngle(targetPrizeIndex, sliceAngle, targetPrize.multiplier);
-  const finalRotation = wheelRotationDeltaToLand(landingAngle, climaxPointerAngle(), spinProfile.turns);
   playWheelStartPerformance();
   await wait(3000);
+
+  stopClimaxIdleSpin();
+  const targetPrizeIndex = wheelLabelIndexByPrize(targetPrize.label);
+  const sliceAngle = wheelLabelSliceAngle();
+  const pointerAngle = climaxPointerAngle();
+  const landingAngle = wheelLandingAngle(targetPrizeIndex, sliceAngle, targetPrize.multiplier);
+  const finalRotation = wheelRotationDeltaToLand(landingAngle, pointerAngle, spinProfile.turns);
+  const auditStartRotation = normalizeAngle(state.climaxWheelRotation || 0);
 
   state.climaxWheelHoldingResult = false;
   state.climaxSpinning = true;
   render();
   await animateClimaxWheel(finalRotation, spinProfile);
 
-  const resultIndex = wheelIndexAtPointer(sliceAngle, climaxPointerAngle());
+  const resultIndex = wheelIndexAtPointer(sliceAngle, pointerAngle);
   const resultLabel = FULL_DROP_WHEEL_LABEL_ORDER[resultIndex]?.prizeLabel;
-  const prize = wheelPrizeByLabel(resultLabel) || targetPrize;
+  const prize = targetPrize;
   const award = Math.round(baseTotal * prize.multiplier);
+  if (WHEEL_AUDIT_ENABLED) {
+    console.info("[Sweet Drop Riches] wheel audit", {
+      target: targetPrize.label,
+      visual: resultLabel,
+      matched: resultLabel === targetPrize.label,
+      startRotation: auditStartRotation,
+      finalRotation: normalizeAngle(auditStartRotation + finalRotation),
+      pointerAngle,
+      baseTotal,
+      award,
+    });
+  }
   duckBackgroundMusic(1300, BGM_DUCK_DEEP);
   playWheelStopPerformance(prize.multiplier);
-  if (isWheelHighNearMiss(resultIndex, prize)) playNearMissPerformance("wheel");
+  if (isWheelHighNearMiss(targetPrizeIndex, prize)) playNearMissPerformance("wheel");
   addWin(award);
   state.climaxSpinning = false;
   state.climaxWheelHoldingResult = true;
