@@ -2671,7 +2671,8 @@ async function resolveMove(initialMatches, preferredSpawn = null) {
 }
 
 async function maybeShowWinCard(options = {}) {
-  if (state.winCardShownThisResolve) return true;
+  const force = Boolean(options.force);
+  if (state.winCardShownThisResolve && !force) return true;
   const displayAmount = Math.max(0, Math.round(options.amount ?? state.currentWin));
   const ratio = displayAmount / currentBet();
   const tier = WIN_TIERS.find((item) => ratio >= item.ratio);
@@ -2827,8 +2828,7 @@ async function playFullDropWheel() {
   state.climaxWheelHoldingResult = true;
   triggerScreenFx(prize.multiplier >= 5 ? "fx-jackpot" : prize.multiplier >= 1 ? "fx-blast" : "fx-bump", 820);
   render();
-  await wait(520);
-  await maybeShowWinCard({ amount: climaxTotal });
+  await maybeShowWinCard({ amount: climaxTotal, force: true });
   await wait(360);
 }
 
@@ -5249,7 +5249,6 @@ async function presentCollectedMultipliers(collected) {
   if (shouldPlayClimaxIntro) {
     state.pendingClimaxIntro = false;
     state.climaxLogoReturn = false;
-    state.climaxIntroPhase = "logo";
   }
   render();
   // FX-TUNE: 現行事件 - 倍數糖收集進槽粒子改造。
@@ -5259,7 +5258,11 @@ async function presentCollectedMultipliers(collected) {
   if (!usedCollectAsset) playMultiplierCollectSound(highCollect, collected.length, state.filledSlots.size);
   if (highCollect >= 100) triggerScreenFx("fx-jackpot", 780);
   else if (highCollect >= 20) triggerScreenFx("fx-bump", 420);
+  const collectTotal = collected.reduce((sum, item) => sum + Math.round(item.payout || 0), 0);
+  await maybeShowWinCard({ amount: collectTotal, force: true });
   if (shouldPlayClimaxIntro) {
+    state.climaxIntroPhase = "logo";
+    render();
     await playClimaxIntroSequence();
   }
   const lightningSettled = Promise.all(collected.map((item, index) => spawnSlotClimaxNumberFlight(item.col, item.payout, index * 80)));
