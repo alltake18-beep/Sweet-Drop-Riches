@@ -6003,7 +6003,7 @@ window.setInterval(() => {
 
 function initClimaxTunePanel() {
   const params = new URLSearchParams(window.location.search);
-  const tuningClimax = params.has("tune") || params.has("machineTune");
+  const tuningClimax = params.has("tune");
   if (!tuningClimax) return;
 
   const phone = document.querySelector(".phone");
@@ -6923,7 +6923,9 @@ function initMachineTunePanel() {
   if (!params.has("machineTune")) return;
   if (!phoneShellEl) return;
 
-  phoneShellEl.classList.add("machine-candy-cat", "machine-tune");
+  phoneShellEl.classList.add("machine-candy-cat");
+  if (!params.has("tune")) return;
+  phoneShellEl.classList.add("machine-tune");
 
   const groups = [
     {

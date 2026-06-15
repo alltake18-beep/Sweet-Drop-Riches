@@ -8156,7 +8156,7 @@ button {
   --number-receiver-y: 13.1%;
   --number-flight-size: 60px;
   --number-final-size: 60px;
-  --number-show-scale: 1.8;
+  --number-show-scale: 1.80;
   --number-to-show-ms: 800ms;
   --number-show-hold-ms: 420ms;
   --number-to-final-ms: 80ms;
@@ -9263,10 +9263,11 @@ html.ios-performance .phone.machine-candy-cat,
   --hud-width: 88.2%;
   --hud-height: 4.8%;
   --hud-gap: 8.2%;
-  --climax-wheel-left: 27.5%;
-  --climax-wheel-top: 24%;
-  --climax-wheel-size: 98%;
+  --climax-wheel-left: 49.5%;
+  --climax-wheel-top: 27%;
+  --climax-wheel-size: 104%;
   --climax-center-line-x: 50%;
+  --climax-mask-path: polygon(23.46% 1.32%, 51.29% -3.07%, 71.86% 0.44%, 83.96% 2.63%, 97.23% 8.78%, 97.23% 16.79%, 84.93% 17.56%, 50.2% 17.67%, 15.46% 17.56%, 1.8% 16.58%, 4.14% 8.89%, 16.04% 3.18%);
   background:
     url("assets/ui/mobile/candy-machine-candy-cat-mobile.png?v=candy-cat-720-20260616-000759") center / 100% 100% no-repeat,
     linear-gradient(180deg, #70c7ff, #f84ea0) !important;
