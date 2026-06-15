@@ -3356,6 +3356,161 @@ function spawnSlotClimaxEnergy(col, value, baseDelay = 0) {
   return wait(baseDelay + CLIMAX_LIGHTNING_DURATION_MS);
 }
 
+function numberFlightTuneFromCss() {
+  return {
+    starts: [
+      { id: "left", label: "Left", value: 5, x: readPhonePercent("--number-start-left-x", 22.49), y: readPhonePercent("--number-start-left-y", 84.66) },
+      { id: "middle", label: "Middle", value: 20, x: readPhonePercent("--number-start-middle-x", 49.49), y: readPhonePercent("--number-start-middle-y", 84.86) },
+      { id: "right", label: "Right", value: 50, x: readPhonePercent("--number-start-right-x", 77.59), y: readPhonePercent("--number-start-right-y", 84.8) },
+    ],
+    receiver: {
+      x: readPhonePercent("--number-receiver-x", CLIMAX_CHARGE_TARGETS[1].x),
+      y: readPhonePercent("--number-receiver-y", CLIMAX_CHARGE_TARGETS[1].y),
+    },
+    show: {
+      x: readPhonePercent("--number-show-x", 50.73),
+      y: readPhonePercent("--number-show-y", 36.57),
+    },
+    size: {
+      flight: readPhonePercent("--number-flight-size", 60),
+      final: readPhonePercent("--number-final-size", 60),
+    },
+    showScale: Math.max(1, Math.min(1.8, readPhonePercent("--number-show-scale", 1.8))),
+    time: {
+      toShow: readPhonePercent("--number-to-show-ms", 800),
+      hold: readPhonePercent("--number-show-hold-ms", 420),
+      toFinal: readPhonePercent("--number-to-final-ms", 80),
+    },
+  };
+}
+
+function phoneDesignSize(host = phoneShellEl) {
+  return {
+    width: host?.offsetWidth || CABINET_DESIGN_WIDTH,
+    height: host?.offsetHeight || CABINET_DESIGN_HEIGHT,
+  };
+}
+
+function numberFlightPercentToPx(point, host = phoneShellEl) {
+  const size = phoneDesignSize(host);
+  return {
+    x: size.width * point.x / 100,
+    y: size.height * point.y / 100,
+  };
+}
+
+function ensureClimaxNumberFlightLayer() {
+  const host = phoneShellEl;
+  if (!host) return null;
+  let layer = host.querySelector(".climax-number-flight-layer");
+  if (layer) return layer;
+  layer = document.createElement("div");
+  layer.className = "climax-number-tune-layer climax-number-flight-layer";
+  layer.innerHTML = `<div class="climax-number-final" aria-hidden="true"><span class="climax-number-final-text"></span></div>`;
+  host.appendChild(layer);
+  return layer;
+}
+
+function placeNumberFlightFinal(layer, tune) {
+  const finalEl = layer?.querySelector(".climax-number-final");
+  if (!finalEl) return;
+  finalEl.style.left = `${tune.receiver.x}%`;
+  finalEl.style.top = `${tune.receiver.y}%`;
+  finalEl.style.setProperty("--number-final-size", `${tune.size.final}px`);
+}
+
+function playClimaxNumberFlight({
+  slotIndex,
+  label,
+  layer = ensureClimaxNumberFlightLayer(),
+  finalEl = layer?.querySelector(".climax-number-final"),
+  finalTextEl = layer?.querySelector(".climax-number-final-text"),
+  tune = numberFlightTuneFromCss(),
+  baseDelay = 0,
+  onArrive,
+} = {}) {
+  const host = phoneShellEl;
+  if (!host || !layer || !finalEl || !finalTextEl) return wait(baseDelay);
+  const startTune = tune.starts[slotIndex] || tune.starts[1];
+  const start = numberFlightPercentToPx(startTune, host);
+  const show = numberFlightPercentToPx(tune.show, host);
+  const end = numberFlightPercentToPx(tune.receiver, host);
+  const toShow = Math.max(80, tune.time.toShow);
+  const hold = Math.max(40, tune.time.hold);
+  const toFinal = Math.max(80, tune.time.toFinal);
+  const total = toShow + hold + toFinal;
+
+  return new Promise((resolve) => {
+    window.setTimeout(() => {
+      placeNumberFlightFinal(layer, tune);
+      const fly = document.createElement("div");
+      fly.className = "climax-flying-number";
+      fly.style.left = `${start.x}px`;
+      fly.style.top = `${start.y}px`;
+      fly.style.setProperty("--number-flight-size", `${tune.size.flight}px`);
+      fly.innerHTML = `
+        <i class="climax-number-glow" aria-hidden="true"></i>
+        <strong>${label}</strong>
+      `;
+      layer.appendChild(fly);
+      finalEl.classList.remove("is-visible");
+
+      const showX = show.x - start.x;
+      const showY = show.y - start.y;
+      const finalX = end.x - start.x;
+      const finalY = end.y - start.y;
+      const showOffset = toShow / total;
+      const leaveOffset = (toShow + hold) / total;
+      const earlyOffset = Math.min(0.12, showOffset * 0.58);
+      const showScale = Math.max(1, Math.min(1.8, tune.showScale));
+      const transformAt = (x, y, scale) => `translate(-50%, -50%) translate3d(${x}px, ${y}px, 0) scale(${scale})`;
+      const flightAnimation = fly.animate([
+        { offset: 0, opacity: 0, transform: transformAt(0, 0, 0.9) },
+        { offset: earlyOffset, opacity: 1, transform: transformAt(0, 0, 1) },
+        { offset: showOffset, opacity: 1, transform: transformAt(showX, showY, showScale) },
+        { offset: leaveOffset, opacity: 1, transform: transformAt(showX, showY, showScale) },
+        { offset: 1, opacity: 1, transform: transformAt(finalX, finalY, 1) },
+      ], {
+        duration: total,
+        easing: "cubic-bezier(0.16, 0.82, 0.17, 1)",
+        fill: "forwards",
+      });
+
+      const revealFinal = () => {
+        finalTextEl.textContent = label;
+        finalEl.classList.add("is-visible");
+        onArrive?.();
+      };
+
+      flightAnimation.finished.then(() => {
+        revealFinal();
+        fly.remove();
+        resolve();
+      }).catch(() => {
+        fly.remove();
+        resolve();
+      });
+    }, baseDelay);
+  });
+}
+
+function spawnSlotClimaxNumberFlight(col, payout, baseDelay = 0) {
+  const target = climaxChargeTargetsEl?.querySelector(`.climax-charge-target[data-slot="${col}"]`);
+  const tune = numberFlightTuneFromCss();
+  return playClimaxNumberFlight({
+    slotIndex: col,
+    label: formatScore(payout),
+    tune,
+    baseDelay,
+    onArrive: () => {
+      state.climaxChargedSlots.add(col);
+      target?.classList.add("is-hit");
+      renderClimaxStage();
+      window.setTimeout(() => target?.classList.remove("is-hit"), 260);
+    },
+  });
+}
+
 function keyToPoint(key) {
   const [row, col] = key.split(",").map(Number);
   return { row, col };
@@ -5270,7 +5425,7 @@ async function presentCollectedMultipliers(collected) {
   if (shouldPlayClimaxIntro) {
     await playClimaxIntroSequence();
   }
-  const lightningSettled = Promise.all(collected.map((item, index) => spawnSlotClimaxEnergy(item.col, item.payout, index * 80)));
+  const lightningSettled = Promise.all(collected.map((item, index) => spawnSlotClimaxNumberFlight(item.col, item.payout, index * 80)));
   await lightningSettled;
   if (!isFullCollect && !shouldPlayClimaxIntro && state.filledSlots.size === SLOT_COUNT - 1) {
     playNearMissPerformance("slot");
@@ -6297,82 +6452,27 @@ function initClimaxTunePanel() {
       });
     });
 
-    function phoneDesignSize() {
-      return {
-        width: phone.offsetWidth || CABINET_DESIGN_WIDTH,
-        height: phone.offsetHeight || CABINET_DESIGN_HEIGHT,
-      };
-    }
-
-    function percentPointToDesignPx(point) {
-      const size = phoneDesignSize();
-      return {
-        x: size.width * point.x / 100,
-        y: size.height * point.y / 100,
-      };
-    }
-
-    function slotStartPoint(slotIndex) {
-      return percentPointToDesignPx(numberStartTune[slotIndex] || numberStartTune[1]);
-    }
-
-    function receiverPoint() {
-      return percentPointToDesignPx(receiverTune);
-    }
-
-    function showPoint() {
-      return percentPointToDesignPx(showTune);
-    }
-
     function playNumberFlight(slotIndex, label = "x20") {
-      const start = slotStartPoint(slotIndex);
-      const show = showPoint();
-      const end = receiverPoint();
-      const fly = document.createElement("div");
-      fly.className = "climax-flying-number";
-      fly.style.left = `${start.x}px`;
-      fly.style.top = `${start.y}px`;
-      fly.style.setProperty("--number-flight-size", `${sizeTune.flight}px`);
-      fly.innerHTML = `
-        <i class="climax-number-glow" aria-hidden="true"></i>
-        <strong>${label}</strong>
-      `;
-      numberTuneLayer.appendChild(fly);
       receiverEl.classList.remove("is-hit");
-      finalEl.classList.remove("is-visible");
-      const showX = show.x - start.x;
-      const showY = show.y - start.y;
-      const finalX = end.x - start.x;
-      const finalY = end.y - start.y;
-      const toShow = Math.max(80, timeTune.toShow);
-      const hold = Math.max(40, timeTune.hold);
-      const toFinal = Math.max(80, timeTune.toFinal);
-      const total = toShow + hold + toFinal;
-      const showOffset = toShow / total;
-      const leaveOffset = (toShow + hold) / total;
-      const earlyOffset = Math.min(0.12, showOffset * 0.58);
-      const transformAt = (x, y, scale) => `translate(-50%, -50%) translate3d(${x}px, ${y}px, 0) scale(${scale})`;
-      const flightAnimation = fly.animate([
-        { offset: 0, opacity: 0, transform: transformAt(0, 0, 0.9) },
-        { offset: earlyOffset, opacity: 1, transform: transformAt(0, 0, 1) },
-        { offset: showOffset, opacity: 1, transform: transformAt(showX, showY, showScale) },
-        { offset: leaveOffset, opacity: 1, transform: transformAt(showX, showY, showScale) },
-        { offset: 1, opacity: 1, transform: transformAt(finalX, finalY, 1) },
-      ], {
-        duration: total,
-        easing: "cubic-bezier(0.16, 0.82, 0.17, 1)",
-        fill: "forwards",
+      return playClimaxNumberFlight({
+        slotIndex,
+        label,
+        layer: numberTuneLayer,
+        finalEl,
+        finalTextEl,
+        tune: {
+          starts: numberStartTune,
+          receiver: receiverTune,
+          show: showTune,
+          size: sizeTune,
+          showScale,
+          time: timeTune,
+        },
+        onArrive: () => {
+          receiverEl.classList.add("is-hit");
+          window.setTimeout(() => receiverEl.classList.remove("is-hit"), 140);
+        },
       });
-      const revealFinal = () => {
-        receiverEl.classList.add("is-hit");
-        finalTextEl.textContent = label;
-        finalEl.classList.add("is-visible");
-      };
-      window.setTimeout(() => receiverEl.classList.remove("is-hit"), total + 140);
-      flightAnimation.finished.then(() => {
-        revealFinal();
-        fly.remove();
-      }).catch(() => fly.remove());
     }
 
     panel.querySelectorAll('[data-action="preview"]').forEach((button) => {
