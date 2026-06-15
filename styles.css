@@ -8143,55 +8143,6 @@ button {
   --climax-wheel-size: 98%;
   --climax-center-line-x: 50%;
   --climax-mask-path: polygon(9.3% 0.59%, 51.29% -3.07%, 92.58% 0.38%, 92.87% 5.65%, 91.53% 9.04%, 92.14% 12.79%, 90.55% 14.73%, 44.48% 14.61%, 11.16% 14.7%, 8.37% 14.28%, 8.91% 8.54%, 8.06% 4.76%);
-  --tune-circle-1-x: 42%;
-  --tune-circle-1-y: 12.5%;
-  --tune-circle-1-d: 7%;
-  --tune-circle-2-x: 50%;
-  --tune-circle-2-y: 12.5%;
-  --tune-circle-2-d: 7%;
-  --tune-circle-3-x: 58%;
-  --tune-circle-3-y: 12.5%;
-  --tune-circle-3-d: 7%;
-  --lightning-left-1-x: 22.26%;
-  --lightning-left-1-y: 84.85%;
-  --lightning-left-2-x: 4.85%;
-  --lightning-left-2-y: 81.89%;
-  --lightning-left-3-x: 7.48%;
-  --lightning-left-3-y: 67.88%;
-  --lightning-left-4-x: 4.04%;
-  --lightning-left-4-y: 59%;
-  --lightning-left-5-x: 8.29%;
-  --lightning-left-5-y: 49.54%;
-  --lightning-left-6-x: 4.04%;
-  --lightning-left-6-y: 43.51%;
-  --lightning-left-7-x: 8.49%;
-  --lightning-left-7-y: 35.99%;
-  --lightning-left-8-x: 5.25%;
-  --lightning-left-8-y: 28.13%;
-  --lightning-left-9-x: 8.29%;
-  --lightning-left-9-y: 12.76%;
-  --lightning-left-10-x: 41.7%;
-  --lightning-left-10-y: 12.3%;
-  --lightning-right-1-x: 77.33%;
-  --lightning-right-1-y: 84.28%;
-  --lightning-right-2-x: 95.36%;
-  --lightning-right-2-y: 81.89%;
-  --lightning-right-3-x: 91.71%;
-  --lightning-right-3-y: 68.68%;
-  --lightning-right-4-x: 96.37%;
-  --lightning-right-4-y: 58.09%;
-  --lightning-right-5-x: 92.12%;
-  --lightning-right-5-y: 49.77%;
-  --lightning-right-6-x: 95.56%;
-  --lightning-right-6-y: 42.03%;
-  --lightning-right-7-x: 92.93%;
-  --lightning-right-7-y: 33.37%;
-  --lightning-right-8-x: 94.34%;
-  --lightning-right-8-y: 27.79%;
-  --lightning-right-9-x: 94.34%;
-  --lightning-right-9-y: 13.1%;
-  --lightning-right-10-x: 58.71%;
-  --lightning-right-10-y: 12.53%;
   --number-start-left-x: 22.49%;
   --number-start-left-y: 84.66%;
   --number-start-middle-x: 49.49%;
@@ -8364,80 +8315,6 @@ button {
   display: none;
 }
 
-.climax-charge-targets {
-  position: absolute;
-  z-index: 8;
-  inset: 0;
-  pointer-events: none;
-}
-
-.climax-charge-target {
-  position: absolute;
-  left: var(--target-x);
-  top: var(--target-y);
-  width: var(--target-d);
-  aspect-ratio: 1;
-  border: 2px solid rgba(143, 247, 255, 0.92);
-  border-radius: 50%;
-  background:
-    radial-gradient(circle, rgba(255, 255, 255, 0.22) 0 8%, rgba(143, 247, 255, 0.16) 9% 31%, transparent 33%),
-    radial-gradient(circle at 50% 56%, rgba(20, 223, 255, 0.22), transparent 62%);
-  box-shadow:
-    inset 0 0 9px rgba(143, 247, 255, 0.36),
-    0 0 12px rgba(33, 223, 255, 0.48),
-    0 0 0 1px rgba(39, 11, 59, 0.76);
-  opacity: 0;
-  transform: translate(-50%, -50%) scale(0.84);
-  transition: opacity 180ms ease, transform 220ms ease, filter 180ms ease;
-}
-
-.phone.multiplier-climax .climax-charge-target {
-  opacity: 1;
-  transform: translate(-50%, -50%) scale(1);
-}
-
-.climax-charge-target::before {
-  content: "";
-  position: absolute;
-  inset: 18%;
-  border-radius: 50%;
-  background: radial-gradient(circle, #fff 0 15%, #8ff7ff 35%, #ffe78c 70%, transparent 72%);
-  opacity: 0;
-  transform: scale(0.18);
-  transition: opacity 180ms ease, transform 260ms cubic-bezier(0.16, 1.12, 0.22, 1);
-}
-
-.climax-charge-target::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 136%;
-  height: 136%;
-  border-radius: 50%;
-  border: 1px solid rgba(255, 231, 140, 0.55);
-  opacity: 0;
-  transform: translate(-50%, -50%) scale(0.55);
-}
-
-.climax-charge-target.is-charged {
-  border-color: rgba(255, 231, 140, 0.98);
-  filter: brightness(1.18);
-  box-shadow:
-    inset 0 0 12px rgba(255, 255, 255, 0.52),
-    0 0 16px rgba(255, 231, 140, 0.75),
-    0 0 28px rgba(143, 247, 255, 0.72);
-}
-
-.climax-charge-target.is-charged::before {
-  opacity: 1;
-  transform: scale(1);
-}
-
-.climax-charge-target.is-hit::after {
-  animation: charge-target-hit 360ms ease-out both;
-}
-
 .phone.multiplier-climax .play-area::before {
   content: "";
   position: absolute;
@@ -8501,75 +8378,6 @@ button {
 
 .phone.climax-logo-return {
   animation: climax-return-bump 160ms ease-out 2;
-}
-
-.climax-lightning-bolt {
-  position: absolute;
-  z-index: 26;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  opacity: 0;
-  mix-blend-mode: normal;
-  animation: climax-lightning-bolt var(--duration, 1000ms) linear var(--delay, 0ms) forwards;
-}
-
-.climax-lightning-segment {
-  position: absolute;
-  display: block;
-  pointer-events: none;
-  transform-origin: 0 50%;
-  background: url("assets/fx/lightning-bolt.png?v=fx-material-20260613-034625") center / 100% 100% no-repeat;
-  opacity: 0;
-  animation: lightning-segment-pop 260ms ease-out both;
-}
-
-@keyframes climax-lightning-bolt {
-  0% {
-    opacity: 0;
-  }
-  8% {
-    opacity: 1;
-  }
-  72% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-  }
-}
-
-@keyframes lightning-segment-pop {
-  0% {
-    opacity: 0;
-    transform: translateY(-50%) rotate(var(--segment-angle, 0deg)) scaleX(0.12);
-  }
-  16% {
-    opacity: 1;
-  }
-  72% {
-    opacity: 0.92;
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(-50%) rotate(var(--segment-angle, 0deg)) scaleX(1);
-  }
-}
-
-@keyframes charge-target-hit {
-  0% {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0.55);
-  }
-  48% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(1.45);
-  }
 }
 
 @keyframes climax-screen-shake {
@@ -9031,72 +8839,6 @@ button {
   }
 }
 
-.climax-tune-lightning-layer {
-  position: fixed;
-  z-index: 9996;
-  pointer-events: none;
-  overflow: visible;
-}
-
-.climax-tune-lightning-layer svg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  overflow: visible;
-}
-
-.climax-tune-lightning-layer path {
-  fill: none;
-  stroke-width: 0.8;
-  stroke-dasharray: 2 2;
-  vector-effect: non-scaling-stroke;
-}
-
-.climax-tune-lightning-layer path.left {
-  stroke: rgba(143, 247, 255, 0.82);
-}
-
-.climax-tune-lightning-layer path.right {
-  stroke: rgba(255, 231, 140, 0.82);
-}
-
-.climax-tune-lightning-layer.is-hidden {
-  display: none;
-}
-
-.climax-lightning-path-handle {
-  position: absolute;
-  display: grid;
-  place-items: center;
-  width: 19px;
-  height: 19px;
-  padding: 0;
-  color: #270a05;
-  font: 900 12px/1 Arial, sans-serif;
-  border: 1px solid rgba(255, 255, 255, 0.82);
-  border-radius: 50%;
-  background: #8ff7ff;
-  box-shadow:
-    0 0 0 1px rgba(38, 7, 3, 0.76),
-    0 0 10px rgba(143, 247, 255, 0.74);
-  transform: translate(-50%, -50%);
-  pointer-events: auto;
-  cursor: grab;
-  touch-action: none;
-}
-
-.climax-lightning-path-handle.is-right {
-  background: #ffe78c;
-  box-shadow:
-    0 0 0 1px rgba(38, 7, 3, 0.76),
-    0 0 10px rgba(255, 231, 140, 0.74);
-}
-
-.climax-lightning-path-handle:active {
-  cursor: grabbing;
-}
-
 /* iOS Safari performance mode: keep gameplay animations, reduce costly idle compositing. */
 .phone.ios-performance {
   box-shadow:
@@ -9142,8 +8884,7 @@ html.ios-performance .event-socket {
 .phone.ios-performance .special-meter,
 .phone.ios-performance .stage-slot,
 .phone.ios-performance .event-socket,
-.phone.ios-performance .tile,
-.phone.ios-performance .climax-charge-target {
+.phone.ios-performance .tile {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
 }
@@ -9471,8 +9212,7 @@ html.ios-performance .phone {
 .phone.fx-lite .special-meter,
 .phone.fx-lite .stage-slot,
 .phone.fx-lite .event-socket,
-.phone.fx-lite .tile,
-.phone.fx-lite .climax-charge-target {
+.phone.fx-lite .tile {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
 }
@@ -9514,8 +9254,7 @@ html.ios-performance .phone {
 .phone.fx-lite.climax-intro-wheel,
 .phone.fx-lite.climax-logo-return,
 .phone.fx-lite .climax-wheel-rotor,
-.phone.fx-lite .climax-wheel-highlight,
-.phone.fx-lite .climax-charge-target.is-hit::after {
+.phone.fx-lite .climax-wheel-highlight {
   animation: none !important;
 }
 
@@ -9530,22 +9269,6 @@ html.ios-performance .phone {
 
 .phone.fx-lite.climax-spinning .climax-wheel-highlight {
   opacity: 0.28 !important;
-}
-
-.phone.fx-lite .climax-lightning-bolt {
-  display: block !important;
-  animation: climax-lightning-bolt var(--duration, 520ms) linear var(--delay, 0ms) forwards !important;
-}
-
-.phone.fx-lite .climax-lightning-segment {
-  animation-duration: 180ms !important;
-}
-
-.phone.fx-lite .climax-charge-target.is-charged {
-  filter: none !important;
-  box-shadow:
-    inset 0 0 8px rgba(255, 255, 255, 0.34),
-    0 0 10px rgba(255, 231, 140, 0.42) !important;
 }
 
 .audit-panel {

@@ -59,7 +59,6 @@ const AUDIO_ASSETS = {
   multiplierCollect: "assets/audio/multiplier-collect.wav",
   multiplierHigh: "assets/audio/multiplier-high.wav",
   slotFull: "assets/audio/slot-full.wav",
-  lightningEnergy: "assets/audio/lightning-energy.wav",
   climaxIntro: "assets/audio/climax-intro.wav",
   climaxLift: "assets/audio/climax-lift.wav",
   logoReturn: "assets/audio/logo-return.wav",
@@ -209,39 +208,6 @@ const FULL_DROP_WHEEL_TURNS_MAX = 4;
 const FULL_DROP_WHEEL_FALLBACK_POINTER_Y = 7.5;
 const CLIMAX_INTRO_PUSH_DELAY_MS = 650;
 const CLIMAX_INTRO_WHEEL_RISE_MS = 2000;
-const CLIMAX_LIGHTNING_DURATION_MS = 1000;
-const CLIMAX_REDUCED_LIGHTNING_DURATION_MS = 520;
-const CLIMAX_CHARGE_TARGETS = [
-  { x: 42, y: 12.5, d: 7 },
-  { x: 50, y: 12.5, d: 7 },
-  { x: 58, y: 12.5, d: 7 },
-];
-const CLIMAX_LIGHTNING_PATHS = {
-  left: [
-    { x: 22.26, y: 84.85 },
-    { x: 4.85, y: 81.89 },
-    { x: 7.48, y: 67.88 },
-    { x: 4.04, y: 59 },
-    { x: 8.29, y: 49.54 },
-    { x: 4.04, y: 43.51 },
-    { x: 8.49, y: 35.99 },
-    { x: 5.25, y: 28.13 },
-    { x: 8.29, y: 12.76 },
-    { x: 41.7, y: 12.3 },
-  ],
-  right: [
-    { x: 77.33, y: 84.28 },
-    { x: 95.36, y: 81.89 },
-    { x: 91.71, y: 68.68 },
-    { x: 96.37, y: 58.09 },
-    { x: 92.12, y: 49.77 },
-    { x: 95.56, y: 42.03 },
-    { x: 92.93, y: 33.37 },
-    { x: 94.34, y: 27.79 },
-    { x: 94.34, y: 13.1 },
-    { x: 58.71, y: 12.53 },
-  ],
-};
 const BGM_DUCK_IMPORTANT_MS = 1400;
 const BGM_DUCK_LIGHT = 0.64;
 const BGM_DUCK_MEDIUM = 0.42;
@@ -369,7 +335,6 @@ const climaxWheelImageEl = document.getElementById("climaxWheelImage");
 const climaxWheelLabelsEl = document.getElementById("climaxWheelLabels");
 const climaxWheelHighlightEl = document.getElementById("climaxWheelHighlight");
 const climaxCenterLineEl = document.getElementById("climaxCenterLine");
-const climaxChargeTargetsEl = document.getElementById("climaxChargeTargets");
 const cabinetScaleEl = document.getElementById("cabinetScale");
 const phoneShellEl = document.querySelector(".phone");
 const CABINET_DESIGN_WIDTH = 720;
@@ -1468,25 +1433,11 @@ function animateClimaxWheel(finalRotation, profile) {
   });
 }
 
-function renderClimaxChargeTargets() {
-  if (!climaxChargeTargetsEl) return;
-  const targets = Array.from(climaxChargeTargetsEl.querySelectorAll(".climax-charge-target"));
-  targets.forEach((target, index) => {
-    const tune = climaxChargeTargetTune(index);
-    if (!tune) return;
-    target.style.setProperty("--target-x", `${tune.x}%`);
-    target.style.setProperty("--target-y", `${tune.y}%`);
-    target.style.setProperty("--target-d", `${tune.d}%`);
-    target.classList.toggle("is-charged", state.climaxChargedSlots.has(index));
-  });
-}
-
 function renderClimaxStage() {
   if (!climaxStageEl) return;
   const active = isMultiplierClimaxActive();
   if (active || phoneShellEl?.classList.contains("tune-climax")) ensureClimaxWheelImageLoaded();
   climaxStageEl.setAttribute("aria-hidden", String(!active));
-  renderClimaxChargeTargets();
   if (!active || state.climaxSpinning) stopClimaxIdleSpin();
   if (climaxWheelRotorEl) {
     climaxWheelRotorEl.style.setProperty("--wheel-rotation", `${state.climaxWheelRotation || 0}deg`);
@@ -3187,173 +3138,12 @@ function spawnSlotEnergy(col, value) {
   enqueueFx(items);
 }
 
-function phonePointFromStagePercent(point, phoneRect, stageRect) {
-  return {
-    x: stageRect.left + stageRect.width * (point.x / 100) - phoneRect.left,
-    y: stageRect.top + stageRect.height * (point.y / 100) - phoneRect.top,
-  };
-}
-
 function readPhonePercent(name, fallback) {
   const phone = document.querySelector(".phone");
   if (!phone) return fallback;
   const raw = getComputedStyle(phone).getPropertyValue(name).trim();
   const value = parseFloat(raw);
   return Number.isFinite(value) ? value : fallback;
-}
-
-function climaxChargeTargetTune(index) {
-  const fallback = CLIMAX_CHARGE_TARGETS[index] || { x: 50, y: 12.5, d: 7 };
-  const id = index + 1;
-  return {
-    x: readPhonePercent(`--tune-circle-${id}-x`, fallback.x),
-    y: readPhonePercent(`--tune-circle-${id}-y`, fallback.y),
-    d: readPhonePercent(`--tune-circle-${id}-d`, fallback.d),
-  };
-}
-
-function climaxLightningPathTune(side) {
-  const fallback = CLIMAX_LIGHTNING_PATHS[side] || [];
-  return fallback.map((point, index) => {
-    const id = index + 1;
-    return {
-      x: readPhonePercent(`--lightning-${side}-${id}-x`, point.x),
-      y: readPhonePercent(`--lightning-${side}-${id}-y`, point.y),
-    };
-  });
-}
-
-function lightningRoutePoints(col, start, end, phoneRect, stageRect) {
-  if (col === 1) {
-    return [
-      start,
-      { x: start.x, y: start.y + (end.y - start.y) * 0.38 },
-      { x: end.x, y: start.y + (end.y - start.y) * 0.68 },
-      end,
-    ];
-  }
-  const key = col === 0 ? "left" : "right";
-  const route = climaxLightningPathTune(key);
-  return [
-    start,
-    ...route.map((point) => phonePointFromStagePercent(point, phoneRect, stageRect)),
-    end,
-  ];
-}
-
-function appendBitmapLightningSegment(host, start, end, delay) {
-  const dx = end.x - start.x;
-  const dy = end.y - start.y;
-  const length = Math.hypot(dx, dy);
-  if (length < 8) return;
-  const segment = document.createElement("i");
-  segment.className = "climax-lightning-segment";
-  segment.style.left = `${start.x}px`;
-  segment.style.top = `${start.y}px`;
-  segment.style.width = `${length}px`;
-  segment.style.height = `${Math.min(92, Math.max(34, length * 0.16))}px`;
-  segment.style.setProperty("--segment-angle", `${Math.atan2(dy, dx)}rad`);
-  segment.style.transform = `translateY(-50%) rotate(var(--segment-angle))`;
-  segment.style.animationDelay = `${delay}ms`;
-  host.appendChild(segment);
-}
-
-function curvePathData(points) {
-  if (!points.length) return "";
-  if (points.length === 1) return `M ${points[0].x} ${points[0].y}`;
-  const commands = [`M ${points[0].x.toFixed(2)} ${points[0].y.toFixed(2)}`];
-  for (let index = 0; index < points.length - 1; index += 1) {
-    const current = points[index];
-    const next = points[index + 1];
-    const previous = points[index - 1] || current;
-    const after = points[index + 2] || next;
-    const cp1 = {
-      x: current.x + (next.x - previous.x) / 6,
-      y: current.y + (next.y - previous.y) / 6,
-    };
-    const cp2 = {
-      x: next.x - (after.x - current.x) / 6,
-      y: next.y - (after.y - current.y) / 6,
-    };
-    commands.push(`C ${cp1.x.toFixed(2)} ${cp1.y.toFixed(2)}, ${cp2.x.toFixed(2)} ${cp2.y.toFixed(2)}, ${next.x.toFixed(2)} ${next.y.toFixed(2)}`);
-  }
-  return commands.join(" ");
-}
-
-function playClimaxLightningPerformance(col) {
-  if (playAudioAsset("lightningEnergy", { category: "transition", gain: 1.08 })) return true;
-  withSoundScope("transition", 1.22, () => {
-    playMachineRumble({ duration: 0.72, root: hz("F", 1), to: hz("Bb", 1), volume: 0.048, from: 620, lowTo: 180, noiseFreq: 880 });
-    playRiser(hz("Bb", 2), hz("F", 5), 0.82, { delay: 0.03, volume: 0.046, q: 4.4, noiseFreq: 4200 });
-    [0.08, 0.22, 0.38, 0.56, 0.74].forEach((delay, index) => {
-      playNoise(0.05, { delay, frequency: 4200 + index * 760, filterType: "bandpass", q: 6, volume: 0.032 });
-      playTone(hz("F", 4) * (1 + index * 0.08), 0.045, { delay: delay + 0.012, type: "square", volume: 0.035, filter: { type: "bandpass", from: 1300, to: 3400, q: 5 } });
-    });
-    playHydraulicClank({ delay: 0.9, root: col === 1 ? hz("Bb", 1) : hz("F", 1), low: 0.058, noise: 0.032, noiseFreq: 1300, stab: 0.03, chord: "tonic" });
-  });
-  return false;
-}
-
-function spawnSlotClimaxEnergy(col, value, baseDelay = 0) {
-  const host = document.querySelector(".phone");
-  const source = slotsEl?.children[col];
-  const target = climaxChargeTargetsEl?.querySelector(`.climax-charge-target[data-slot="${col}"]`);
-  if (!host || !climaxStageEl || !source || !target) return Promise.resolve();
-
-  const hostRect = host.getBoundingClientRect();
-  const sourceRect = source.getBoundingClientRect();
-  const stageRect = climaxStageEl.getBoundingClientRect();
-  const targetRect = target.getBoundingClientRect();
-  const startX = sourceRect.left + sourceRect.width * 0.5 - hostRect.left;
-  const startY = sourceRect.top - hostRect.top;
-  const endX = targetRect.left + targetRect.width * 0.5 - hostRect.left;
-  const endY = targetRect.top + targetRect.height * 0.5 - hostRect.top;
-
-  if (isReducedClimaxFx()) {
-    const bolt = document.createElement("div");
-    const midX = startX + (endX - startX) * 0.52 + (col - 1) * 18;
-    const midY = startY + (endY - startY) * 0.58;
-    bolt.className = "climax-lightning-bolt is-bitmap is-lite";
-    bolt.style.setProperty("--delay", `${baseDelay}ms`);
-    bolt.style.setProperty("--duration", `${CLIMAX_REDUCED_LIGHTNING_DURATION_MS}ms`);
-    [
-      { x: startX, y: startY },
-      { x: midX, y: midY },
-      { x: endX, y: endY },
-    ].forEach((point, index, route) => {
-      const next = route[index + 1];
-      if (next) appendBitmapLightningSegment(bolt, point, next, baseDelay + index * 28);
-    });
-    host.appendChild(bolt);
-    window.setTimeout(() => {
-      state.climaxChargedSlots.add(col);
-      target.classList.add("is-hit");
-      renderClimaxStage();
-      window.setTimeout(() => target.classList.remove("is-hit"), 180);
-    }, baseDelay + CLIMAX_REDUCED_LIGHTNING_DURATION_MS);
-    window.setTimeout(() => bolt.remove(), baseDelay + CLIMAX_REDUCED_LIGHTNING_DURATION_MS + 160);
-    return wait(baseDelay + CLIMAX_REDUCED_LIGHTNING_DURATION_MS);
-  }
-
-  const route = lightningRoutePoints(col, { x: startX, y: startY }, { x: endX, y: endY }, hostRect, stageRect);
-  const bolt = document.createElement("div");
-  bolt.className = "climax-lightning-bolt is-bitmap";
-  bolt.style.setProperty("--delay", `${baseDelay}ms`);
-  bolt.style.setProperty("--duration", `${CLIMAX_LIGHTNING_DURATION_MS}ms`);
-  route.forEach((point, index) => {
-    const next = route[index + 1];
-    if (next) appendBitmapLightningSegment(bolt, point, next, baseDelay + index * 18);
-  });
-  host.appendChild(bolt);
-  window.setTimeout(() => playClimaxLightningPerformance(col), baseDelay);
-  window.setTimeout(() => {
-    state.climaxChargedSlots.add(col);
-    target.classList.add("is-hit");
-    renderClimaxStage();
-    window.setTimeout(() => target.classList.remove("is-hit"), 360);
-  }, baseDelay + CLIMAX_LIGHTNING_DURATION_MS);
-  window.setTimeout(() => bolt.remove(), baseDelay + CLIMAX_LIGHTNING_DURATION_MS + 280);
-  return wait(baseDelay + CLIMAX_LIGHTNING_DURATION_MS);
 }
 
 function numberFlightTuneFromCss() {
@@ -3364,8 +3154,8 @@ function numberFlightTuneFromCss() {
       { id: "right", label: "Right", value: 50, x: readPhonePercent("--number-start-right-x", 77.59), y: readPhonePercent("--number-start-right-y", 84.8) },
     ],
     receiver: {
-      x: readPhonePercent("--number-receiver-x", CLIMAX_CHARGE_TARGETS[1].x),
-      y: readPhonePercent("--number-receiver-y", CLIMAX_CHARGE_TARGETS[1].y),
+      x: readPhonePercent("--number-receiver-x", 50.54),
+      y: readPhonePercent("--number-receiver-y", 13.1),
     },
     show: {
       x: readPhonePercent("--number-show-x", 50.73),
@@ -3495,7 +3285,6 @@ function playClimaxNumberFlight({
 }
 
 function spawnSlotClimaxNumberFlight(col, payout, baseDelay = 0) {
-  const target = climaxChargeTargetsEl?.querySelector(`.climax-charge-target[data-slot="${col}"]`);
   const tune = numberFlightTuneFromCss();
   return playClimaxNumberFlight({
     slotIndex: col,
@@ -3504,9 +3293,7 @@ function spawnSlotClimaxNumberFlight(col, payout, baseDelay = 0) {
     baseDelay,
     onArrive: () => {
       state.climaxChargedSlots.add(col);
-      target?.classList.add("is-hit");
       renderClimaxStage();
-      window.setTimeout(() => target?.classList.remove("is-hit"), 260);
     },
   });
 }
@@ -6166,8 +5953,8 @@ function initClimaxTunePanel() {
       { id: "right", label: "Right", value: 50, x: readPhonePercent("--number-start-right-x", 81.29), y: readPhonePercent("--number-start-right-y", 99.56) },
     ];
     const receiverTune = {
-      x: readPhonePercent("--number-receiver-x", CLIMAX_CHARGE_TARGETS[1].x),
-      y: readPhonePercent("--number-receiver-y", CLIMAX_CHARGE_TARGETS[1].y),
+      x: readPhonePercent("--number-receiver-x", 50.54),
+      y: readPhonePercent("--number-receiver-y", 13.1),
     };
     const showTune = {
       x: readPhonePercent("--number-show-x", 50),
@@ -6553,12 +6340,6 @@ function initClimaxTunePanel() {
   ];
   const labelTune = JSON.parse(JSON.stringify(WHEEL_LABEL_TUNE));
   let selectedLabel = FULL_DROP_WHEEL_LABEL_ORDER[0].key;
-  const circleTune = CLIMAX_CHARGE_TARGETS.map((circle) => ({ ...circle }));
-  const lightningTune = {
-    left: CLIMAX_LIGHTNING_PATHS.left.map((point) => ({ ...point })),
-    right: CLIMAX_LIGHTNING_PATHS.right.map((point) => ({ ...point })),
-  };
-  let selectedCircle = 0;
 
   const panel = document.createElement("div");
   panel.className = "climax-tune-panel";
@@ -6567,11 +6348,8 @@ function initClimaxTunePanel() {
     <div class="climax-tune-controls"></div>
     <strong>Label Tune</strong>
     <div class="climax-label-tune"></div>
-    <strong>Circle Tune</strong>
-    <div class="climax-circle-tune"></div>
     <div class="climax-tune-actions">
       <button type="button" data-action="copy">Copy CSS</button>
-      <button type="button" data-action="toggle-points">Hide Points</button>
       <button type="button" data-action="spin">Spin</button>
     </div>
     <textarea class="climax-tune-output" spellcheck="false"></textarea>
@@ -6580,23 +6358,10 @@ function initClimaxTunePanel() {
 
   const controlsEl = panel.querySelector(".climax-tune-controls");
   const labelTuneEl = panel.querySelector(".climax-label-tune");
-  const circleTuneEl = panel.querySelector(".climax-circle-tune");
   const output = panel.querySelector(".climax-tune-output");
   const handleLayer = document.createElement("div");
   handleLayer.className = "climax-mask-handle-layer";
   document.body.appendChild(handleLayer);
-  const circleLayer = document.createElement("div");
-  circleLayer.className = "climax-tune-circle-layer";
-  document.body.appendChild(circleLayer);
-  const lightningTuneLayer = document.createElement("div");
-  lightningTuneLayer.className = "climax-tune-lightning-layer";
-  lightningTuneLayer.innerHTML = `
-    <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-      <path class="left"></path>
-      <path class="right"></path>
-    </svg>
-  `;
-  document.body.appendChild(lightningTuneLayer);
   let draggingPoint = false;
 
   function numericValue(name) {
@@ -6659,18 +6424,6 @@ function initClimaxTunePanel() {
       return `  ${name}: ${value || `0${unit}`};`;
     });
     lines.push(`  --climax-mask-path: ${maskPath()};`);
-    circleTune.forEach((circle, index) => {
-      const id = index + 1;
-      lines.push(`  --tune-circle-${id}-x: ${+circle.x.toFixed(2)}%;`);
-      lines.push(`  --tune-circle-${id}-y: ${+circle.y.toFixed(2)}%;`);
-      lines.push(`  --tune-circle-${id}-d: ${+circle.d.toFixed(2)}%;`);
-    });
-    ["left", "right"].forEach((side) => {
-      lightningTune[side].forEach((point, index) => {
-        lines.push(`  --lightning-${side}-${index + 1}-x: ${+point.x.toFixed(2)}%;`);
-        lines.push(`  --lightning-${side}-${index + 1}-y: ${+point.y.toFixed(2)}%;`);
-      });
-    });
     return `.phone {\n${lines.join("\n")}\n}\n\nWHEEL_LABEL_TUNE = ${JSON.stringify(labelTune, null, 2)};`;
   }
 
@@ -6763,61 +6516,6 @@ function initClimaxTunePanel() {
     tuneRow(labelTuneEl, "item font", item.font.toFixed(0), () => (item.font -= 1).toFixed(0), () => (item.font += 1).toFixed(0));
   }
 
-  function updateCircleLayer() {
-    circleLayer.querySelectorAll(".climax-tune-circle").forEach((circleEl, index) => {
-      const circle = circleTune[index];
-      circleEl.style.left = `${circle.x}%`;
-      circleEl.style.top = `${circle.y}%`;
-      circleEl.style.width = `${circle.d}%`;
-      circleEl.classList.toggle("is-selected", index === selectedCircle);
-    });
-    refreshOutput();
-  }
-
-  function renderCircleTuneControls() {
-    circleTuneEl.innerHTML = "";
-    const selectRow = document.createElement("label");
-    selectRow.className = "climax-tune-row";
-    selectRow.innerHTML = `
-      <span>selected</span>
-      <select class="climax-circle-select">${circleTune.map((_, index) => `<option value="${index}">circle ${index + 1}</option>`).join("")}</select>
-      <span></span>
-    `;
-    const select = selectRow.querySelector("select");
-    select.value = String(selectedCircle);
-    select.addEventListener("change", () => {
-      selectedCircle = Number(select.value);
-      renderCircleTuneControls();
-      updateCircleLayer();
-    });
-    circleTuneEl.appendChild(selectRow);
-
-    const circle = circleTune[selectedCircle];
-    const circleUpdate = () => {
-      renderCircleTuneControls();
-      updateCircleLayer();
-    };
-    tuneRow(circleTuneEl, "circle x", circle.x.toFixed(1), () => (circle.x -= 0.5).toFixed(1), () => (circle.x += 0.5).toFixed(1), circleUpdate);
-    tuneRow(circleTuneEl, "circle y", circle.y.toFixed(1), () => (circle.y -= 0.5).toFixed(1), () => (circle.y += 0.5).toFixed(1), circleUpdate);
-    tuneRow(circleTuneEl, "diameter", circle.d.toFixed(1), () => (circle.d = Math.max(1, circle.d - 0.5)).toFixed(1), () => (circle.d += 0.5).toFixed(1), circleUpdate);
-  }
-
-  function updateLightningTuneLayer() {
-    ["left", "right"].forEach((side) => {
-      const path = lightningTuneLayer.querySelector(`path.${side}`);
-      path?.setAttribute("d", curvePathData(lightningTune[side]));
-    });
-    lightningTuneLayer.querySelectorAll(".climax-lightning-path-handle").forEach((handle) => {
-      const side = handle.dataset.side;
-      const index = Number(handle.dataset.index);
-      const point = lightningTune[side]?.[index];
-      if (!point) return;
-      handle.style.left = `${point.x}%`;
-      handle.style.top = `${point.y}%`;
-    });
-    refreshOutput();
-  }
-
   for (const [label, name, min, max, step, unit] of controls) {
     const row = document.createElement("label");
     row.className = "climax-tune-row";
@@ -6869,21 +6567,11 @@ function initClimaxTunePanel() {
     handleLayer.style.top = `${rect.top}px`;
     handleLayer.style.width = `${rect.width}px`;
     handleLayer.style.height = `${rect.height}px`;
-    circleLayer.style.left = `${rect.left}px`;
-    circleLayer.style.top = `${rect.top}px`;
-    circleLayer.style.width = `${rect.width}px`;
-    circleLayer.style.height = `${rect.height}px`;
-    lightningTuneLayer.style.left = `${rect.left}px`;
-    lightningTuneLayer.style.top = `${rect.top}px`;
-    lightningTuneLayer.style.width = `${rect.width}px`;
-    lightningTuneLayer.style.height = `${rect.height}px`;
     handleLayer.querySelectorAll(".climax-mask-handle").forEach((handle, index) => {
       const point = maskPoints[index];
       handle.style.left = `${point.x}%`;
       handle.style.top = `${point.y}%`;
     });
-    updateCircleLayer();
-    updateLightningTuneLayer();
   }
 
   maskPoints.forEach((point, index) => {
@@ -6916,83 +6604,6 @@ function initClimaxTunePanel() {
       handle.addEventListener("pointercancel", up);
     });
     handleLayer.appendChild(handle);
-  });
-
-  circleTune.forEach((circle, index) => {
-    const circleEl = document.createElement("button");
-    circleEl.type = "button";
-    circleEl.className = "climax-tune-circle";
-    circleEl.title = `circle ${index + 1}`;
-    circleEl.setAttribute("aria-label", `circle ${index + 1}`);
-    circleEl.textContent = String(index + 1);
-    circleEl.addEventListener("click", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      selectedCircle = index;
-      renderCircleTuneControls();
-      updateCircleLayer();
-    });
-    circleEl.addEventListener("pointerdown", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      selectedCircle = index;
-      renderCircleTuneControls();
-      updateCircleLayer();
-      circleEl.setPointerCapture(event.pointerId);
-      const move = (moveEvent) => {
-        const rect = climaxStageEl.getBoundingClientRect();
-        circle.x = ((moveEvent.clientX - rect.left) / rect.width) * 100;
-        circle.y = ((moveEvent.clientY - rect.top) / rect.height) * 100;
-        updateCircleLayer();
-        renderCircleTuneControls();
-      };
-      const up = () => {
-        draggingPoint = false;
-        circleEl.removeEventListener("pointermove", move);
-        circleEl.removeEventListener("pointerup", up);
-        circleEl.removeEventListener("pointercancel", up);
-      };
-      draggingPoint = true;
-      circleEl.addEventListener("pointermove", move);
-      circleEl.addEventListener("pointerup", up);
-      circleEl.addEventListener("pointercancel", up);
-    });
-    circleLayer.appendChild(circleEl);
-  });
-
-  ["left", "right"].forEach((side) => {
-    lightningTune[side].forEach((point, index) => {
-      const handle = document.createElement("button");
-      handle.type = "button";
-      handle.className = `climax-lightning-path-handle is-${side}`;
-      handle.dataset.side = side;
-      handle.dataset.index = String(index);
-      handle.title = `${side} lightning point ${index + 1}`;
-      handle.setAttribute("aria-label", `${side} lightning point ${index + 1}`);
-      handle.textContent = "▲";
-      handle.addEventListener("pointerdown", (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        handle.setPointerCapture(event.pointerId);
-        const move = (moveEvent) => {
-          const rect = climaxStageEl.getBoundingClientRect();
-          point.x = ((moveEvent.clientX - rect.left) / rect.width) * 100;
-          point.y = ((moveEvent.clientY - rect.top) / rect.height) * 100;
-          updateLightningTuneLayer();
-        };
-        const up = () => {
-          draggingPoint = false;
-          handle.removeEventListener("pointermove", move);
-          handle.removeEventListener("pointerup", up);
-          handle.removeEventListener("pointercancel", up);
-        };
-        draggingPoint = true;
-        handle.addEventListener("pointermove", move);
-        handle.addEventListener("pointerup", up);
-        handle.addEventListener("pointercancel", up);
-      });
-      lightningTuneLayer.appendChild(handle);
-    });
   });
 
   renderClimaxStage();
@@ -7031,7 +6642,7 @@ function initClimaxTunePanel() {
   });
 
   climaxStageEl.addEventListener("pointerdown", (event) => {
-    if (!params.has("tune") || draggingPoint || event.target.closest(".climax-mask-handle") || event.target.closest(".climax-tune-circle") || event.target.closest(".climax-lightning-path-handle") || event.target.closest(".climax-center-line") || event.target.closest(".climax-tune-panel")) return;
+    if (!params.has("tune") || draggingPoint || event.target.closest(".climax-mask-handle") || event.target.closest(".climax-center-line") || event.target.closest(".climax-tune-panel")) return;
     event.preventDefault();
     climaxStageEl.setPointerCapture(event.pointerId);
     const rect = climaxStageEl.getBoundingClientRect();
@@ -7069,13 +6680,6 @@ function initClimaxTunePanel() {
     }
   });
 
-  panel.querySelector('[data-action="toggle-points"]').addEventListener("click", (event) => {
-    handleLayer.classList.toggle("is-hidden");
-    circleLayer.classList.toggle("is-hidden");
-    lightningTuneLayer.classList.toggle("is-hidden");
-    event.currentTarget.textContent = handleLayer.classList.contains("is-hidden") ? "Show Points" : "Hide Points";
-  });
-
   panel.querySelector('[data-action="spin"]').addEventListener("click", () => {
     state.climaxWheelRotation += 720;
     renderClimaxStage();
@@ -7084,7 +6688,6 @@ function initClimaxTunePanel() {
   refreshOutput();
   applyMaskPath();
   renderLabelTuneControls();
-  renderCircleTuneControls();
   rotateSelectedLabelToTop();
   applyLabelTune();
   placeHandleLayer();
