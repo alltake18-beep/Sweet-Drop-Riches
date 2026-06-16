@@ -306,6 +306,7 @@ const SOUND_PROFILES = {
 
 const boardEl = document.getElementById("board");
 const slotsEl = document.getElementById("slots");
+const slotStatusCirclesEl = document.getElementById("slotStatusCircles");
 const fxCanvas = document.getElementById("fxCanvas");
 const perfPanel = document.getElementById("perfPanel");
 const specialMeterTextEl = document.getElementById("specialMeterText");
@@ -1236,7 +1237,38 @@ function renderSlots() {
     slotsEl.appendChild(slot);
   }
 
+  renderSlotStatusCircles();
+
   if (hasFlash) state.slotFlash = Array(SLOT_COUNT).fill(null);
+}
+
+function renderSlotStatusCircles() {
+  if (!slotStatusCirclesEl) return;
+  const html = Array.from({ length: SLOT_COUNT }, (_, col) => {
+    const value = state.slotValues[col] || state.slotFlash[col];
+    const symbolValue = state.slotSymbolValues[col] || 5;
+    const scoreLength = formatScore(value).replace(/[^0-9]/g, "").length;
+    const classes = ["slot-status-circle"];
+    if (value) {
+      classes.push("is-filled", `score-length-${Math.min(6, scoreLength)}`);
+    }
+    return `
+      <div class="${classes.join(" ")}" data-slot="${col + 1}" aria-label="第${col + 1}槽${value ? ` ${formatScore(value)}` : " 未收集"}">
+        ${
+          value
+            ? `<div class="slot-status-symbol">
+                <img src="${multiplierAsset(symbolValue)}" alt="">
+                <strong>${formatScore(value)}</strong>
+              </div>`
+            : ""
+        }
+      </div>
+    `;
+  }).join("");
+  if (slotStatusCirclesEl.dataset.signature !== html) {
+    slotStatusCirclesEl.innerHTML = html;
+    slotStatusCirclesEl.dataset.signature = html;
+  }
 }
 
 function isMultiplierClimaxActive() {
@@ -6792,21 +6824,29 @@ function initBoardTunePanel() {
     { label: "光環寬", name: "--slot-ring-width", min: 20, max: 240, step: 0.1, value: 123, unit: "%" },
     { label: "光環高", name: "--slot-ring-height", min: 20, max: 240, step: 0.1, value: 117.7, unit: "%" },
     { heading: "能量槽" },
-    { label: "能量槽 X", name: "--energy-track-x", min: 0, max: 100, step: 0.1, value: 49.8, unit: "%" },
-    { label: "能量槽 Y", name: "--energy-track-y", min: 0, max: 100, step: 0.1, value: 21.5, unit: "%" },
-    { label: "能量槽寬", name: "--energy-track-width", min: 4, max: 100, step: 0.1, value: 72.8, unit: "%" },
-    { label: "能量槽高", name: "--energy-track-height", min: 4, max: 160, step: 1, value: 82, unit: "px" },
-    { label: "兩端弧線", name: "--energy-end-curve", min: 0, max: 120, step: 1, value: 26, unit: "px" },
+    { label: "能量槽 X", name: "--energy-track-x", min: 0, max: 100, step: 0.1, value: 49.9, unit: "%" },
+    { label: "能量槽 Y", name: "--energy-track-y", min: 0, max: 100, step: 0.1, value: 20, unit: "%" },
+    { label: "能量槽寬", name: "--energy-track-width", min: 4, max: 100, step: 0.1, value: 72, unit: "%" },
+    { label: "能量槽高", name: "--energy-track-height", min: 4, max: 160, step: 1, value: 98, unit: "px" },
+    { label: "兩端弧線", name: "--energy-end-curve", min: 0, max: 120, step: 1, value: 14, unit: "px" },
     { heading: "遮罩圓洞" },
-    { label: "左洞 X", name: "--energy-hole-1-x", min: 0, max: 100, step: 0.1, value: 22.1, unit: "%" },
-    { label: "左洞 Y", name: "--energy-hole-1-y", min: 0, max: 100, step: 0.1, value: 33.6, unit: "%" },
-    { label: "左洞半徑", name: "--energy-hole-1-r", min: 0, max: 90, step: 1, value: 55, unit: "px" },
-    { label: "中洞 X", name: "--energy-hole-2-x", min: 0, max: 100, step: 0.1, value: 50, unit: "%" },
-    { label: "中洞 Y", name: "--energy-hole-2-y", min: 0, max: 100, step: 0.1, value: 33.6, unit: "%" },
-    { label: "中洞半徑", name: "--energy-hole-2-r", min: 0, max: 90, step: 1, value: 56, unit: "px" },
-    { label: "右洞 X", name: "--energy-hole-3-x", min: 0, max: 100, step: 0.1, value: 78.1, unit: "%" },
-    { label: "右洞 Y", name: "--energy-hole-3-y", min: 0, max: 100, step: 0.1, value: 33.6, unit: "%" },
-    { label: "右洞半徑", name: "--energy-hole-3-r", min: 0, max: 90, step: 1, value: 56, unit: "px" },
+    { label: "左洞 X", name: "--energy-hole-1-x", min: 0, max: 100, step: 0.1, value: 20, unit: "%" },
+    { label: "左洞 Y", name: "--energy-hole-1-y", min: 0, max: 100, step: 0.1, value: 49.3, unit: "%" },
+    { label: "左洞半徑", name: "--energy-hole-1-r", min: 0, max: 90, step: 1, value: 60, unit: "px" },
+    { label: "中洞 X", name: "--energy-hole-2-x", min: 0, max: 100, step: 0.1, value: 49.9, unit: "%" },
+    { label: "中洞 Y", name: "--energy-hole-2-y", min: 0, max: 100, step: 0.1, value: 47.8, unit: "%" },
+    { label: "中洞半徑", name: "--energy-hole-2-r", min: 0, max: 90, step: 1, value: 60, unit: "px" },
+    { label: "右洞 X", name: "--energy-hole-3-x", min: 0, max: 100, step: 0.1, value: 79.5, unit: "%" },
+    { label: "右洞 Y", name: "--energy-hole-3-y", min: 0, max: 100, step: 0.1, value: 47.3, unit: "%" },
+    { label: "右洞半徑", name: "--energy-hole-3-r", min: 0, max: 90, step: 1, value: 60, unit: "px" },
+    { heading: "收集狀態圓圈" },
+    { label: "狀態左 X", name: "--slot-status-1-x", min: 0, max: 100, step: 0.1, value: 20, unit: "%" },
+    { label: "狀態左 Y", name: "--slot-status-1-y", min: 0, max: 100, step: 0.1, value: 23.8, unit: "%" },
+    { label: "狀態中 X", name: "--slot-status-2-x", min: 0, max: 100, step: 0.1, value: 49.9, unit: "%" },
+    { label: "狀態中 Y", name: "--slot-status-2-y", min: 0, max: 100, step: 0.1, value: 23.8, unit: "%" },
+    { label: "狀態右 X", name: "--slot-status-3-x", min: 0, max: 100, step: 0.1, value: 79.5, unit: "%" },
+    { label: "狀態右 Y", name: "--slot-status-3-y", min: 0, max: 100, step: 0.1, value: 23.8, unit: "%" },
+    { label: "狀態大小", name: "--slot-status-size", min: 20, max: 120, step: 1, value: 54, unit: "px" },
   ];
 
   const panel = document.createElement("div");
