@@ -565,6 +565,13 @@ function currentBet() {
   return BET_STEPS[state.betIndex];
 }
 
+function winMultiplierLabel(amount, bet = currentBet()) {
+  const ratio = bet > 0 ? Number(amount) / bet : 0;
+  if (!Number.isFinite(ratio) || ratio <= 0) return "0x";
+  const rounded = Math.round(ratio * 10) / 10;
+  return `${Number.isInteger(rounded) ? rounded.toFixed(0) : rounded.toFixed(1)}x`;
+}
+
 function wait(ms) {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
@@ -2730,7 +2737,7 @@ async function maybeShowWinCard(options = {}) {
   winLabelEl.textContent = tier.label;
   winTitleArtEl.src = winArtAsset(tier.art);
   winTitleArtEl.alt = tier.label;
-  winMultiplierEl.textContent = options.multiplierLabel || `${Math.floor(ratio)}x`;
+  winMultiplierEl.textContent = options.multiplierLabel || winMultiplierLabel(displayAmount);
   winAmountEl.textContent = "0";
   state.winCardActive = true;
   renderHud();
@@ -2897,7 +2904,7 @@ async function playFullDropWheel() {
   state.climaxWheelHoldingResult = true;
   triggerScreenFx(prize.multiplier >= 5 ? "fx-jackpot" : prize.multiplier >= 1 ? "fx-blast" : "fx-bump", 820);
   render();
-  await maybeShowWinCard({ amount: award, force: true, minTierRatio: 5, multiplierLabel: prize.label });
+  await maybeShowWinCard({ amount: award, force: true, minTierRatio: 5 });
   await wait(360);
 }
 
