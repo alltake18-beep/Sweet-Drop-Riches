@@ -8610,6 +8610,21 @@ html.ios-performance .phone.climax-idle-wheel .climax-wheel-rotor,
   }
 }
 
+@keyframes climax-wheel-rise-lite {
+  0% {
+    transform: translate(-50%, calc(-50% + 58%)) rotate(var(--wheel-rotation, 0deg)) scale(0.93);
+    opacity: 0.6;
+  }
+  64% {
+    transform: translate(-50%, calc(-50% + 7%)) rotate(var(--wheel-rotation, 0deg)) scale(0.99);
+    opacity: 0.96;
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(var(--wheel-rotation, 0deg)) scale(1);
+    opacity: 1;
+  }
+}
+
 @keyframes climax-wheel-idle {
   0% {
     transform: translate(-50%, -50%) rotate(var(--wheel-rotation, 0deg));
@@ -9640,9 +9655,24 @@ html.ios-performance .phone.machine-candy-cat .board-bar,
 .phone.fx-lite.climax-intro-logo,
 .phone.fx-lite.climax-intro-wheel,
 .phone.fx-lite.climax-logo-return,
-.phone.fx-lite .climax-wheel-rotor,
 .phone.fx-lite .climax-wheel-highlight {
   animation: none !important;
+}
+
+.phone.fx-lite.climax-intro-logo .brand-logo {
+  animation-duration: 1500ms !important;
+}
+
+.phone.fx-lite.climax-intro-wheel .climax-wheel-rotor {
+  animation: climax-wheel-rise-lite 1200ms cubic-bezier(0.12, 0.72, 0.16, 1) both !important;
+}
+
+.phone.fx-lite.climax-idle-wheel .climax-wheel-rotor {
+  animation: climax-wheel-idle 42s linear infinite !important;
+}
+
+.phone.fx-lite.climax-logo-return .brand-logo {
+  animation-duration: 760ms !important;
 }
 
 .phone.fx-lite .climax-wheel-rotor img,

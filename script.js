@@ -5343,22 +5343,18 @@ async function presentCollectedMultipliers(collected) {
 }
 
 async function playClimaxIntroSequence() {
-  if (isReducedClimaxFx()) {
-    duckBackgroundMusic(900, BGM_DUCK_MEDIUM);
-    state.climaxIntroPhase = null;
-    state.climaxIntroWheelStartedAt = 0;
-    render();
-    return;
-  }
-  duckBackgroundMusic(4200, BGM_DUCK_DEEP);
+  const reducedFx = isReducedClimaxFx();
+  const pushDelay = reducedFx ? 500 : CLIMAX_INTRO_PUSH_DELAY_MS;
+  const wheelRiseMs = reducedFx ? 1200 : CLIMAX_INTRO_WHEEL_RISE_MS;
+  duckBackgroundMusic(reducedFx ? pushDelay + wheelRiseMs + 650 : 4200, reducedFx ? BGM_DUCK_MEDIUM : BGM_DUCK_DEEP);
   playClimaxIntroPerformance("logo");
-  await wait(CLIMAX_INTRO_PUSH_DELAY_MS);
+  await wait(pushDelay);
 
   state.climaxIntroPhase = "push";
   state.climaxIntroWheelStartedAt = performance.now();
   render();
   playClimaxIntroPerformance("lift");
-  await wait(CLIMAX_INTRO_WHEEL_RISE_MS);
+  await wait(wheelRiseMs);
 
   state.climaxIntroPhase = null;
   state.climaxIntroWheelStartedAt = 0;
