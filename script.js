@@ -7052,6 +7052,7 @@ function initMachineTunePanel() {
   if (!params.has("tune")) return;
   phoneShellEl.classList.add("machine-tune");
   phoneShellEl.classList.add("tune-climax", "board-tune");
+  phoneShellEl.classList.add("machine-hide-energy", "machine-hide-wheel");
 
   const guideLayer = document.createElement("div");
   guideLayer.className = "machine-tune-guide-layer";
