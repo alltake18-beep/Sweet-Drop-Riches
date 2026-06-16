@@ -12,6 +12,7 @@ const LITE_ENABLED = SEARCH_PARAMS.has("lite");
 const WHEEL_AUDIT_ENABLED = SEARCH_PARAMS.has("wheelAudit");
 const IOS_PERFORMANCE_MODE = PERF_ENABLED || document.documentElement.classList.contains("ios-performance");
 const FX_PERFORMANCE_MODE = IOS_PERFORMANCE_MODE || LITE_ENABLED;
+const FX_LONG_SESSION_MS = 150000;
 const SPECIAL_METER_TARGET = 9;
 const SPECIAL_METER_THRESHOLDS = [9, 21, 40];
 const SPECIAL_METER_MAX = SPECIAL_METER_THRESHOLDS[SPECIAL_METER_THRESHOLDS.length - 1];
@@ -2951,10 +2952,10 @@ function spawnParticles(count) {
   const host = document.querySelector(".play-area");
   if (!host || document.hidden) return;
 
-  const hostRect = host.getBoundingClientRect();
-  const limit = FX_PERFORMANCE_MODE || window.innerWidth <= 520 ? 10 : 16;
-  const actualCount = Math.min(count, limit);
   const now = performance.now();
+  const hostRect = host.getBoundingClientRect();
+  const limit = isLongFxSession(now) ? 6 : FX_PERFORMANCE_MODE || window.innerWidth <= 520 ? 10 : 16;
+  const actualCount = Math.min(count, limit);
   const items = Array.from({ length: actualCount }, () => ({
     kind: "burst",
     start: now,
@@ -2982,10 +2983,10 @@ function spawnClearBursts(cells, intense = false) {
   const host = document.querySelector(".play-area");
   if (!host || document.hidden) return;
 
-  const hostRect = host.getBoundingClientRect();
-  const maxCells = FX_PERFORMANCE_MODE || window.innerWidth <= 520 ? 10 : 16;
-  const points = Array.from(cells).slice(0, maxCells);
   const now = performance.now();
+  const hostRect = host.getBoundingClientRect();
+  const maxCells = isLongFxSession(now) ? 6 : FX_PERFORMANCE_MODE || window.innerWidth <= 520 ? 10 : 16;
+  const points = Array.from(cells).slice(0, maxCells);
   const colors = ["#ffdf5f", "#ff58c8", "#35c8ff", "#83ff58", "#ff8138", "#ffffff"];
   const items = [];
 
@@ -3032,7 +3033,7 @@ function triggerScreenFx(className, duration = 420) {
 function resizeFxCanvas() {
   if (!fxCanvas) return;
   const rect = fxCanvas.getBoundingClientRect();
-  const dpr = Math.min(window.devicePixelRatio || 1, FX_PERFORMANCE_MODE ? 1.25 : 2);
+  const dpr = Math.min(window.devicePixelRatio || 1, isLongFxSession() ? 1 : FX_PERFORMANCE_MODE ? 1.25 : 2);
   const width = Math.max(1, Math.floor(rect.width * dpr));
   const height = Math.max(1, Math.floor(rect.height * dpr));
   if (fxCanvas.width !== width || fxCanvas.height !== height) {
@@ -3047,7 +3048,7 @@ function enqueueFx(items) {
   if (!fxCanvas || document.hidden) return;
   resizeFxCanvas();
   state.fx.items.push(...items);
-  const maxFxItems = FX_PERFORMANCE_MODE ? 36 : 64;
+  const maxFxItems = isLongFxSession() ? 20 : FX_PERFORMANCE_MODE ? 36 : 64;
   if (state.fx.items.length > maxFxItems) {
     state.fx.items.splice(0, state.fx.items.length - maxFxItems);
   }
@@ -3179,11 +3180,11 @@ function spawnCollectEnergy(cells) {
   const targetRect = target.getBoundingClientRect();
   if (!targetRect.width || !targetRect.height) return;
 
-  const maxEnergy = FX_PERFORMANCE_MODE || window.innerWidth <= 520 ? 5 : 8;
+  const now = performance.now();
+  const maxEnergy = isLongFxSession(now) ? 3 : FX_PERFORMANCE_MODE || window.innerWidth <= 520 ? 5 : 8;
   const allPoints = Array.from(cells);
   const step = Math.max(1, Math.ceil(allPoints.length / maxEnergy));
   const points = allPoints.filter((_, index) => index % step === 0).slice(0, maxEnergy);
-  const now = performance.now();
   const items = [];
   for (const key of points) {
     const tile = boardEl.querySelector(tileSelector(keyToPoint(key)));
@@ -3226,8 +3227,8 @@ function spawnSlotEnergy(col, value) {
   const startY = hostRect.height * 0.48;
   const targetX = targetRect.left + targetRect.width * 0.5 - hostRect.left;
   const targetY = targetRect.top + targetRect.height * 0.46 - hostRect.top;
-  const count = value >= 100 ? 5 : value >= 50 ? 4 : value >= 20 ? 3 : 2;
   const now = performance.now();
+  const count = Math.min(isLongFxSession(now) ? 3 : 5, value >= 100 ? 5 : value >= 50 ? 4 : value >= 20 ? 3 : 2);
   const items = [];
 
   for (let i = 0; i < count; i += 1) {
@@ -3567,6 +3568,16 @@ function playAudioAsset(name, options = {}) {
   gain.gain.value = gainValue;
   source.connect(gain);
   gain.connect(isMusic ? state.bgmGain : state.sfxGain);
+  const cleanup = () => {
+    try {
+      source.disconnect();
+    } catch (error) {}
+    try {
+      gain.disconnect();
+    } catch (error) {}
+  };
+  source._sweetCleanup = cleanup;
+  source.onended = cleanup;
   source.start(context.currentTime + (options.delay || 0));
   return source;
 }
@@ -3582,6 +3593,10 @@ function currentMusicDuckFactor(now = performance.now()) {
   state.musicDuckWindows = state.musicDuckWindows.filter((item) => item.until > now);
   if (!state.musicDuckWindows.length) return 1;
   return Math.min(...state.musicDuckWindows.map((item) => item.depth));
+}
+
+function isLongFxSession(now = performance.now()) {
+  return FX_PERFORMANCE_MODE && now > FX_LONG_SESSION_MS;
 }
 
 function playTone(freq, duration = 0.08, options = {}) {
@@ -3604,8 +3619,9 @@ function playTone(freq, duration = 0.08, options = {}) {
   gain.gain.setValueAtTime(0.0001, now);
   gain.gain.exponentialRampToValueAtTime(volume, now + 0.012);
   gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+  let filter = null;
   if (options.filter) {
-    const filter = context.createBiquadFilter();
+    filter = context.createBiquadFilter();
     filter.type = options.filter.type || "lowpass";
     filter.frequency.setValueAtTime(options.filter.from || options.filter.frequency || 1200, now);
     if (options.filter.to) filter.frequency.exponentialRampToValueAtTime(Math.max(40, options.filter.to), now + duration);
@@ -3616,6 +3632,17 @@ function playTone(freq, duration = 0.08, options = {}) {
     osc.connect(gain);
   }
   gain.connect(options.music ? state.bgmGain : state.sfxGain);
+  osc.onended = () => {
+    try {
+      osc.disconnect();
+    } catch (error) {}
+    try {
+      filter?.disconnect();
+    } catch (error) {}
+    try {
+      gain.disconnect();
+    } catch (error) {}
+  };
   osc.start(now);
   osc.stop(now + duration + 0.03);
   window.setTimeout(() => {
@@ -3656,6 +3683,17 @@ function playNoise(duration = 0.06, options = {}) {
   source.connect(filter);
   filter.connect(gain);
   gain.connect(options.music ? state.bgmGain : state.sfxGain);
+  source.onended = () => {
+    try {
+      source.disconnect();
+    } catch (error) {}
+    try {
+      filter.disconnect();
+    } catch (error) {}
+    try {
+      gain.disconnect();
+    } catch (error) {}
+  };
   source.start(now);
   source.stop(now + duration + 0.02);
 }
@@ -3870,7 +3908,9 @@ function startBackgroundMusic() {
     const source = playAudioAsset("bgmNormal", { bus: "bgm", loop: true, music: true, gain: 0.9 });
     if (source) {
       state.bgmSource = source;
+      const cleanup = source._sweetCleanup;
       source.onended = () => {
+        cleanup?.();
         if (state.bgmSource === source) state.bgmSource = null;
       };
       return;
@@ -3929,15 +3969,17 @@ function armBackgroundMusic() {
 }
 
 function duckBackgroundMusic(duration = BGM_DUCK_IMPORTANT_MS, depth = BGM_DUCK_MEDIUM) {
-  const until = performance.now() + duration;
+  const nowMs = performance.now();
+  const until = nowMs + duration;
   state.musicDuckingUntil = Math.max(state.musicDuckingUntil || 0, until);
   if (!state.musicDuckWindows) state.musicDuckWindows = [];
+  state.musicDuckWindows = state.musicDuckWindows.filter((item) => item.until > nowMs).slice(-8);
   state.musicDuckWindows.push({ until, depth });
   const context = ensureAudio();
   if (!context || !state.bgmGain) return;
-  const activeDepth = currentMusicDuckFactor();
+  const activeDepth = currentMusicDuckFactor(nowMs);
   const activeUntil = Math.max(until, ...state.musicDuckWindows.map((item) => item.until));
-  const holdSeconds = Math.max(0.08, (activeUntil - performance.now()) / 1000);
+  const holdSeconds = Math.max(0.08, (activeUntil - nowMs) / 1000);
   const now = context.currentTime;
   const current = Math.max(0.0001, state.bgmGain.gain.value || AUDIO_BGM_VOLUME);
   state.bgmGain.gain.cancelScheduledValues(now);

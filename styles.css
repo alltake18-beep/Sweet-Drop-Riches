@@ -8362,7 +8362,7 @@ button {
 
 html.ios-performance .phone.climax-idle-wheel .climax-wheel-rotor,
 .phone.fx-lite.climax-idle-wheel .climax-wheel-rotor {
-  animation-duration: 36s;
+  animation-duration: 60s;
 }
 
 .climax-wheel-rotor img {
@@ -9668,7 +9668,7 @@ html.ios-performance .phone.machine-candy-cat .board-bar,
 }
 
 .phone.fx-lite.climax-idle-wheel .climax-wheel-rotor {
-  animation: climax-wheel-idle 42s linear infinite !important;
+  animation: climax-wheel-idle 72s linear infinite !important;
 }
 
 .phone.fx-lite.climax-logo-return .brand-logo {
