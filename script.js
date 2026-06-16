@@ -2600,8 +2600,9 @@ async function handleTileClick(row, col) {
 }
 
 async function resolveMove(initialMatches, preferredSpawn = null) {
+  const wasResolving = state.resolving;
   state.resolving = true;
-  state.winCardShownThisResolve = false;
+  if (!wasResolving) state.winCardShownThisResolve = false;
   setBoardBusy(true);
   setPerfPhase("resolve");
   let matches = initialMatches;
