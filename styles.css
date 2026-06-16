@@ -7610,6 +7610,8 @@ button {
 
 .phone.board-tune .special-meter-track {
   background: #000;
+  border-radius: var(--energy-end-curve, 26px);
+  clip-path: inset(0 round var(--energy-end-curve, 26px));
   outline: 2px dashed rgba(143, 247, 255, 0.95);
   outline-offset: 4px;
 }
@@ -7620,7 +7622,7 @@ button {
   inset: 0;
   z-index: 4;
   pointer-events: none;
-  border-radius: 0;
+  border-radius: inherit;
   background:
     linear-gradient(90deg, rgba(143, 247, 255, 0.9) 0 2px, transparent 2px calc(100% - 2px), rgba(143, 247, 255, 0.9) calc(100% - 2px)),
     linear-gradient(180deg, rgba(143, 247, 255, 0.9) 0 2px, transparent 2px calc(100% - 2px), rgba(143, 247, 255, 0.9) calc(100% - 2px));
