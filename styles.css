@@ -7754,6 +7754,10 @@ button {
   place-items: center;
 }
 
+.phone.multiplier-climax:not(.board-tune) .slot-status-symbol {
+  display: none;
+}
+
 .slot-status-symbol img {
   width: 106%;
   height: 106%;
