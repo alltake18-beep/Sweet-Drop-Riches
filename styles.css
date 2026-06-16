@@ -8330,6 +8330,10 @@ button {
   opacity: 0;
 }
 
+.phone.machine-tune .brand-logo {
+  opacity: 1 !important;
+}
+
 .phone.tune-climax .climax-stage {
   pointer-events: auto;
 }
@@ -9594,6 +9598,74 @@ html.ios-performance .phone.machine-candy-cat .board-bar,
   left: 10px;
   right: auto;
   bottom: 10px;
+}
+
+.machine-tune-guide-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 10009;
+  pointer-events: none;
+}
+
+.machine-number-guide {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  color: #1a0704;
+  font: 900 13px/1 Arial, sans-serif;
+  border: 2px solid rgba(255, 255, 255, 0.92);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 1px rgba(24, 5, 3, 0.78),
+    0 0 13px rgba(255, 244, 160, 0.72);
+  transform: translate(-50%, -50%);
+}
+
+.machine-number-guide-start {
+  background: linear-gradient(180deg, #fff1a4, #ff9a3c);
+}
+
+.machine-number-guide-show {
+  width: 38px;
+  height: 38px;
+  color: #061825;
+  background: linear-gradient(180deg, #d4fcff, #31c4ff);
+  box-shadow:
+    0 0 0 1px rgba(24, 5, 3, 0.78),
+    0 0 15px rgba(143, 247, 255, 0.78);
+}
+
+.machine-number-guide-final {
+  width: 42px;
+  height: 42px;
+  color: #2b0b05;
+  background: linear-gradient(180deg, #fff7c4, #ffd55c);
+  box-shadow:
+    0 0 0 1px rgba(24, 5, 3, 0.78),
+    0 0 18px rgba(255, 213, 92, 0.82);
+}
+
+.machine-mask-guide {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.machine-mask-guide-fill {
+  fill: rgba(49, 196, 255, 0.08);
+  stroke: none;
+}
+
+.machine-mask-guide-line {
+  fill: none;
+  stroke: rgba(143, 247, 255, 0.96);
+  stroke-width: 0.38;
+  vector-effect: non-scaling-stroke;
+  filter: drop-shadow(0 0 4px rgba(49, 196, 255, 0.92));
 }
 
 .wheel-tune-panel {

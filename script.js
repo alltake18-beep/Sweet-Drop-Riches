@@ -7053,6 +7053,60 @@ function initMachineTunePanel() {
   phoneShellEl.classList.add("machine-tune");
   phoneShellEl.classList.add("tune-climax", "board-tune");
 
+  const guideLayer = document.createElement("div");
+  guideLayer.className = "machine-tune-guide-layer";
+  guideLayer.innerHTML = `
+    <span class="machine-number-guide machine-number-guide-start" data-guide="start-left">L</span>
+    <span class="machine-number-guide machine-number-guide-start" data-guide="start-middle">M</span>
+    <span class="machine-number-guide machine-number-guide-start" data-guide="start-right">R</span>
+    <span class="machine-number-guide machine-number-guide-show" data-guide="show">S</span>
+    <span class="machine-number-guide machine-number-guide-final" data-guide="final">F</span>
+    <svg class="machine-mask-guide" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+      <polygon class="machine-mask-guide-fill"></polygon>
+      <polygon class="machine-mask-guide-line"></polygon>
+    </svg>
+  `;
+  phoneShellEl.appendChild(guideLayer);
+
+  const machineTuneNumberGuides = [
+    { key: "start-left", x: "--number-start-left-x", y: "--number-start-left-y" },
+    { key: "start-middle", x: "--number-start-middle-x", y: "--number-start-middle-y" },
+    { key: "start-right", x: "--number-start-right-x", y: "--number-start-right-y" },
+    { key: "show", x: "--number-show-x", y: "--number-show-y" },
+    { key: "final", x: "--number-receiver-x", y: "--number-receiver-y" },
+  ];
+
+  function readMachineTunePercent(name, fallback = 0) {
+    const raw = phoneShellEl.style.getPropertyValue(name) || getComputedStyle(phoneShellEl).getPropertyValue(name);
+    const value = parseFloat(raw);
+    return Number.isFinite(value) ? value : fallback;
+  }
+
+  function readMachineTuneMaskPoints() {
+    const raw = phoneShellEl.style.getPropertyValue("--climax-mask-path") || getComputedStyle(phoneShellEl).getPropertyValue("--climax-mask-path");
+    const points = [];
+    const pattern = /(-?\d+(?:\.\d+)?)%\s+(-?\d+(?:\.\d+)?)%/g;
+    let match = pattern.exec(raw);
+    while (match) {
+      points.push(`${parseFloat(match[1])},${parseFloat(match[2])}`);
+      match = pattern.exec(raw);
+    }
+    return points.join(" ");
+  }
+
+  function syncMachineTuneGuides() {
+    for (const guide of machineTuneNumberGuides) {
+      const el = guideLayer.querySelector(`[data-guide="${guide.key}"]`);
+      if (!el) continue;
+      el.style.left = `${readMachineTunePercent(guide.x)}%`;
+      el.style.top = `${readMachineTunePercent(guide.y)}%`;
+    }
+    const points = readMachineTuneMaskPoints();
+    guideLayer.querySelectorAll(".machine-mask-guide polygon").forEach((polygon) => {
+      polygon.setAttribute("points", points);
+    });
+  }
+
   const groups = [
     {
       label: "Logo",
@@ -7109,47 +7163,6 @@ function initMachineTunePanel() {
       ],
     },
     {
-      label: "Energy Holes",
-      controls: [
-        { label: "Hole L X", name: "--energy-hole-1-x", min: 0, max: 100, step: 0.1, fallback: 20, unit: "%" },
-        { label: "Hole L Y", name: "--energy-hole-1-y", min: 0, max: 100, step: 0.1, fallback: 49.3, unit: "%" },
-        { label: "Hole L R", name: "--energy-hole-1-r", min: 0, max: 100, step: 1, fallback: 60, unit: "px" },
-        { label: "Hole M X", name: "--energy-hole-2-x", min: 0, max: 100, step: 0.1, fallback: 49.9, unit: "%" },
-        { label: "Hole M Y", name: "--energy-hole-2-y", min: 0, max: 100, step: 0.1, fallback: 47.8, unit: "%" },
-        { label: "Hole M R", name: "--energy-hole-2-r", min: 0, max: 100, step: 1, fallback: 60, unit: "px" },
-        { label: "Hole R X", name: "--energy-hole-3-x", min: 0, max: 100, step: 0.1, fallback: 79.5, unit: "%" },
-        { label: "Hole R Y", name: "--energy-hole-3-y", min: 0, max: 100, step: 0.1, fallback: 47.3, unit: "%" },
-        { label: "Hole R R", name: "--energy-hole-3-r", min: 0, max: 100, step: 1, fallback: 60, unit: "px" },
-      ],
-    },
-    {
-      label: "Collected Cores",
-      hideClass: "machine-hide-slot-status",
-      controls: [
-        { label: "Core L X", name: "--slot-status-1-x", min: 0, max: 100, step: 0.1, fallback: 28.5, unit: "%" },
-        { label: "Core L Y", name: "--slot-status-1-y", min: 0, max: 100, step: 0.1, fallback: 23.8, unit: "%" },
-        { label: "Core M X", name: "--slot-status-2-x", min: 0, max: 100, step: 0.1, fallback: 50, unit: "%" },
-        { label: "Core M Y", name: "--slot-status-2-y", min: 0, max: 100, step: 0.1, fallback: 23.8, unit: "%" },
-        { label: "Core R X", name: "--slot-status-3-x", min: 0, max: 100, step: 0.1, fallback: 71.1, unit: "%" },
-        { label: "Core R Y", name: "--slot-status-3-y", min: 0, max: 100, step: 0.1, fallback: 23.8, unit: "%" },
-        { label: "Core Size", name: "--slot-status-size", min: 20, max: 140, step: 1, fallback: 90, unit: "px" },
-        { label: "Core Opacity", name: "--slot-status-opacity", min: 0, max: 1, step: 0.01, fallback: 1, unit: "" },
-      ],
-    },
-    {
-      label: "Bottom Intake / Old Slots",
-      hideClass: "machine-hide-bottom-slots",
-      controls: [
-        { label: "Well Y", name: "--well-top", min: 40, max: 105, step: 0.1, fallback: 85, unit: "%" },
-        { label: "Well W", name: "--well-width", min: 5, max: 40, step: 0.1, fallback: 25.6, unit: "%" },
-        { label: "Well H", name: "--well-height", min: 2, max: 22, step: 0.1, fallback: 7.65, unit: "%" },
-        { label: "Well L", name: "--well-1-x", min: 0, max: 100, step: 0.1, fallback: 22.9, unit: "%" },
-        { label: "Well M", name: "--well-2-x", min: 0, max: 100, step: 0.1, fallback: 50, unit: "%" },
-        { label: "Well R", name: "--well-3-x", min: 0, max: 100, step: 0.1, fallback: 77.1, unit: "%" },
-        { label: "Bottom Opacity", name: "--bottom-slots-opacity", min: 0, max: 1, step: 0.01, fallback: 1, unit: "" },
-      ],
-    },
-    {
       label: "Number Flight",
       controls: [
         { label: "Start L X", name: "--number-start-left-x", min: 0, max: 100, step: 0.1, fallback: 22.49, unit: "%" },
@@ -7179,6 +7192,7 @@ function initMachineTunePanel() {
         { label: "HUD W", name: "--hud-width", min: 30, max: 110, step: 0.1, fallback: 85.4, unit: "%" },
         { label: "HUD H", name: "--hud-height", min: 1, max: 12, step: 0.1, fallback: 3.6, unit: "%" },
         { label: "HUD Gap", name: "--hud-gap", min: 0, max: 18, step: 0.05, fallback: 7.75, unit: "%" },
+        { label: "HUD Tilt", name: "--hud-rotate-x", min: -60, max: 60, step: 0.5, fallback: 25, unit: "deg" },
         { label: "HUD Opacity", name: "--hud-opacity", min: 0, max: 1, step: 0.01, fallback: 1, unit: "" },
         { label: "Balance X", name: "--balance-x", min: -40, max: 40, step: 0.1, fallback: 1, unit: "%" },
         { label: "Balance Y", name: "--balance-y", min: -40, max: 40, step: 0.1, fallback: -4, unit: "%" },
@@ -7225,7 +7239,6 @@ function initMachineTunePanel() {
     </div>
     <div class="machine-tune-actions">
       <button type="button" data-action="copy">Copy CSS</button>
-      <button type="button" data-action="sync-wells">Sync Starts</button>
       <button type="button" data-action="show-all">Show All</button>
     </div>
     <div class="machine-tune-controls"></div>
@@ -7276,6 +7289,7 @@ function initMachineTunePanel() {
     scheduleBoardSizeSync(true);
     renderClimaxStage();
     renderHud();
+    syncMachineTuneGuides();
     refreshOutput();
   }
 
@@ -7327,27 +7341,6 @@ function initMachineTunePanel() {
     }
   }
 
-  function syncStartsToWells() {
-    const map = [
-      ["--well-1-x", "--number-start-left-x"],
-      ["--well-2-x", "--number-start-middle-x"],
-      ["--well-3-x", "--number-start-right-x"],
-      ["--well-top", "--number-start-left-y"],
-      ["--well-top", "--number-start-middle-y"],
-      ["--well-top", "--number-start-right-y"],
-    ];
-    for (const [fromName, toName] of map) {
-      const fromControl = controls.find((control) => control.name === fromName);
-      const toControl = controls.find((control) => control.name === toName);
-      if (!fromControl || !toControl) continue;
-      const next = values.get(fromName) ?? currentNumeric(fromControl);
-      const row = Array.from(controlsEl.querySelectorAll(".machine-tune-row")).find((item) =>
-        item.dataset.control === toControl.name
-      );
-      setValue(toControl, next, row?.querySelector("input"), row?.querySelector(".machine-tune-value"));
-    }
-  }
-
   let panelDrag = null;
   const movePanel = (clientX, clientY) => {
     if (!panelDrag) return;
@@ -7386,7 +7379,6 @@ function initMachineTunePanel() {
   document.addEventListener("pointerup", endPanelDrag);
   document.addEventListener("pointercancel", endPanelDrag);
 
-  panel.querySelector('[data-action="sync-wells"]').addEventListener("click", syncStartsToWells);
   panel.querySelector('[data-action="show-all"]').addEventListener("click", () => {
     groups.forEach((group) => {
       if (group.hideClass) phoneShellEl.classList.remove(group.hideClass);
@@ -7396,6 +7388,7 @@ function initMachineTunePanel() {
     });
     renderClimaxStage();
     renderHud();
+    syncMachineTuneGuides();
     refreshOutput();
   });
   panel.querySelector('[data-action="collapse"]').addEventListener("click", (event) => {
@@ -7424,6 +7417,7 @@ function initMachineTunePanel() {
   refreshOutput();
   renderClimaxStage();
   renderHud();
+  syncMachineTuneGuides();
 }
 
 function applyPerformanceMode() {
