@@ -7611,12 +7611,12 @@ button {
 }
 
 .phone.board-tune .special-meter-track i {
-  background: #000;
+  background: transparent;
   box-shadow: none;
 }
 
 .phone.board-tune .special-meter-track {
-  background: #000;
+  background: transparent;
   border-radius: var(--energy-end-curve, 26px) / 50%;
   clip-path: none;
   box-shadow:
