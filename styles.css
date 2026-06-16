@@ -9423,8 +9423,13 @@ html.ios-performance .phone.machine-candy-cat,
 
 html.ios-performance .phone.machine-candy-cat {
   background:
-    url("assets/ui/mobile/candy-machine-candy-cat-ios.jpg?v=ios-cat-20260616-123631") center / 100% 100% no-repeat,
+    url("assets/ui/mobile/candy-machine-candy-cat-ios.jpg?v=ios-cat-20260616-130236") center / 100% 100% no-repeat,
     linear-gradient(180deg, #70c7ff, #f84ea0) !important;
+}
+
+html.ios-performance .phone.machine-candy-cat .board-bar,
+.phone.fx-lite.machine-candy-cat .board-bar {
+  background: transparent !important;
 }
 
 .phone.machine-tune .event-socket,
