@@ -6108,7 +6108,7 @@ window.setInterval(() => {
 
 function initClimaxTunePanel() {
   const params = new URLSearchParams(window.location.search);
-  const tuningClimax = params.has("tune");
+  const tuningClimax = params.has("climaxTune") || params.has("wheelTune") || params.has("numberTune");
   if (!tuningClimax) return;
 
   const phone = document.querySelector(".phone");
@@ -7051,39 +7051,94 @@ function initMachineTunePanel() {
   phoneShellEl.classList.add("machine-candy-cat");
   if (!params.has("tune")) return;
   phoneShellEl.classList.add("machine-tune");
+  phoneShellEl.classList.add("tune-climax", "board-tune");
 
   const groups = [
     {
       label: "Logo",
+      hideClass: "machine-hide-logo",
       controls: [
         { label: "Logo X", name: "--logo-left", min: -20, max: 120, step: 0.1, fallback: 14.5, unit: "%" },
         { label: "Logo Y", name: "--logo-top", min: -20, max: 50, step: 0.1, fallback: 2.2, unit: "%" },
         { label: "Logo W", name: "--logo-width", min: 10, max: 120, step: 0.1, fallback: 71, unit: "%" },
         { label: "Logo H", name: "--logo-height", min: 2, max: 35, step: 0.1, fallback: 10.8, unit: "%" },
+        { label: "Logo Opacity", name: "--logo-opacity", min: 0, max: 1, step: 0.01, fallback: 1, unit: "" },
       ],
     },
     {
       label: "Board",
+      hideClass: "machine-hide-board",
       controls: [
         { label: "Board X", name: "--play-board-left", min: 0, max: 100, step: 0.1, fallback: 50, unit: "%" },
         { label: "Board Y", name: "--play-board-top", min: 0, max: 100, step: 0.1, fallback: 27.6, unit: "%" },
         { label: "Board W", name: "--play-board-width", min: 20, max: 100, step: 0.1, fallback: 73, unit: "%" },
         { label: "Board H", name: "--play-board-height", min: 20, max: 80, step: 0.1, fallback: 50.3, unit: "%" },
         { label: "Board R", name: "--play-board-radius", min: 0, max: 60, step: 1, fallback: 14, unit: "px" },
+        { label: "Board Opacity", name: "--board-opacity", min: 0, max: 1, step: 0.01, fallback: 1, unit: "" },
+        { label: "Normal Candy", name: "--normal-candy-size", min: 40, max: 140, step: 1, fallback: 100, unit: "%" },
+        { label: "Special Candy", name: "--special-candy-size", min: 60, max: 180, step: 1, fallback: 116, unit: "%" },
+        { label: "Multiplier", name: "--board-multiplier-size", min: 60, max: 160, step: 1, fallback: 110, unit: "%" },
       ],
     },
     {
       label: "Top Slots",
+      hideClass: "machine-hide-stage-slots",
       controls: [
         { label: "Slot Y", name: "--stage-slot-top", min: 0, max: 60, step: 0.1, fallback: 20.9, unit: "%" },
         { label: "Slot Size", name: "--stage-slot-size", min: 20, max: 120, step: 1, fallback: 54, unit: "px" },
         { label: "Slot L", name: "--stage-slot-1-x", min: 0, max: 100, step: 0.1, fallback: 29.1, unit: "%" },
         { label: "Slot M", name: "--stage-slot-2-x", min: 0, max: 100, step: 0.1, fallback: 51.9, unit: "%" },
         { label: "Slot R", name: "--stage-slot-3-x", min: 0, max: 100, step: 0.1, fallback: 71.1, unit: "%" },
+        { label: "Slot Opacity", name: "--stage-slots-opacity", min: 0, max: 1, step: 0.01, fallback: 1, unit: "" },
+        { label: "Obj X", name: "--stage-slot-object-x", min: -80, max: 80, step: 0.1, fallback: 0, unit: "%" },
+        { label: "Obj Y", name: "--stage-slot-object-y", min: -80, max: 80, step: 0.1, fallback: 5, unit: "%" },
+        { label: "Normal Icon", name: "--stage-slot-normal-icon-size", min: 20, max: 180, step: 1, fallback: 72, unit: "%" },
+        { label: "Special Icon", name: "--stage-slot-special-icon-size", min: 40, max: 240, step: 1, fallback: 174, unit: "%" },
       ],
     },
     {
-      label: "Bottom Wells",
+      label: "Energy Track",
+      hideClass: "machine-hide-energy",
+      controls: [
+        { label: "Energy X", name: "--energy-track-x", min: 0, max: 100, step: 0.1, fallback: 49.9, unit: "%" },
+        { label: "Energy Y", name: "--energy-track-y", min: 0, max: 100, step: 0.1, fallback: 20, unit: "%" },
+        { label: "Energy W", name: "--energy-track-width", min: 4, max: 100, step: 0.1, fallback: 72, unit: "%" },
+        { label: "Energy H", name: "--energy-track-height", min: 4, max: 180, step: 1, fallback: 98, unit: "px" },
+        { label: "End Curve", name: "--energy-end-curve", min: 0, max: 140, step: 1, fallback: 14, unit: "px" },
+        { label: "Energy Opacity", name: "--energy-track-opacity", min: 0, max: 1, step: 0.01, fallback: 1, unit: "" },
+      ],
+    },
+    {
+      label: "Energy Holes",
+      controls: [
+        { label: "Hole L X", name: "--energy-hole-1-x", min: 0, max: 100, step: 0.1, fallback: 20, unit: "%" },
+        { label: "Hole L Y", name: "--energy-hole-1-y", min: 0, max: 100, step: 0.1, fallback: 49.3, unit: "%" },
+        { label: "Hole L R", name: "--energy-hole-1-r", min: 0, max: 100, step: 1, fallback: 60, unit: "px" },
+        { label: "Hole M X", name: "--energy-hole-2-x", min: 0, max: 100, step: 0.1, fallback: 49.9, unit: "%" },
+        { label: "Hole M Y", name: "--energy-hole-2-y", min: 0, max: 100, step: 0.1, fallback: 47.8, unit: "%" },
+        { label: "Hole M R", name: "--energy-hole-2-r", min: 0, max: 100, step: 1, fallback: 60, unit: "px" },
+        { label: "Hole R X", name: "--energy-hole-3-x", min: 0, max: 100, step: 0.1, fallback: 79.5, unit: "%" },
+        { label: "Hole R Y", name: "--energy-hole-3-y", min: 0, max: 100, step: 0.1, fallback: 47.3, unit: "%" },
+        { label: "Hole R R", name: "--energy-hole-3-r", min: 0, max: 100, step: 1, fallback: 60, unit: "px" },
+      ],
+    },
+    {
+      label: "Collected Cores",
+      hideClass: "machine-hide-slot-status",
+      controls: [
+        { label: "Core L X", name: "--slot-status-1-x", min: 0, max: 100, step: 0.1, fallback: 28.5, unit: "%" },
+        { label: "Core L Y", name: "--slot-status-1-y", min: 0, max: 100, step: 0.1, fallback: 23.8, unit: "%" },
+        { label: "Core M X", name: "--slot-status-2-x", min: 0, max: 100, step: 0.1, fallback: 50, unit: "%" },
+        { label: "Core M Y", name: "--slot-status-2-y", min: 0, max: 100, step: 0.1, fallback: 23.8, unit: "%" },
+        { label: "Core R X", name: "--slot-status-3-x", min: 0, max: 100, step: 0.1, fallback: 71.1, unit: "%" },
+        { label: "Core R Y", name: "--slot-status-3-y", min: 0, max: 100, step: 0.1, fallback: 23.8, unit: "%" },
+        { label: "Core Size", name: "--slot-status-size", min: 20, max: 140, step: 1, fallback: 90, unit: "px" },
+        { label: "Core Opacity", name: "--slot-status-opacity", min: 0, max: 1, step: 0.01, fallback: 1, unit: "" },
+      ],
+    },
+    {
+      label: "Bottom Intake / Old Slots",
+      hideClass: "machine-hide-bottom-slots",
       controls: [
         { label: "Well Y", name: "--well-top", min: 40, max: 105, step: 0.1, fallback: 85, unit: "%" },
         { label: "Well W", name: "--well-width", min: 5, max: 40, step: 0.1, fallback: 25.6, unit: "%" },
@@ -7091,6 +7146,7 @@ function initMachineTunePanel() {
         { label: "Well L", name: "--well-1-x", min: 0, max: 100, step: 0.1, fallback: 22.9, unit: "%" },
         { label: "Well M", name: "--well-2-x", min: 0, max: 100, step: 0.1, fallback: 50, unit: "%" },
         { label: "Well R", name: "--well-3-x", min: 0, max: 100, step: 0.1, fallback: 77.1, unit: "%" },
+        { label: "Bottom Opacity", name: "--bottom-slots-opacity", min: 0, max: 1, step: 0.01, fallback: 1, unit: "" },
       ],
     },
     {
@@ -7116,21 +7172,44 @@ function initMachineTunePanel() {
     },
     {
       label: "HUD",
+      hideClass: "machine-hide-hud",
       controls: [
         { label: "HUD X", name: "--hud-x", min: -30, max: 30, step: 0.1, fallback: 0.3, unit: "%" },
         { label: "HUD Y", name: "--hud-y", min: -20, max: 20, step: 0.1, fallback: -0.2, unit: "%" },
         { label: "HUD W", name: "--hud-width", min: 30, max: 110, step: 0.1, fallback: 85.4, unit: "%" },
         { label: "HUD H", name: "--hud-height", min: 1, max: 12, step: 0.1, fallback: 3.6, unit: "%" },
         { label: "HUD Gap", name: "--hud-gap", min: 0, max: 18, step: 0.05, fallback: 7.75, unit: "%" },
+        { label: "HUD Opacity", name: "--hud-opacity", min: 0, max: 1, step: 0.01, fallback: 1, unit: "" },
+        { label: "Balance X", name: "--balance-x", min: -40, max: 40, step: 0.1, fallback: 1, unit: "%" },
+        { label: "Balance Y", name: "--balance-y", min: -40, max: 40, step: 0.1, fallback: -4, unit: "%" },
+        { label: "Balance Size", name: "--balance-size", min: 20, max: 180, step: 1, fallback: 95, unit: "%" },
+        { label: "Bet X", name: "--bet-x", min: -40, max: 40, step: 0.1, fallback: 0, unit: "%" },
+        { label: "Bet Y", name: "--bet-y", min: -40, max: 40, step: 0.1, fallback: -4, unit: "%" },
+        { label: "Bet Size", name: "--bet-size", min: 20, max: 180, step: 1, fallback: 101, unit: "%" },
+        { label: "Fast X", name: "--fast-icon-x", min: -80, max: 80, step: 0.1, fallback: -4, unit: "%" },
+        { label: "Fast Y", name: "--fast-icon-y", min: -80, max: 80, step: 0.1, fallback: 0, unit: "%" },
+        { label: "Fast Size", name: "--fast-icon-size", min: 20, max: 180, step: 1, fallback: 65, unit: "%" },
+        { label: "Menu X", name: "--menu-icon-x", min: -80, max: 80, step: 0.1, fallback: 3.5, unit: "%" },
+        { label: "Menu Y", name: "--menu-icon-y", min: -80, max: 80, step: 0.1, fallback: -3, unit: "%" },
+        { label: "Menu Size", name: "--menu-icon-size", min: 20, max: 180, step: 1, fallback: 74, unit: "%" },
       ],
     },
     {
       label: "Wheel",
+      hideClass: "machine-hide-wheel",
       controls: [
         { label: "Wheel X", name: "--climax-wheel-left", min: -200, max: 300, step: 0.5, fallback: 50, unit: "%" },
         { label: "Wheel Y", name: "--climax-wheel-top", min: -200, max: 500, step: 0.5, fallback: 24, unit: "%" },
         { label: "Wheel Size", name: "--climax-wheel-size", min: 25, max: 500, step: 1, fallback: 98, unit: "%" },
         { label: "Pointer X", name: "--climax-center-line-x", min: -50, max: 150, step: 0.5, fallback: 50, unit: "%" },
+        { label: "Wheel Opacity", name: "--wheel-opacity", min: 0, max: 1, step: 0.01, fallback: 1, unit: "" },
+      ],
+    },
+    {
+      label: "Status / Win Card",
+      hideClass: "machine-hide-status",
+      controls: [
+        { label: "Status Opacity", name: "--status-opacity", min: 0, max: 1, step: 0.01, fallback: 1, unit: "" },
       ],
     },
   ];
@@ -7139,15 +7218,27 @@ function initMachineTunePanel() {
   const panel = document.createElement("div");
   panel.className = "machine-tune-panel";
   panel.innerHTML = `
-    <strong class="machine-tune-title">Machine UI Tune</strong>
+    <div class="machine-tune-header">
+      <strong class="machine-tune-title">Machine UI Tune</strong>
+      <button type="button" data-action="collapse">Fold</button>
+      <button type="button" data-action="hide-panel">Hide</button>
+    </div>
     <div class="machine-tune-actions">
       <button type="button" data-action="copy">Copy CSS</button>
       <button type="button" data-action="sync-wells">Sync Starts</button>
+      <button type="button" data-action="show-all">Show All</button>
     </div>
     <div class="machine-tune-controls"></div>
     <textarea class="machine-tune-output" spellcheck="false"></textarea>
   `;
   document.body.appendChild(panel);
+
+  const reopenButton = document.createElement("button");
+  reopenButton.type = "button";
+  reopenButton.className = "machine-tune-reopen";
+  reopenButton.textContent = "Machine Tune";
+  reopenButton.hidden = true;
+  document.body.appendChild(reopenButton);
 
   const titleEl = panel.querySelector(".machine-tune-title");
   const controlsEl = panel.querySelector(".machine-tune-controls");
@@ -7169,7 +7260,10 @@ function initMachineTunePanel() {
     const lines = controls.map((control) => `  ${control.name}: ${phoneShellEl.style.getPropertyValue(control.name) || formatted(control, values.get(control.name) ?? currentNumeric(control))};`);
     const maskPath = phoneShellEl.style.getPropertyValue("--climax-mask-path") || getComputedStyle(phoneShellEl).getPropertyValue("--climax-mask-path").trim();
     if (maskPath) lines.push(`  --climax-mask-path: ${maskPath};`);
-    outputEl.value = `.phone {\n${lines.join("\n")}\n}`;
+    const hidden = groups
+      .filter((group) => group.hideClass && phoneShellEl.classList.contains(group.hideClass))
+      .map((group) => group.hideClass);
+    outputEl.value = `.phone {\n${lines.join("\n")}\n}\n${hidden.length ? `/* hidden: ${hidden.join(" ")} */` : "/* hidden: none */"}`;
   }
 
   function setValue(control, raw, input, valueEl) {
@@ -7185,10 +7279,26 @@ function initMachineTunePanel() {
     refreshOutput();
   }
 
+  function setGroupHidden(group, hidden, button) {
+    if (!group.hideClass) return;
+    phoneShellEl.classList.toggle(group.hideClass, hidden);
+    if (button) button.textContent = hidden ? "Show" : "Hide";
+    renderClimaxStage();
+    renderHud();
+    refreshOutput();
+  }
+
   for (const group of groups) {
     const groupEl = document.createElement("div");
     groupEl.className = "machine-tune-group";
-    groupEl.textContent = group.label;
+    groupEl.innerHTML = `<span>${group.label}</span>`;
+    if (group.hideClass) {
+      const hideButton = document.createElement("button");
+      hideButton.type = "button";
+      hideButton.textContent = phoneShellEl.classList.contains(group.hideClass) ? "Show" : "Hide";
+      hideButton.addEventListener("click", () => setGroupHidden(group, !phoneShellEl.classList.contains(group.hideClass), hideButton));
+      groupEl.appendChild(hideButton);
+    }
     controlsEl.appendChild(groupEl);
 
     for (const control of group.controls) {
@@ -7277,6 +7387,29 @@ function initMachineTunePanel() {
   document.addEventListener("pointercancel", endPanelDrag);
 
   panel.querySelector('[data-action="sync-wells"]').addEventListener("click", syncStartsToWells);
+  panel.querySelector('[data-action="show-all"]').addEventListener("click", () => {
+    groups.forEach((group) => {
+      if (group.hideClass) phoneShellEl.classList.remove(group.hideClass);
+    });
+    controlsEl.querySelectorAll(".machine-tune-group button").forEach((button) => {
+      button.textContent = "Hide";
+    });
+    renderClimaxStage();
+    renderHud();
+    refreshOutput();
+  });
+  panel.querySelector('[data-action="collapse"]').addEventListener("click", (event) => {
+    panel.classList.toggle("is-collapsed");
+    event.currentTarget.textContent = panel.classList.contains("is-collapsed") ? "Open" : "Fold";
+  });
+  panel.querySelector('[data-action="hide-panel"]').addEventListener("click", () => {
+    panel.classList.add("is-hidden");
+    reopenButton.hidden = false;
+  });
+  reopenButton.addEventListener("click", () => {
+    panel.classList.remove("is-hidden");
+    reopenButton.hidden = true;
+  });
   panel.querySelector('[data-action="copy"]').addEventListener("click", async () => {
     refreshOutput();
     outputEl.select();

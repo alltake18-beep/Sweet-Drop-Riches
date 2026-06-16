@@ -7463,7 +7463,10 @@ button {
 .menu-panel,
 .menu-panel *,
 .board-tune-panel,
-.board-tune-panel * {
+.board-tune-panel *,
+.machine-tune-panel,
+.machine-tune-panel *,
+.machine-tune-reopen {
   pointer-events: auto;
 }
 
@@ -7611,12 +7614,14 @@ button {
   animation: none;
 }
 
-.phone.board-tune .special-meter-track i {
+.phone.board-tune .special-meter-track i,
+.phone.machine-tune .special-meter-track i {
   background: transparent;
   box-shadow: none;
 }
 
-.phone.board-tune .special-meter-track {
+.phone.board-tune .special-meter-track,
+.phone.machine-tune .special-meter-track {
   background: transparent;
   border-radius: var(--energy-end-curve, 26px) / 50%;
   clip-path: none;
@@ -7626,7 +7631,8 @@ button {
   outline: 0;
 }
 
-.phone.board-tune .special-meter-track::before {
+.phone.board-tune .special-meter-track::before,
+.phone.machine-tune .special-meter-track::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -7649,7 +7655,8 @@ button {
   transform: translate(-50%, 0);
 }
 
-.phone.board-tune .energy-hole-guides {
+.phone.board-tune .energy-hole-guides,
+.phone.machine-tune .energy-hole-guides {
   display: block !important;
 }
 
@@ -7705,7 +7712,8 @@ button {
 }
 
 .phone.multiplier-climax .slot-status-circles,
-.phone.board-tune .slot-status-circles {
+.phone.board-tune .slot-status-circles,
+.phone.machine-tune .slot-status-circles {
   display: block;
 }
 
@@ -9375,26 +9383,26 @@ html.ios-performance .phone {
 .phone.machine-candy-cat,
 html.ios-performance .phone.machine-candy-cat,
 .phone.fx-lite.machine-candy-cat {
-  --logo-left: 11.4%;
-  --logo-top: 4.9%;
-  --logo-width: 76.5%;
+  --logo-left: 11.6%;
+  --logo-top: 2.6%;
+  --logo-width: 76.2%;
   --logo-height: 10.8%;
   --play-board-left: 50%;
-  --play-board-top: 29.3%;
-  --play-board-width: 68.5%;
-  --play-board-height: 49%;
+  --play-board-top: 29.9%;
+  --play-board-width: 78.2%;
+  --play-board-height: 51.3%;
   --play-board-radius: 14px;
-  --stage-slot-top: 23.2%;
-  --stage-slot-size: 62px;
-  --stage-slot-1-x: 28.4%;
-  --stage-slot-2-x: 51.9%;
-  --stage-slot-3-x: 71.1%;
-  --well-top: 84.4%;
-  --well-width: 20.9%;
-  --well-height: 8.8%;
-  --well-1-x: 23.1%;
-  --well-2-x: 48.6%;
-  --well-3-x: 74.9%;
+  --stage-slot-top: 27.8%;
+  --stage-slot-size: 66px;
+  --stage-slot-1-x: 31.8%;
+  --stage-slot-2-x: 50%;
+  --stage-slot-3-x: 68.4%;
+  --well-top: 86.5%;
+  --well-width: 22%;
+  --well-height: 7.4%;
+  --well-1-x: 24%;
+  --well-2-x: 50%;
+  --well-3-x: 76%;
   --number-start-left-x: 23.46%;
   --number-start-left-y: 84.74%;
   --number-start-middle-x: 49.49%;
@@ -9412,17 +9420,17 @@ html.ios-performance .phone.machine-candy-cat,
   --number-show-hold-ms: 420ms;
   --number-to-final-ms: 80ms;
   --hud-x: -0.9%;
-  --hud-y: -0.9%;
+  --hud-y: -0.2%;
   --hud-width: 88.2%;
   --hud-height: 4.8%;
   --hud-gap: 8.2%;
   --climax-wheel-left: 49.5%;
-  --climax-wheel-top: 27%;
-  --climax-wheel-size: 104%;
+  --climax-wheel-top: 17.2%;
+  --climax-wheel-size: 92%;
   --climax-center-line-x: 50%;
   --climax-mask-path: polygon(23.46% 1.32%, 51.29% -3.07%, 71.86% 0.44%, 83.96% 2.63%, 97.23% 8.78%, 97.23% 16.79%, 84.93% 17.56%, 50.2% 17.67%, 15.46% 17.56%, 1.8% 16.58%, 4.14% 8.89%, 16.04% 3.18%);
   background:
-    url("assets/ui/mobile/candy-machine-candy-cat-mobile.png?v=candy-cat-720-20260616-005254") center / 100% 100% no-repeat,
+    url("assets/ui/mobile/candy-machine-dream-ui.png?v=dream-ui-20260616-001") center / 100% 100% no-repeat,
     linear-gradient(180deg, #70c7ff, #f84ea0) !important;
 }
 
@@ -9438,7 +9446,7 @@ html.ios-performance .phone.machine-candy-cat,
 
 html.ios-performance .phone.machine-candy-cat {
   background:
-    url("assets/ui/mobile/candy-machine-candy-cat-ios.jpg?v=ios-cat-20260616-130236") center / 100% 100% no-repeat,
+    url("assets/ui/mobile/candy-machine-dream-ui-ios.jpg?v=dream-ui-20260616-001") center / 100% 100% no-repeat,
     linear-gradient(180deg, #70c7ff, #f84ea0) !important;
 }
 
@@ -9450,6 +9458,61 @@ html.ios-performance .phone.machine-candy-cat .board-bar,
 .phone.machine-tune .event-socket,
 .phone.machine-tune .slot {
   background: rgba(27, 248, 255, 0.1) !important;
+}
+
+.phone.machine-hide-logo .topbar,
+.phone.machine-hide-board .board,
+.phone.machine-hide-stage-slots .stage-slots,
+.phone.machine-hide-energy .special-meter-track,
+.phone.machine-hide-energy .energy-hole-guides,
+.phone.machine-hide-slot-status .slot-status-circles,
+.phone.machine-hide-bottom-slots .slots,
+.phone.machine-hide-bottom-slots .drop-arrows,
+.phone.machine-hide-hud .hud,
+.phone.machine-hide-wheel .climax-stage,
+.phone.machine-hide-status .status-text,
+.phone.machine-hide-win-card .win-overlay {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+.phone.machine-candy-cat .topbar {
+  opacity: var(--logo-opacity, 1);
+}
+
+.phone.machine-candy-cat .board {
+  opacity: var(--board-opacity, 1);
+}
+
+.phone.machine-candy-cat .stage-slots {
+  opacity: var(--stage-slots-opacity, 1);
+}
+
+.phone.machine-candy-cat .special-meter-track,
+.phone.machine-candy-cat .energy-hole-guides {
+  opacity: var(--energy-track-opacity, 1);
+}
+
+.phone.machine-candy-cat .slot-status-circles {
+  opacity: var(--slot-status-opacity, 1);
+}
+
+.phone.machine-candy-cat .slots,
+.phone.machine-candy-cat .drop-arrows {
+  opacity: var(--bottom-slots-opacity, 1);
+}
+
+.phone.machine-candy-cat .hud {
+  opacity: var(--hud-opacity, 1);
+}
+
+.phone.machine-candy-cat .climax-stage {
+  opacity: var(--wheel-opacity, 1);
+}
+
+.phone.machine-candy-cat .status-text {
+  opacity: var(--status-opacity, 1);
 }
 
 .machine-tune-panel {
@@ -9465,6 +9528,32 @@ html.ios-performance .phone.machine-candy-cat .board-bar,
   font: 12px/1.25 Arial, sans-serif;
   background: rgba(14, 4, 9, 0.94);
   border: 1px solid rgba(255, 213, 103, 0.72);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.48);
+}
+
+.machine-tune-panel.is-hidden {
+  display: none;
+}
+
+.machine-tune-panel.is-collapsed .machine-tune-controls,
+.machine-tune-panel.is-collapsed .machine-tune-output,
+.machine-tune-panel.is-collapsed .machine-tune-group,
+.machine-tune-panel.is-collapsed .machine-tune-row {
+  display: none;
+}
+
+.machine-tune-reopen {
+  position: fixed;
+  z-index: 10021;
+  right: 10px;
+  bottom: 10px;
+  min-height: 34px;
+  padding: 0 12px;
+  color: #301006;
+  font: 900 12px/1 Arial, sans-serif;
+  background: linear-gradient(180deg, #fff4b0, #d49136);
+  border: 0;
+  border-radius: 999px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.48);
 }
 
@@ -9528,14 +9617,47 @@ html.ios-performance .phone.machine-candy-cat .board-bar,
   user-select: none;
 }
 
+.machine-tune-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.machine-tune-header .machine-tune-title {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.machine-tune-header button {
+  min-height: 26px;
+  padding: 0 8px;
+  color: #301006;
+  font-weight: 900;
+  background: linear-gradient(180deg, #fff4b0, #d49136);
+  border: 0;
+}
+
 .machine-tune-panel.is-dragging .machine-tune-title {
   cursor: grabbing;
 }
 
 .machine-tune-group {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   margin: 10px 0 4px;
   color: #ffd865;
   font-weight: 900;
+}
+
+.machine-tune-group button {
+  min-height: 22px;
+  padding: 0 8px;
+  color: #301006;
+  font-weight: 900;
+  background: linear-gradient(180deg, #fff4b0, #d49136);
+  border: 0;
 }
 
 .machine-tune-row {
