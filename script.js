@@ -432,6 +432,7 @@ const state = {
   pendingClimaxIntro: false,
   climaxLogoReturn: false,
   climaxChargedSlots: new Set(),
+  winCardActive: false,
   winCardShownThisResolve: false,
 };
 
@@ -1062,6 +1063,7 @@ function startNewBoard(keepScore = false) {
   state.pendingClimaxIntro = false;
   state.climaxLogoReturn = false;
   state.climaxWheelHoldingResult = false;
+  state.winCardActive = false;
   clearClimaxNumberFlightDisplay();
   if (!keepScore) {
     state.currentWin = 0;
@@ -2726,6 +2728,8 @@ async function maybeShowWinCard(options = {}) {
   winTitleArtEl.alt = tier.label;
   winMultiplierEl.textContent = `${Math.floor(ratio)}x`;
   winAmountEl.textContent = "0";
+  state.winCardActive = true;
+  renderHud();
   winOverlay.className = `win-overlay ${tier.className}`;
   winOverlay.classList.remove("hidden");
   const countDuration = Math.max(1450, tier.duration - 340);
@@ -2737,6 +2741,8 @@ async function maybeShowWinCard(options = {}) {
   playWinCardPerformance(tier);
   await wait(resolveDelay(tier.duration, tier.quick));
   winOverlay.classList.add("hidden");
+  state.winCardActive = false;
+  renderHud();
   setPerfPhase("resolve");
   state.winCardShownThisResolve = true;
   return true;
@@ -4988,6 +4994,7 @@ function renderHud() {
   phoneEl?.classList.toggle("climax-intro-logo", state.climaxIntroPhase === "logo" || state.climaxIntroPhase === "push");
   phoneEl?.classList.toggle("climax-intro-wheel", state.climaxIntroPhase === "wheel" || state.climaxIntroPhase === "push");
   phoneEl?.classList.toggle("climax-logo-return", state.climaxLogoReturn);
+  phoneEl?.classList.toggle("win-card-active", state.winCardActive);
   if (!state.stagePreviews.length) state.stagePreviews = initialStagePreviews();
   const currentStage = currentSpecialStageIndex();
   const focusedStage = state.rollingStage && (state.miniSlotRolling || state.miniSlotWin);
