@@ -6840,13 +6840,13 @@ function initBoardTunePanel() {
     { label: "右洞 Y", name: "--energy-hole-3-y", min: 0, max: 100, step: 0.1, value: 47.3, unit: "%" },
     { label: "右洞半徑", name: "--energy-hole-3-r", min: 0, max: 90, step: 1, value: 60, unit: "px" },
     { heading: "收集狀態圓圈" },
-    { label: "狀態左 X", name: "--slot-status-1-x", min: 0, max: 100, step: 0.1, value: 20, unit: "%" },
+    { label: "狀態左 X", name: "--slot-status-1-x", min: 0, max: 100, step: 0.1, value: 28.5, unit: "%" },
     { label: "狀態左 Y", name: "--slot-status-1-y", min: 0, max: 100, step: 0.1, value: 23.8, unit: "%" },
-    { label: "狀態中 X", name: "--slot-status-2-x", min: 0, max: 100, step: 0.1, value: 49.9, unit: "%" },
+    { label: "狀態中 X", name: "--slot-status-2-x", min: 0, max: 100, step: 0.1, value: 50, unit: "%" },
     { label: "狀態中 Y", name: "--slot-status-2-y", min: 0, max: 100, step: 0.1, value: 23.8, unit: "%" },
-    { label: "狀態右 X", name: "--slot-status-3-x", min: 0, max: 100, step: 0.1, value: 79.5, unit: "%" },
+    { label: "狀態右 X", name: "--slot-status-3-x", min: 0, max: 100, step: 0.1, value: 71.1, unit: "%" },
     { label: "狀態右 Y", name: "--slot-status-3-y", min: 0, max: 100, step: 0.1, value: 23.8, unit: "%" },
-    { label: "狀態大小", name: "--slot-status-size", min: 20, max: 120, step: 1, value: 54, unit: "px" },
+    { label: "狀態大小", name: "--slot-status-size", min: 20, max: 120, step: 1, value: 90, unit: "px" },
   ];
 
   const panel = document.createElement("div");
