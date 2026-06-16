@@ -7340,9 +7340,27 @@ button {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.48);
 }
 
+.board-tune-panel.is-hidden {
+  display: none;
+}
+
+.board-tune-panel.is-collapsed .board-tune-readout,
+.board-tune-panel.is-collapsed .board-tune-controls,
+.board-tune-panel.is-collapsed .board-tune-toggle,
+.board-tune-panel.is-collapsed .board-tune-output {
+  display: none;
+}
+
+.board-tune-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .board-tune-title {
+  flex: 1;
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: 0;
   font-size: 13px;
   cursor: grab;
   touch-action: none;
@@ -7351,6 +7369,26 @@ button {
 
 .board-tune-panel.is-dragging .board-tune-title {
   cursor: grabbing;
+}
+
+.board-tune-header button,
+.board-tune-reopen {
+  min-height: 26px;
+  padding: 0 8px;
+  color: #301006;
+  font-weight: 900;
+  background: linear-gradient(180deg, #fff4b0, #d49136);
+  border: 0;
+}
+
+.board-tune-reopen {
+  position: fixed;
+  z-index: 10001;
+  right: 10px;
+  bottom: 10px;
+  min-height: 34px;
+  border-radius: 999px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.48);
 }
 
 .board-tune-row {
@@ -9981,4 +10019,809 @@ html.ios-performance .phone.machine-candy-cat .board-bar,
   border: 1px solid rgba(143, 247, 255, 0.5);
   pointer-events: none;
   white-space: pre-wrap;
+}
+
+/* BoardTune CSS-only skin: keeps gameplay, removes bitmap art from the experiment URL. */
+.phone.css-board-skin.machine-candy-cat,
+html.ios-performance .phone.css-board-skin.machine-candy-cat,
+.phone.fx-lite.css-board-skin.machine-candy-cat {
+  --logo-left: 7%;
+  --logo-top: 4.2%;
+  --logo-width: 86%;
+  --logo-height: 8.4%;
+  --play-board-left: 50%;
+  --play-board-top: 28.2%;
+  --play-board-width: 80%;
+  --play-board-height: 51.6%;
+  --play-board-radius: 28px;
+  --stage-slot-top: 17.1%;
+  --stage-slot-size: 64px;
+  --stage-slot-1-x: 29%;
+  --stage-slot-2-x: 50%;
+  --stage-slot-3-x: 71%;
+  --energy-track-x: 50%;
+  --energy-track-y: 14.6%;
+  --energy-track-width: 74%;
+  --energy-track-height: 18px;
+  --energy-end-curve: 999px;
+  --slot-status-1-x: 29%;
+  --slot-status-1-y: 17.1%;
+  --slot-status-2-x: 50%;
+  --slot-status-2-y: 17.1%;
+  --slot-status-3-x: 71%;
+  --slot-status-3-y: 17.1%;
+  --slot-status-size: 64px;
+  --well-top: 83.9%;
+  --well-width: 23%;
+  --well-height: 8.2%;
+  --well-1-x: 25%;
+  --well-2-x: 50%;
+  --well-3-x: 75%;
+  --slot-ring-x: 50%;
+  --slot-ring-y: 50%;
+  --slot-ring-width: 112%;
+  --slot-ring-height: 104%;
+  --hud-x: 0%;
+  --hud-y: -1.2%;
+  --hud-width: 88%;
+  --hud-height: 4.7%;
+  --hud-gap: 2.2%;
+  --hud-rotate-x: 0deg;
+  --climax-wheel-left: 50%;
+  --climax-wheel-top: 31%;
+  --climax-wheel-size: 86%;
+  --climax-mask-path: polygon(0 0, 100% 0, 100% 62%, 0 62%);
+  border: 0;
+  border-radius: 32px;
+  background:
+    linear-gradient(90deg, rgba(102, 232, 255, 0.08) 0 1px, transparent 1px 58px),
+    linear-gradient(0deg, rgba(255, 255, 255, 0.05) 0 1px, transparent 1px 58px),
+    linear-gradient(180deg, #11141d 0%, #151b25 42%, #10131a 100%) !important;
+  box-shadow:
+    0 24px 70px rgba(0, 0, 0, 0.58),
+    inset 0 0 0 2px rgba(151, 252, 255, 0.18),
+    inset 0 0 0 9px rgba(255, 255, 255, 0.025);
+}
+
+.phone.css-board-skin::before,
+.phone.css-board-skin::after,
+.phone.css-board-skin .ambient,
+.phone.css-board-skin .board-shell::before,
+.phone.css-board-skin .board-shell::after,
+.phone.css-board-skin .drop-arrows,
+.phone.css-board-skin .brand-logo,
+.phone.css-board-skin .symbol-img,
+.phone.css-board-skin .multiplier-art,
+.phone.css-board-skin .slot-symbol img,
+.phone.css-board-skin .slot-status-symbol img,
+.phone.css-board-skin .event-socket img,
+.phone.css-board-skin .climax-wheel-rotor img,
+.phone.css-board-skin .win-title-art,
+.phone.css-board-skin .energy-hole-guides {
+  display: none !important;
+}
+
+.phone.css-board-skin .topbar {
+  position: absolute;
+  z-index: 12;
+  left: var(--logo-left);
+  top: var(--logo-top);
+  width: var(--logo-width);
+  height: var(--logo-height);
+  display: grid;
+  place-items: center;
+  padding: 0;
+}
+
+.phone.css-board-skin .brand {
+  width: 100%;
+  height: 100%;
+  filter: none;
+}
+
+.phone.css-board-skin .brand::before {
+  content: "";
+  left: 0;
+  right: 0;
+  bottom: 6%;
+  width: auto;
+  height: 3px;
+  transform: none;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, #66e8ff 20%, #fff36d 50%, #ff647f 80%, transparent);
+  box-shadow: 0 0 18px rgba(102, 232, 255, 0.34);
+}
+
+.phone.css-board-skin .brand::after {
+  content: "SWEET DROP RICHES";
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  color: #f7fbff;
+  font-size: 41px;
+  font-weight: 1000;
+  line-height: 0.9;
+  letter-spacing: 0;
+  text-align: center;
+  text-shadow:
+    0 2px 0 #0a0d12,
+    0 0 16px rgba(102, 232, 255, 0.54),
+    0 0 22px rgba(255, 100, 127, 0.28);
+}
+
+.phone.css-board-skin.climax-intro-logo .brand::after {
+  animation: climax-logo-launch 2650ms cubic-bezier(0.16, 0.78, 0.14, 1) both;
+  transform-origin: 50% 78%;
+}
+
+.phone.css-board-skin.climax-logo-return .brand::after {
+  animation: climax-logo-return 960ms cubic-bezier(0.16, 0.88, 0.18, 1) both;
+  transform-origin: 50% 80%;
+}
+
+.phone.css-board-skin .play-area,
+.phone.css-board-skin .board-shell {
+  position: absolute;
+  inset: 0;
+  padding: 0;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.phone.css-board-skin .board {
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid rgba(151, 252, 255, 0.24);
+  border-radius: var(--play-board-radius);
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.06) 0 1px, transparent 1px 16.66%),
+    linear-gradient(0deg, rgba(255, 255, 255, 0.045) 0 1px, transparent 1px 11.11%),
+    linear-gradient(180deg, rgba(25, 34, 47, 0.94), rgba(12, 16, 24, 0.96));
+  box-shadow:
+    0 20px 44px rgba(0, 0, 0, 0.42),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+    inset 0 0 34px rgba(102, 232, 255, 0.05);
+}
+
+.phone.css-board-skin .tile {
+  overflow: visible;
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 46%),
+    linear-gradient(180deg, #202839, #101722);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.07),
+    inset 0 -8px 16px rgba(0, 0, 0, 0.18);
+  transition:
+    transform 150ms ease,
+    filter 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.phone.css-board-skin .tile.selected {
+  transform: translateY(-2px) scale(1.045);
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 243, 109, 0.74),
+    0 0 18px rgba(255, 243, 109, 0.42),
+    0 12px 24px rgba(0, 0, 0, 0.34);
+}
+
+.phone.css-board-skin .tile.dragging {
+  transform: translate(var(--drag-x, 0), var(--drag-y, 0)) scale(1.11);
+}
+
+.phone.css-board-skin .tile.candy::before,
+.phone.css-board-skin .tile.candy::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  pointer-events: none;
+}
+
+.phone.css-board-skin .tile.candy::before {
+  width: 74%;
+  height: 74%;
+  border-radius: 24%;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.34), transparent 28%),
+    linear-gradient(160deg, var(--tile-hot), var(--tile-cool));
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 255, 255, 0.22),
+    inset 0 -9px 15px rgba(0, 0, 0, 0.22),
+    0 9px 15px rgba(0, 0, 0, 0.26),
+    0 0 14px rgba(102, 232, 255, 0.22);
+  transform: translate(-50%, -50%) rotate(var(--tile-tilt, 0deg));
+}
+
+.phone.css-board-skin .tile.candy::after {
+  content: attr(data-symbol);
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 44%;
+  height: 44%;
+  color: var(--tile-ink);
+  font-size: 25px;
+  font-weight: 1000;
+  line-height: 1;
+  text-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.6),
+    0 0 8px rgba(255, 255, 255, 0.35);
+  transform: translate(-50%, -50%);
+}
+
+.phone.css-board-skin .tile.candy-red {
+  --tile-hot: #ff637a;
+  --tile-cool: #8e2538;
+  --tile-ink: #fff4f5;
+}
+
+.phone.css-board-skin .tile.candy-blue {
+  --tile-hot: #65d9ff;
+  --tile-cool: #1f5cb7;
+  --tile-ink: #eefaff;
+}
+
+.phone.css-board-skin .tile.candy-blue::before {
+  border-radius: 19%;
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.phone.css-board-skin .tile.candy-green {
+  --tile-hot: #8ff66b;
+  --tile-cool: #248a58;
+  --tile-ink: #f3ffe9;
+}
+
+.phone.css-board-skin .tile.candy-green::before {
+  clip-path: polygon(24% 4%, 76% 4%, 100% 50%, 76% 96%, 24% 96%, 0 50%);
+}
+
+.phone.css-board-skin .tile.candy-orange {
+  --tile-hot: #ffb548;
+  --tile-cool: #b9542e;
+  --tile-ink: #fff8e6;
+}
+
+.phone.css-board-skin .tile.candy-orange::before {
+  border-radius: 50% 20% 50% 20%;
+  transform: translate(-50%, -50%) rotate(-17deg);
+}
+
+.phone.css-board-skin .tile.candy-purple {
+  --tile-hot: #c78cff;
+  --tile-cool: #7b3ac5;
+  --tile-ink: #fbf2ff;
+}
+
+.phone.css-board-skin .tile.candy-purple::before {
+  border-radius: 50%;
+}
+
+.phone.css-board-skin .tile.special-candy::before {
+  width: 82%;
+  height: 82%;
+  box-shadow:
+    inset 0 0 0 3px rgba(255, 255, 255, 0.26),
+    0 0 0 4px rgba(255, 243, 109, 0.18),
+    0 0 18px rgba(255, 243, 109, 0.44);
+}
+
+.phone.css-board-skin .tile.special-horizontal::after,
+.phone.css-board-skin .tile.special-vertical::after,
+.phone.css-board-skin .tile.special-bomb::after,
+.phone.css-board-skin .tile.special-fish::after,
+.phone.css-board-skin .tile.special-colorbomb::after,
+.phone.css-board-skin .tile.special-chocolate::after {
+  width: 52%;
+  height: 52%;
+  border-radius: 999px;
+  background: rgba(8, 12, 18, 0.74);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+}
+
+.phone.css-board-skin .tile.special-horizontal::before {
+  border-radius: 999px;
+}
+
+.phone.css-board-skin .tile.special-vertical::before {
+  border-radius: 999px;
+  transform: translate(-50%, -50%) rotate(90deg);
+}
+
+.phone.css-board-skin .tile.special-bomb::before {
+  border-radius: 50%;
+  animation: css-skin-pulse 940ms ease-in-out infinite;
+}
+
+.phone.css-board-skin .tile.special-fish::before {
+  clip-path: polygon(6% 50%, 30% 18%, 78% 18%, 96% 50%, 78% 82%, 30% 82%);
+}
+
+.phone.css-board-skin .tile.special-colorbomb::before {
+  border-radius: 50%;
+  background:
+    conic-gradient(from 0deg, #ff637a, #ffb548, #8ff66b, #65d9ff, #c78cff, #ff637a);
+}
+
+.phone.css-board-skin .tile.special-chocolate::before {
+  border-radius: 16%;
+  background:
+    linear-gradient(90deg, transparent 48%, rgba(255, 255, 255, 0.14) 48% 52%, transparent 52%),
+    linear-gradient(0deg, transparent 48%, rgba(255, 255, 255, 0.14) 48% 52%, transparent 52%),
+    linear-gradient(160deg, #6b4637, #2b1a18);
+}
+
+.phone.css-board-skin .tile.multiplier {
+  border: 0;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.phone.css-board-skin .tile.multiplier .multiplier-symbol {
+  width: 96%;
+  height: 96%;
+  display: grid;
+  place-items: center;
+  filter:
+    drop-shadow(0 12px 16px rgba(0, 0, 0, 0.36))
+    drop-shadow(0 0 16px rgba(255, 243, 109, 0.34));
+}
+
+.phone.css-board-skin .tile.multiplier .multiplier-symbol::before {
+  content: "";
+  position: absolute;
+  inset: 8%;
+  border-radius: 26%;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.42), transparent 28%),
+    linear-gradient(160deg, #fff36d, #ff647f 52%, #6adfff);
+  clip-path: polygon(50% 0, 92% 24%, 92% 76%, 50% 100%, 8% 76%, 8% 24%);
+  box-shadow:
+    inset 0 0 0 3px rgba(255, 255, 255, 0.2),
+    inset 0 -14px 20px rgba(0, 0, 0, 0.24),
+    0 0 18px rgba(255, 243, 109, 0.42);
+}
+
+.phone.css-board-skin .tile.multiplier .multiplier-halo,
+.phone.css-board-skin .tile.multiplier .multiplier-glint {
+  display: none !important;
+}
+
+.phone.css-board-skin .tile.multiplier .multiplier-mark {
+  z-index: 2;
+  width: 80%;
+  max-width: 80%;
+  color: #10131a;
+  font-size: 34px;
+  font-weight: 1000;
+  -webkit-text-stroke: 0;
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.62),
+    0 0 10px rgba(255, 255, 255, 0.4);
+}
+
+.phone.css-board-skin .tile.multiplier-size-2 .multiplier-mark {
+  font-size: 60px;
+}
+
+.phone.css-board-skin .tile.multiplier-size-1 .multiplier-mark.score-length-5,
+.phone.css-board-skin .tile.multiplier-size-1 .multiplier-mark.score-length-6 {
+  font-size: 22px;
+}
+
+.phone.css-board-skin .special-meter-track,
+.phone.css-board-skin.machine-candy-cat .special-meter-track {
+  overflow: hidden !important;
+  border: 0;
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.12),
+    0 0 16px rgba(102, 232, 255, 0.12);
+}
+
+.phone.css-board-skin .special-meter-track::before {
+  display: none !important;
+}
+
+.phone.css-board-skin .special-meter-track i {
+  background:
+    linear-gradient(90deg, #66e8ff, #8ff66b 50%, #fff36d 100%) !important;
+  box-shadow: 0 0 14px rgba(143, 246, 107, 0.34) !important;
+}
+
+.phone.css-board-skin .meter-mark {
+  display: none !important;
+}
+
+.phone.css-board-skin .event-socket {
+  border-radius: 22px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.1), transparent 44%),
+    rgba(17, 23, 33, 0.92) !important;
+  border: 1px solid rgba(151, 252, 255, 0.24);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 9px 20px rgba(0, 0, 0, 0.3);
+}
+
+.phone.css-board-skin .event-socket::before {
+  content: "";
+  position: absolute;
+  inset: 12%;
+  display: block;
+  border-radius: 18px;
+  background:
+    linear-gradient(160deg, rgba(102, 232, 255, 0.35), rgba(255, 243, 109, 0.14));
+}
+
+.phone.css-board-skin .event-socket::after,
+.phone.css-board-skin .event-socket.multiplier-preview::after {
+  content: attr(data-preview-label);
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  color: #f7fbff;
+  font-size: 22px;
+  font-weight: 1000;
+  line-height: 0.92;
+  text-align: center;
+  -webkit-text-stroke: 0;
+  text-shadow:
+    0 2px 0 #0a0d12,
+    0 0 10px rgba(102, 232, 255, 0.45);
+  transform: none;
+}
+
+.phone.css-board-skin .event-socket[data-preview-kind="flame"]::before {
+  background: linear-gradient(160deg, #ffb548, #ff647f);
+}
+
+.phone.css-board-skin .event-socket.active {
+  transform: translate(-50%, -50%) scale(1.08);
+  border-color: rgba(255, 243, 109, 0.78);
+  box-shadow:
+    0 0 0 3px rgba(255, 243, 109, 0.12),
+    0 0 18px rgba(255, 243, 109, 0.38);
+}
+
+.phone.css-board-skin .event-socket.rolling {
+  animation: css-skin-pulse 640ms ease-in-out infinite alternate;
+}
+
+.phone.css-board-skin .slot-status-circle {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 48%),
+    rgba(10, 14, 21, 0.72);
+  border: 1px solid rgba(151, 252, 255, 0.24);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 8px 18px rgba(0, 0, 0, 0.28);
+}
+
+.phone.css-board-skin .slot-status-circle.is-filled {
+  background:
+    linear-gradient(160deg, rgba(255, 243, 109, 0.72), rgba(102, 232, 255, 0.5)),
+    #171d28;
+  border-color: rgba(255, 243, 109, 0.68);
+}
+
+.phone.css-board-skin .slot-status-symbol strong {
+  color: #10131a;
+  font-size: calc(var(--slot-status-size, 64px) * 0.24);
+  -webkit-text-stroke: 0;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.64);
+}
+
+.phone.css-board-skin .slot {
+  border-radius: 24px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.09), transparent 48%),
+    rgba(17, 23, 33, 0.86) !important;
+  border: 1px solid rgba(151, 252, 255, 0.2) !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05),
+    0 12px 24px rgba(0, 0, 0, 0.32) !important;
+}
+
+.phone.css-board-skin .slot-countdown .ring-track .ring-segment {
+  stroke: rgba(255, 255, 255, 0.16);
+}
+
+.phone.css-board-skin .slot-countdown .ring-track .ring-segment.on {
+  stroke: rgba(102, 232, 255, 0.84);
+}
+
+.phone.css-board-skin .slot-countdown .ring-glow .ring-segment.on {
+  stroke: rgba(255, 243, 109, 0.9);
+}
+
+.phone.css-board-skin .slot-symbol {
+  top: 50%;
+  width: 100%;
+  height: 100%;
+  animation: none;
+  filter: none;
+}
+
+.phone.css-board-skin .slot-symbol::before {
+  content: "";
+  position: absolute;
+  inset: 16%;
+  border-radius: 20px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.34), transparent 30%),
+    linear-gradient(160deg, #fff36d, #ff647f 56%, #66e8ff);
+  clip-path: polygon(50% 0, 92% 24%, 92% 76%, 50% 100%, 8% 76%, 8% 24%);
+}
+
+.phone.css-board-skin .slot strong {
+  position: relative;
+  z-index: 2;
+  color: #10131a;
+  font-size: 26px;
+  -webkit-text-stroke: 0;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.64);
+}
+
+.phone.css-board-skin .slot-guide-arrow {
+  top: 50%;
+  width: 42%;
+  height: 42%;
+  filter: none;
+}
+
+.phone.css-board-skin .slot-guide-arrow::before {
+  background: linear-gradient(180deg, #66e8ff, #8ff66b);
+}
+
+.phone.css-board-skin .hud {
+  grid-template-columns: 1.2fr 1.1fr 0.28fr 0.28fr !important;
+  background: transparent !important;
+}
+
+.phone.css-board-skin .hud-panel,
+.phone.css-board-skin .bet-panel,
+.phone.css-board-skin .icon-button {
+  border-radius: 18px !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.09), transparent 52%),
+    rgba(19, 26, 38, 0.92) !important;
+  border: 1px solid rgba(151, 252, 255, 0.18) !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05),
+    0 8px 18px rgba(0, 0, 0, 0.28) !important;
+}
+
+.phone.css-board-skin .hud-panel span,
+.phone.css-board-skin .hud-panel strong,
+.phone.css-board-skin .bet-panel strong {
+  color: #f7fbff !important;
+  -webkit-text-stroke: 0 !important;
+  text-shadow: none !important;
+}
+
+.phone.css-board-skin .hud-panel span {
+  color: rgba(151, 252, 255, 0.78) !important;
+  font-size: 13px !important;
+}
+
+.phone.css-board-skin .hud-panel strong,
+.phone.css-board-skin .bet-panel strong {
+  font-size: 24px !important;
+}
+
+.phone.css-board-skin .hud-panel span::before,
+.phone.css-board-skin .hud-panel strong::before,
+.phone.css-board-skin .bet-panel strong::before,
+.phone.css-board-skin .bet-panel button::after,
+.phone.css-board-skin .icon-button::after {
+  display: none !important;
+}
+
+.phone.css-board-skin .bet-panel button::before {
+  width: 54%;
+  height: 54%;
+  background: #f7fbff;
+  box-shadow: none;
+}
+
+.phone.css-board-skin #fastButton::before {
+  width: 54%;
+  height: 62%;
+  background: #94a0ad;
+  opacity: 1;
+  filter: none;
+}
+
+.phone.css-board-skin #fastButton[aria-pressed="true"]::before {
+  background: #8ff66b;
+}
+
+.phone.css-board-skin #menuButton::before {
+  width: 48%;
+  height: 38%;
+  background:
+    linear-gradient(#f7fbff, #f7fbff) 0 0 / 100% 22% no-repeat,
+    linear-gradient(#f7fbff, #f7fbff) 0 50% / 100% 22% no-repeat,
+    linear-gradient(#f7fbff, #f7fbff) 0 100% / 100% 22% no-repeat;
+  filter: none;
+}
+
+.phone.css-board-skin .climax-wheel-view {
+  clip-path: var(--climax-mask-path);
+}
+
+.phone.css-board-skin.machine-candy-cat .climax-stage {
+  opacity: 0;
+}
+
+.phone.css-board-skin.machine-candy-cat.multiplier-climax .climax-stage,
+.phone.css-board-skin.machine-candy-cat.climax-intro-wheel .climax-stage,
+.phone.css-board-skin.machine-candy-cat.climax-spinning .climax-stage,
+.phone.css-board-skin.machine-candy-cat.climax-idle-wheel .climax-stage,
+.phone.css-board-skin.machine-candy-cat.tune-climax .climax-stage {
+  opacity: 1;
+}
+
+.phone.css-board-skin.machine-candy-cat.win-card-active:not(.tune-climax) .climax-stage {
+  opacity: 0 !important;
+}
+
+.phone.css-board-skin .climax-wheel-rotor {
+  filter:
+    drop-shadow(0 24px 34px rgba(0, 0, 0, 0.48))
+    drop-shadow(0 0 22px rgba(102, 232, 255, 0.18));
+}
+
+.phone.css-board-skin .climax-wheel-rotor::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: 50%;
+  background:
+    conic-gradient(from -90deg,
+      #66e8ff 0 27.69deg,
+      #202839 27.69deg 55.38deg,
+      #ff647f 55.38deg 83.07deg,
+      #2a3344 83.07deg 110.76deg,
+      #8ff66b 110.76deg 138.45deg,
+      #273043 138.45deg 166.14deg,
+      #fff36d 166.14deg 193.83deg,
+      #252d3d 193.83deg 221.52deg,
+      #c78cff 221.52deg 249.21deg,
+      #212a39 249.21deg 276.9deg,
+      #ffb548 276.9deg 304.59deg,
+      #1f2634 304.59deg 332.28deg,
+      #f7fbff 332.28deg 360deg);
+  border: 12px solid rgba(247, 251, 255, 0.08);
+  box-shadow:
+    inset 0 0 0 8px rgba(12, 16, 24, 0.54),
+    inset 0 0 0 68px rgba(12, 16, 24, 0.18);
+}
+
+.phone.css-board-skin .climax-wheel-rotor::after {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  top: 50%;
+  width: 32%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.1), transparent 52%),
+    #10131a;
+  border: 2px solid rgba(247, 251, 255, 0.18);
+  transform: translate(-50%, -50%);
+}
+
+.phone.css-board-skin .climax-wheel-label {
+  z-index: 4;
+  color: #10131a;
+  font-weight: 1000;
+  -webkit-text-stroke: 0;
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.62),
+    0 0 8px rgba(247, 251, 255, 0.28);
+}
+
+.phone.css-board-skin .climax-wheel-highlight {
+  z-index: 5;
+  background:
+    conic-gradient(from calc(var(--highlight-angle, 15deg) - 14deg), transparent 0deg, rgba(247, 251, 255, 0.46) 0.5deg 19deg, transparent 30deg 360deg);
+  opacity: 0;
+}
+
+.phone.css-board-skin.climax-spinning .climax-wheel-highlight {
+  opacity: 0.44;
+}
+
+.phone.css-board-skin.multiplier-climax .play-area::before {
+  background:
+    repeating-linear-gradient(90deg, rgba(102, 232, 255, 0.12) 0 1px, transparent 1px 18px),
+    linear-gradient(180deg, rgba(102, 232, 255, 0.08), transparent 60%);
+  opacity: 0.34;
+}
+
+.phone.css-board-skin.flame-active .play-area::after {
+  background:
+    linear-gradient(180deg, rgba(255, 100, 127, 0.16), transparent 55%),
+    repeating-linear-gradient(120deg, rgba(255, 181, 72, 0.14) 0 3px, transparent 3px 18px);
+  opacity: 0.58;
+  animation: css-skin-scan 420ms ease-in-out infinite alternate;
+}
+
+.phone.css-board-skin .win-overlay .win-copy {
+  width: min(86vw, 420px) !important;
+  padding: 24px 24px 26px !important;
+  border-radius: 28px !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.09), transparent 42%),
+    rgba(14, 19, 29, 0.9) !important;
+  border: 1px solid rgba(151, 252, 255, 0.24) !important;
+  box-shadow:
+    0 30px 70px rgba(0, 0, 0, 0.55),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06) !important;
+}
+
+.phone.css-board-skin .win-overlay #winLabel {
+  display: block !important;
+  order: 1;
+  color: #f7fbff !important;
+  font-size: clamp(42px, 12vw, 72px) !important;
+  line-height: 0.86 !important;
+  text-align: center;
+  -webkit-text-stroke: 0 !important;
+  text-shadow:
+    0 3px 0 #0a0d12,
+    0 0 18px rgba(102, 232, 255, 0.46) !important;
+}
+
+.phone.css-board-skin .win-overlay #winMultiplier {
+  order: 2;
+  color: #fff36d !important;
+  font-size: clamp(44px, 13vw, 84px) !important;
+  -webkit-text-stroke: 0 !important;
+  text-shadow:
+    0 2px 0 #0a0d12,
+    0 0 16px rgba(255, 243, 109, 0.4) !important;
+}
+
+.phone.css-board-skin .win-overlay #winAmount {
+  order: 3;
+  color: #8ff66b !important;
+  -webkit-text-stroke: 0 !important;
+  text-shadow:
+    0 2px 0 #0a0d12,
+    0 0 14px rgba(143, 246, 107, 0.34) !important;
+}
+
+.phone.css-board-skin .win-overlay .win-rays {
+  opacity: 0.28 !important;
+  background: conic-gradient(from 0deg, transparent, rgba(102, 232, 255, 0.3), transparent 18deg);
+}
+
+@keyframes css-skin-pulse {
+  0% {
+    filter: brightness(1);
+  }
+  100% {
+    filter: brightness(1.24) drop-shadow(0 0 16px rgba(255, 243, 109, 0.34));
+  }
+}
+
+@keyframes css-skin-scan {
+  0% {
+    opacity: 0.34;
+  }
+  100% {
+    opacity: 0.62;
+  }
 }

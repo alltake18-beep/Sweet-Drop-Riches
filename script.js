@@ -1099,6 +1099,29 @@ function tileSignature(tile) {
   return `c:${tile.type}:${tile.special || "normal"}`;
 }
 
+function cssSymbolLabel(tile) {
+  if (!tile) return "";
+  if (tile.kind === "multiplier") return `x${tile.value}`;
+  if (tile.special === "horizontal") return "H";
+  if (tile.special === "vertical") return "V";
+  if (tile.special === "bomb") return "B";
+  if (tile.special === "fish") return "F";
+  if (tile.special === "colorbomb") return "X";
+  if (tile.special === "chocolate") return "C";
+  return { red: "R", blue: "B", green: "G", orange: "O", purple: "P" }[tile.type] || "";
+}
+
+function cssPreviewLabel(preview) {
+  if (!preview) return "";
+  if (preview.kind === "multiplier") return stagePreviewLabel(preview);
+  if (preview.kind === "flame") return "FIRE";
+  if (preview.kind === "sniper") return "AIM";
+  if (preview.kind === "candyClear") {
+    return { red: "R", blue: "B", green: "G", orange: "O", purple: "P" }[preview.type] || "C";
+  }
+  return "FX";
+}
+
 function tileMarkup(tile) {
   if (!tile) return "";
   if (tile.kind === "candy") {
@@ -1209,6 +1232,11 @@ function renderBoard() {
         button.innerHTML = coveredMultiplier && !anchorMultiplier ? "" : tileMarkup(tile);
         button.dataset.signature = signature;
       }
+      const cssTile = coveredMultiplier || tile;
+      button.dataset.symbol = cssSymbolLabel(cssTile);
+      button.dataset.kind = cssTile?.kind || "";
+      button.dataset.type = cssTile?.type || "";
+      button.dataset.special = cssTile?.special || "";
       button.className = classes.join(" ");
       button.disabled = state.resolving || Boolean(coveredMultiplier && multiplierSize(coveredMultiplier) !== 1);
       button.setAttribute("aria-label", tileLabel(coveredMultiplier || tile));
@@ -5073,6 +5101,9 @@ function renderHud() {
     slot.classList.toggle("flame-preview", preview.kind === "flame");
     const previewLabel = preview.kind === "multiplier" ? stagePreviewLabel(preview) : "";
     slot.dataset.value = previewLabel;
+    slot.dataset.previewLabel = cssPreviewLabel(preview);
+    slot.dataset.previewKind = preview.kind || "";
+    slot.dataset.previewType = preview.type || "";
     slot.dataset.digits = stagePreviewDigitCount(previewLabel);
   });
   state.miniSlotPreview = state.stagePreviews[0] || state.miniSlotPreview;
@@ -6872,6 +6903,7 @@ function initBoardTunePanel() {
   if (!phoneShellEl || !boardEl) return;
 
   phoneShellEl.classList.add("board-tune");
+  phoneShellEl.classList.add("css-board-skin");
 
   const controls = [
     { heading: "20段光環" },
@@ -6908,7 +6940,11 @@ function initBoardTunePanel() {
   const panel = document.createElement("div");
   panel.className = "board-tune-panel";
   panel.innerHTML = `
-    <strong class="board-tune-title">光環 / 能量槽調整</strong>
+    <div class="board-tune-header">
+      <strong class="board-tune-title">光環 / 能量槽調整</strong>
+      <button type="button" data-action="collapse">Fold</button>
+      <button type="button" data-action="hide-panel">Hide</button>
+    </div>
     <div class="board-tune-readout"></div>
     <div class="board-tune-controls"></div>
     <label class="board-tune-toggle">
@@ -6925,6 +6961,11 @@ function initBoardTunePanel() {
   const hideEnergyTrackToggle = panel.querySelector("[data-energy-track-hidden]");
   let panelDrag = null;
   const outputControls = [];
+  const reopenButton = document.createElement("button");
+  reopenButton.type = "button";
+  reopenButton.className = "board-tune-reopen";
+  reopenButton.textContent = "Board Tune";
+  reopenButton.hidden = true;
 
   function outputText() {
     const lines = outputControls.map(({ name }) => `  ${name}: ${phoneShellEl.style.getPropertyValue(name)};`);
@@ -7039,8 +7080,27 @@ function initBoardTunePanel() {
   document.addEventListener("pointerup", endPanelDrag);
   document.addEventListener("pointercancel", endPanelDrag);
 
+  panel.querySelector('[data-action="collapse"]')?.addEventListener("click", (event) => {
+    panel.classList.toggle("is-collapsed");
+    event.currentTarget.textContent = panel.classList.contains("is-collapsed") ? "Open" : "Fold";
+  });
+  panel.querySelector('[data-action="hide-panel"]')?.addEventListener("click", () => {
+    panel.classList.add("is-hidden");
+    reopenButton.hidden = false;
+  });
+  reopenButton.addEventListener("click", () => {
+    panel.classList.remove("is-hidden");
+    reopenButton.hidden = true;
+  });
+  if (window.innerWidth <= 520) {
+    panel.classList.add("is-collapsed");
+    const collapseButton = panel.querySelector('[data-action="collapse"]');
+    if (collapseButton) collapseButton.textContent = "Open";
+  }
+
   panel.addEventListener("click", (event) => event.stopPropagation());
   document.body.appendChild(panel);
+  document.body.appendChild(reopenButton);
   refreshOutput();
 }
 
