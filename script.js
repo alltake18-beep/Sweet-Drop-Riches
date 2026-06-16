@@ -6796,7 +6796,7 @@ function initBoardTunePanel() {
     { label: "能量槽 Y", name: "--energy-track-y", min: 0, max: 100, step: 0.1, value: 21.5, unit: "%" },
     { label: "能量槽寬", name: "--energy-track-width", min: 4, max: 100, step: 0.1, value: 72.8, unit: "%" },
     { label: "能量槽高", name: "--energy-track-height", min: 4, max: 160, step: 1, value: 82, unit: "px" },
-    { label: "兩端斜角", name: "--energy-end-curve", min: 0, max: 120, step: 1, value: 26, unit: "px" },
+    { label: "兩端弧線", name: "--energy-end-curve", min: 0, max: 120, step: 1, value: 26, unit: "px" },
     { heading: "遮罩圓洞" },
     { label: "左洞 X", name: "--energy-hole-1-x", min: 0, max: 100, step: 0.1, value: 22.1, unit: "%" },
     { label: "左洞 Y", name: "--energy-hole-1-y", min: 0, max: 100, step: 0.1, value: 33.6, unit: "%" },
