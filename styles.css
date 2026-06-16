@@ -32,6 +32,8 @@ body {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
   overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: none;
 }
 
 body {
@@ -43,11 +45,13 @@ body {
     linear-gradient(160deg, #0f0529 0%, #101b42 52%, #05020f 100%);
   color: var(--ink);
   overflow: hidden;
+  touch-action: none;
 }
 
 button {
   font: inherit;
   color: inherit;
+  touch-action: manipulation;
 }
 
 .stage {
@@ -55,6 +59,7 @@ button {
   display: grid;
   place-items: center;
   padding: 16px;
+  touch-action: none;
 }
 
 .phone {
@@ -81,6 +86,7 @@ button {
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
+  touch-action: none;
   user-select: none;
 }
 
@@ -7555,15 +7561,8 @@ button {
   opacity: 1;
   visibility: visible;
   transform: translate(-50%, 0);
-  border-radius: 0;
-  clip-path: polygon(
-    var(--energy-end-curve, 7px) 0,
-    calc(100% - var(--energy-end-curve, 7px)) 0,
-    100% 50%,
-    calc(100% - var(--energy-end-curve, 7px)) 100%,
-    var(--energy-end-curve, 7px) 100%,
-    0 50%
-  );
+  border-radius: var(--energy-end-curve, 26px) / 50%;
+  clip-path: none;
   mask-image:
     radial-gradient(circle at var(--energy-hole-1-x, 22%) var(--energy-hole-1-y, 50%), transparent 0 var(--energy-hole-1-r, 30px), #000 calc(var(--energy-hole-1-r, 30px) + 1px)),
     radial-gradient(circle at var(--energy-hole-2-x, 52.5%) var(--energy-hole-2-y, 50%), transparent 0 var(--energy-hole-2-r, 30px), #000 calc(var(--energy-hole-2-r, 30px) + 1px)),
@@ -7590,7 +7589,7 @@ button {
   z-index: 1;
   display: block !important;
   pointer-events: none;
-  border-radius: 0;
+  border-radius: inherit;
   background: transparent;
   mix-blend-mode: screen;
 }
@@ -7601,7 +7600,7 @@ button {
   display: block !important;
   height: 100%;
   margin: 0;
-  border-radius: 0;
+  border-radius: inherit;
   background:
     linear-gradient(90deg, rgba(255, 255, 255, 0.34), transparent 17%, rgba(255, 255, 255, 0.28) 36%, transparent 54%),
     linear-gradient(90deg, #ff4fd8 0%, #ffe56c 44%, #61f7ff 100%);
@@ -7700,11 +7699,12 @@ button {
 .slot-status-circles {
   position: absolute;
   inset: 0;
-  z-index: 12;
+  z-index: 8;
   display: none;
   pointer-events: none;
 }
 
+.phone.multiplier-climax .slot-status-circles,
 .phone.board-tune .slot-status-circles {
   display: block;
 }
@@ -9415,6 +9415,12 @@ html.ios-performance .phone.machine-candy-cat,
 .phone.machine-tune .climax-stage {
   outline: 2px solid rgba(135, 247, 255, 0.78);
   outline-offset: -1px;
+}
+
+html.ios-performance .phone.machine-candy-cat {
+  background:
+    url("assets/ui/mobile/candy-machine-candy-cat-ios.jpg?v=ios-cat-20260616-123631") center / 100% 100% no-repeat,
+    linear-gradient(180deg, #70c7ff, #f84ea0) !important;
 }
 
 .phone.machine-tune .event-socket,

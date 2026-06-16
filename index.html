@@ -2,18 +2,22 @@
 <html lang="zh-Hant">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no" />
     <title>Sweet Drop Riches Prototype</title>
     <script>
       (() => {
         try {
-          if (new URLSearchParams(window.location.search).has("perf")) {
+          const params = new URLSearchParams(window.location.search);
+          const isiOS =
+            /iP(hone|ad|od)/.test(navigator.userAgent) ||
+            (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+          if (params.has("perf") || isiOS) {
             document.documentElement.classList.add("ios-performance");
           }
         } catch (error) {}
       })();
     </script>
-    <link rel="stylesheet" href="styles.css?v=win-card-wheel-gate-20260616-121857" />
+    <link rel="stylesheet" href="styles.css?v=ios-meter-wheel-20260616-123631" />
   </head>
   <body>
     <main class="stage">
@@ -145,6 +149,6 @@
       </div>
     </main>
 
-    <script src="script.js?v=win-card-wheel-gate-20260616-121857"></script>
+    <script src="script.js?v=ios-meter-wheel-20260616-123631"></script>
   </body>
 </html>

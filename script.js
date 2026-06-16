@@ -10,8 +10,8 @@ const SEARCH_PARAMS = new URLSearchParams(window.location.search);
 const PERF_ENABLED = SEARCH_PARAMS.has("perf");
 const LITE_ENABLED = SEARCH_PARAMS.has("lite");
 const WHEEL_AUDIT_ENABLED = SEARCH_PARAMS.has("wheelAudit");
-const IOS_PERFORMANCE_MODE = PERF_ENABLED;
-const FX_PERFORMANCE_MODE = PERF_ENABLED || LITE_ENABLED;
+const IOS_PERFORMANCE_MODE = PERF_ENABLED || document.documentElement.classList.contains("ios-performance");
+const FX_PERFORMANCE_MODE = IOS_PERFORMANCE_MODE || LITE_ENABLED;
 const SPECIAL_METER_TARGET = 9;
 const SPECIAL_METER_THRESHOLDS = [9, 21, 40];
 const SPECIAL_METER_MAX = SPECIAL_METER_THRESHOLDS[SPECIAL_METER_THRESHOLDS.length - 1];
@@ -695,6 +695,7 @@ function winArtAsset(name) {
 }
 
 function allSymbolAssets() {
+  if (IOS_PERFORMANCE_MODE) return [];
   const assets = FX_PERFORMANCE_MODE
     ? CANDIES.map(candyAsset)
     : [
@@ -707,7 +708,7 @@ function allSymbolAssets() {
 }
 
 function preloadSymbolAssets() {
-  if (document.hidden) return;
+  if (document.hidden || IOS_PERFORMANCE_MODE) return;
   const done = startPerfSpan("assets.preload");
   const promises = allSymbolAssets().map((src) => {
     const image = new Image();
@@ -1510,9 +1511,11 @@ function animateClimaxWheel(finalRotation, profile) {
 function renderClimaxStage() {
   if (!climaxStageEl) return;
   const active = isMultiplierClimaxActive();
-  if (active || phoneShellEl?.classList.contains("tune-climax")) ensureClimaxWheelImageLoaded();
+  const tuning = phoneShellEl?.classList.contains("tune-climax");
+  const suppressWheel = state.winCardActive && !tuning;
+  if ((active && !suppressWheel) || tuning) ensureClimaxWheelImageLoaded();
   climaxStageEl.setAttribute("aria-hidden", String(!active));
-  if (!active || state.climaxSpinning || state.climaxWheelHoldingResult || state.climaxIntroPhase) stopClimaxIdleSpin();
+  if (!active || suppressWheel || state.climaxSpinning || state.climaxWheelHoldingResult || state.climaxIntroPhase) stopClimaxIdleSpin();
   if (climaxWheelRotorEl) {
     climaxWheelRotorEl.style.setProperty("--wheel-rotation", `${state.climaxWheelRotation || 0}deg`);
   }
@@ -1537,7 +1540,7 @@ function renderClimaxStage() {
     const index = currentClimaxHighlightIndex(sliceAngle);
     climaxWheelHighlightEl.style.setProperty("--highlight-angle", `${wheelVisualAngleToConicAngle(wheelVisualSliceCenter(index, sliceAngle))}deg`);
   }
-  if (active && !state.climaxSpinning && !state.climaxWheelHoldingResult && !state.climaxIntroPhase) startClimaxIdleSpin();
+  if (active && !suppressWheel && !state.climaxSpinning && !state.climaxWheelHoldingResult && !state.climaxIntroPhase) startClimaxIdleSpin();
 }
 
 function render() {
@@ -2718,7 +2721,8 @@ async function maybeShowWinCard(options = {}) {
   if (state.winCardShownThisResolve && !force) return true;
   const displayAmount = Math.max(0, Math.round(options.amount ?? state.currentWin));
   const ratio = displayAmount / currentBet();
-  const tier = WIN_TIERS.find((item) => ratio >= item.ratio);
+  const tierRatio = Math.max(ratio, Number(options.minTierRatio || 0));
+  const tier = WIN_TIERS.find((item) => tierRatio >= item.ratio);
   if (!tier) return false;
 
   duckBackgroundMusic(tier.duration + 620, BGM_DUCK_PAYOUT);
@@ -2726,7 +2730,7 @@ async function maybeShowWinCard(options = {}) {
   winLabelEl.textContent = tier.label;
   winTitleArtEl.src = winArtAsset(tier.art);
   winTitleArtEl.alt = tier.label;
-  winMultiplierEl.textContent = `${Math.floor(ratio)}x`;
+  winMultiplierEl.textContent = options.multiplierLabel || `${Math.floor(ratio)}x`;
   winAmountEl.textContent = "0";
   state.winCardActive = true;
   renderHud();
@@ -2893,7 +2897,7 @@ async function playFullDropWheel() {
   state.climaxWheelHoldingResult = true;
   triggerScreenFx(prize.multiplier >= 5 ? "fx-jackpot" : prize.multiplier >= 1 ? "fx-blast" : "fx-bump", 820);
   render();
-  await maybeShowWinCard({ amount: award, force: true });
+  await maybeShowWinCard({ amount: award, force: true, minTierRatio: 5, multiplierLabel: prize.label });
   await wait(360);
 }
 
@@ -4838,7 +4842,6 @@ specialOddsButton.addEventListener("click", () => {
   menuPanel.classList.add("hidden");
 });
 
-window.setTimeout(() => armBackgroundMusic(), 420);
 window.addEventListener("pointerdown", armBackgroundMusic, { once: true });
 window.addEventListener("keydown", armBackgroundMusic, { once: true });
 
@@ -7328,6 +7331,27 @@ function preventImageSelection() {
   });
 }
 
+function preventViewportGestures() {
+  let lastTouchEndAt = 0;
+  const blockGesture = (event) => {
+    event.preventDefault();
+  };
+  ["gesturestart", "gesturechange", "gestureend"].forEach((name) => {
+    document.addEventListener(name, blockGesture, { passive: false });
+  });
+  document.addEventListener("dblclick", (event) => {
+    if (event.target instanceof Element && event.target.closest(".phone")) {
+      event.preventDefault();
+    }
+  }, { passive: false });
+  document.addEventListener("touchend", (event) => {
+    if (!(event.target instanceof Element) || !event.target.closest(".phone")) return;
+    const now = Date.now();
+    if (now - lastTouchEndAt < 360) event.preventDefault();
+    lastTouchEndAt = now;
+  }, { passive: false });
+}
+
 function clearFxQueue() {
   if (state.fx.frame) cancelAnimationFrame(state.fx.frame);
   state.fx.frame = null;
@@ -7397,6 +7421,7 @@ document.addEventListener("visibilitychange", pauseHiddenWork);
 });
 applyPerformanceMode();
 preventImageSelection();
+preventViewportGestures();
 preloadSymbolAssets();
 initPerfMonitor();
 initAuditPanel();
