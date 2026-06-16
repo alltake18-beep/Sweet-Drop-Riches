@@ -6990,7 +6990,6 @@ function initBoardTunePanel() {
 
 function initMachineTunePanel() {
   const params = new URLSearchParams(window.location.search);
-  if (!params.has("machineTune")) return;
   if (!phoneShellEl) return;
 
   phoneShellEl.classList.add("machine-candy-cat");
