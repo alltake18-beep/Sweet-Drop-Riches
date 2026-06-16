@@ -9610,7 +9610,7 @@ html.ios-performance .phone.machine-candy-cat .board-bar,
   right: 10px;
   bottom: 10px;
   width: min(360px, calc(100vw - 20px));
-  max-height: min(58vh, 560px);
+  max-height: min(29vh, 280px);
   overflow: auto;
   padding: 10px;
   color: #ffeec2;
